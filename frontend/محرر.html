@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+    <title>📖 محرر ZEUS</title>
+    
+    <script src="jszip.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100vh;
+            overflow: hidden; 
+        }
+
+        body {
+            font-family: 'Geeza Pro', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0; 
+            overflow: hidden; 
+        }
+
+        .editor-container {
+            width: 100%;
+            max-width: 100%; 
+            background: white;
+            border-radius: 0; 
+            box-shadow: none; 
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%; 
+        }
+
+        .editor-container.fullscreen {
+            max-width: 100vw;
+            height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            padding-top: calc(15px + env(safe-area-inset-top, 0px));
+        }
+
+        .header.hidden {
+            display: none;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 8px;
+            font-size: 20px;
+        }
+
+        .filename-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .filename-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .filename-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .filename-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .controls.hidden {
+            display: none;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .segmented-control {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .segment {
+            flex: 1;
+            padding: 10px 15px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .segment.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .segment:hover:not(.active) {
+            background: #dee2e6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .control-btn.save {
+            background: #28a745;
+        }
+
+        .control-btn.save:hover {
+            background: #218838;
+        }
+
+        .text-editor {
+            padding: 20px;
+            font-size: 18px;
+            line-height: 1.5;
+            border: none;
+            width: 100%;
+            resize: none;
+            font-family: 'Geeza Pro', 'Arial', sans-serif;
+            transition: all 0.3s ease;
+            direction: rtl;
+            flex-grow: 1; 
+            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            overflow-y: auto; 
+        }
+
+        .text-editor:focus {
+            outline: none;
+        }
+
+        .text-editor.read-only {
+            cursor: default;
+            background-color: #f8f9fa; 
+        }
+
+        .stats {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            color: #6c757d;
+            font-size: 12px;
+            text-align: right;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .stats.hidden {
+            display: none;
+        }
+        
+        /* ==== CSS جديد: للواجهة الداكنة (الأشرطة) ==== */
+        .controls.dark-interface,
+        .stats.dark-interface {
+            background: #222; 
+            color: #f1f1f1; 
+            border-color: #444; 
+        }
+        .controls.dark-interface .segmented-control {
+            background: #444;
+        }
+        .controls.dark-interface .segment {
+            color: #f1f1f1; 
+        }
+        .controls.dark-interface .segment:hover:not(.active) {
+            background: #555;
+        }
+        /* ================================ */
+
+
+        .exit-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            top: calc(20px + env(safe-area-inset-top, 0px));
+        }
+
+        .exit-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .exit-btn.show {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 70vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            display: flex; 
+            flex-direction: column; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            flex-shrink: 0; 
+            transition: border-color 0.3s;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            transition: color 0.3s;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+
+        .file-list {
+            list-style: none;
+            overflow-y: auto; 
+            max-height: 40vh; 
+            padding-right: 10px; 
+        }
+        
+        .search-bar {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .search-bar:focus {
+             outline: none;
+             border-color: #667eea;
+        }
+         .search-bar::placeholder {
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .modal-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .modal-btn.select {
+            background: #667eea;
+            color: white;
+        }
+        .modal-btn.danger {
+            background: #dc3545;
+            color: white;
+        }
+        .modal-btn.danger:hover {
+             background: #c82333;
+        }
+        
+        /* ==== CSS جديد: زر عكس الترتيب ==== */
+        #reverseSortBtn {
+            flex: 0 0 50px; /* لا يتمدد */
+            background: #e9ecef;
+            color: #495057;
+            font-size: 18px;
+        }
+        #reverseSortBtn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .file-item {
+            display: flex; 
+            align-items: center;
+            gap: 10px; 
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent; 
+        }
+        .file-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .file-checkbox-container {
+            display: none; 
+        }
+        
+        .file-checkbox {
+             width: 20px;
+             height: 20px;
+             cursor: pointer;
+        }
+
+        .file-details {
+            flex: 1; 
+            pointer-events: none; 
+        }
+
+        .file-info {
+            font-size: 12px;
+            color: #6c757d;
+            pointer-events: none;
+        }
+
+        .file-item:hover .file-info {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .file-list.selection-active .file-checkbox-container {
+            display: block; 
+        }
+        .file-list.selection-active .file-item:hover {
+            background: #dee2e6; 
+            color: black;
+            transform: translateX(0);
+            box-shadow: none;
+        }
+        .file-list.selection-active .file-item:hover .file-info {
+            color: #6c757d;
+        }
+        .file-list.selection-active .file-item.selected {
+            background: #cce0ff; 
+            color: black;
+            border-color: #667eea;
+        }
+         .file-list.selection-active .file-item.selected .file-info {
+             color: #333;
+         }
+
+        .color-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .color-item {
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .color-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+        
+        /* ==== CSS جديد: للواجهة الداكنة (النوافذ) ==== */
+        .modal-content.dark-interface {
+            background: #222;
+            color: #f1f1f1;
+        }
+        .modal-content.dark-interface .modal-header {
+            border-color: #444;
+        }
+        .modal-content.dark-interface .modal-title {
+            color: #f1f1f1;
+        }
+         .modal-content.dark-interface .close-modal {
+            color: #888;
+        }
+        .modal-content.dark-interface .close-modal:hover {
+            color: #f1f1f1;
+        }
+        .modal-content.dark-interface .search-bar {
+            background: #333;
+            color: #f1f1f1;
+            border-color: #555;
+        }
+        .modal-content.dark-interface .search-bar::placeholder {
+            color: #888;
+        }
+        .modal-content.dark-interface .segmented-control {
+            background: #444;
+        }
+        .modal-content.dark-interface .segment {
+            color: #f1f1f1;
+        }
+        .modal-content.dark-interface .segment:hover:not(.active) {
+            background: #555;
+        }
+         .modal-content.dark-interface #reverseSortBtn {
+            background: #444;
+            color: #f1f1f1;
+        }
+        .modal-content.dark-interface #reverseSortBtn.active {
+            background: #667eea;
+            color: white;
+        }
+        .modal-content.dark-interface .file-item {
+            background: #333;
+            color: #f1f1f1;
+        }
+         .modal-content.dark-interface .file-info {
+            color: #888;
+        }
+        .modal-content.dark-interface .file-item:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .modal-content.dark-interface .file-item:hover .file-info {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .modal-content.dark-interface .file-list.selection-active .file-item:hover {
+            background: #555;
+            color: #f1f1f1;
+            transform: translateX(0);
+            box-shadow: none;
+        }
+         .modal-content.dark-interface .file-list.selection-active .file-item:hover .file-info {
+            color: #888;
+        }
+        .modal-content.dark-interface .file-list.selection-active .file-item.selected {
+            background: #004080; /* لون أزرق داكن للتحديد */
+            color: white;
+            border-color: #667eea;
+        }
+         .modal-content.dark-interface .file-list.selection-active .file-item.selected .file-info {
+             color: #ddd;
+         }
+         .modal-content.dark-interface .color-item {
+             border: 2px solid #555;
+         }
+        /* ================================ */
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .theme-white {
+            background: white;
+            color: black;
+        }
+
+        .theme-dark {
+            background: #000000;
+            color: white;
+        }
+
+        .theme-blue-dark {
+            background: #001F3F;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .control-row {
+                flex-direction: column;
+            }
+
+            .btn-group {
+                width: 100%;
+            }
+
+            .control-btn {
+                flex: 1;
+            }
+            .editor-container {
+                 height: 100%; 
+                 padding: 0;
+                 border-radius: 0;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 3000;
+            animation: slideIn 0.3s ease;
+            display: none;
+            top: calc(20px + env(safe-area-inset-top, 0px));
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            border-left: 4px solid #28a745;
+        }
+
+        .notification.error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .notification.warning {
+            border-left: 4px solid #ffc107;
+        }
+
+        .sort-control {
+            margin-bottom: 15px;
+            flex-shrink: 0; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-container" id="editorContainer">
+        <div class="header" id="header">
+            <button class="btn btn-icon" id="openChapterBtn" title="فتح فصل">📂</button>
+            <button class="btn btn-icon" id="importFileBtn" title="استيراد ملف">📥</button>
+            <input type="text" class="filename-input" id="filenameInput" placeholder="لم يتم فتح ملف" disabled>
+            <button class="btn btn-icon" id="bgColorBtn" title="لون الواجهة">🎨</button>
+            <button class="btn btn-icon" id="readBtn" title="وضع القراءة">👁️</button>
+            <button class="btn btn-icon" id="fullscreenBtn" title="ملء الشاشة">🔳</button>
+        </div>
+
+        <div class="controls" id="controls">
+            <div class="control-row">
+                <div class="segmented-control" id="themeControl">
+                    <button class="segment active" data-theme="white">ابيض</button>
+                    <button class="segment" data-theme="dark">داكن</button>
+                    <button class="segment" data-theme="blue-dark">ازرق داكن</button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="segmented-control" id="fontControl">
+                    <button class="segment active" data-font="Geeza Pro">Geeza Pro</button>
+                    <button class="segment" data-font="Arial">Arial</button>
+                    <button class="segment" data-font="Times New Roman">Times New Roman</button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="btn-group">
+                    <button class="control-btn" id="increaseFontBtn">A+</button>
+                    <button class="control-btn" id="decreaseFontBtn">A-</button>
+                    <button class="control-btn" id="spacingBtn">⤴️ تباعد</button>
+                    <button class="control-btn" id="undoBtn">↩️</button>
+                    <button class="control-btn" id="redoBtn">↪️</button>
+                    <button class="control-btn" id="findReplaceBtn">🔍</button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <button class="control-btn save" id="saveBtn" style="width: 100%;">💾 حفظ</button>
+            </div>
+        </div>
+
+        <textarea class="text-editor theme-white" id="textEditor" placeholder="ابدأ الكتابة هنا..."></textarea>
+
+        <div class="stats" id="stats">📝 0 كلمة | 📏 0 سطر</div>
+    </div>
+
+    <button class="exit-btn" id="exitBtn">❌</button>
+
+    <div class="modal" id="fileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">فتح فصل</h2>
+                <button class="close-modal" id="closeFileModalBtn">×</button>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="fileSearchInput" class="search-bar" placeholder="🔍 ابحث عن فصل...">
+            </div>
+
+            <div class="modal-controls">
+                <button class="modal-btn select" id="selectFilesBtn">تحديد</button>
+                <button class="modal-btn" id="reverseSortBtn" title="عكس الترتيب">🔃</button>
+                <button class="modal-btn danger" id="deleteFilesBtn" style="display: none;">حذف</button>
+            </div>
+
+            <div class="sort-control">
+                <div class="segmented-control" id="sortControl">
+                    <button class="segment active" data-sort="modified">آخر تعديل</button>
+                    <button class="segment" data-sort="alphabetical">أبجدي</button>
+                    <button class="segment" data-sort="numerical">رقم الفصل</button>
+                </div>
+            </div>
+            
+            <ul class="file-list" id="fileList">
+                 </ul>
+        </div>
+    </div>
+
+    <div class="modal" id="colorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">اختر لون الواجهة</h2>
+                <button class="close-modal" id="closeColorModalBtn">×</button>
+            </div>
+            <div class="color-list" id="colorList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="findReplaceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">بحث واستبدال</h2>
+                <button class="close-modal" id="closeFindReplaceModalBtn">×</button>
+            </div>
+            <div class="input-group">
+                <label>ابحث عن النص:</label>
+                <input type="text" id="findText" placeholder="أدخل النص للبحث عنه">
+            </div>
+            <div class="input-group">
+                <label>استبدل بـ:</label>
+                <input type="text" id="replaceText" placeholder="أدخل النص البديل">
+            </div>
+            <button class="control-btn save" id="performFindReplaceBtn" style="width: 100%;">✅ استبدال الكل</button>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // --- الحالة الابتدائية للتطبيق ---
+        const state = {
+            selectedFile: null,
+            fontSize: 18,
+            lineSpacing: 1.5,
+            fontName: 'Geeza Pro',
+            theme: 'white',
+            interfaceColor: 'white',
+            undoStack: [],
+            redoStack: [],
+            readMode: false,
+            fullscreen: false,
+            files: {},
+            // ==== تمت إضافة حالة الفرز ====
+            fileSortType: 'modified', // (modified, alphabetical, numerical)
+            fileSortReversed: false
+        };
+
+        // --- جلب العناصر الأساسية ---
+        const elements = {
+            container: document.getElementById('editorContainer'),
+            header: document.getElementById('header'),
+            controls: document.getElementById('controls'),
+            textEditor: document.getElementById('textEditor'),
+            stats: document.getElementById('stats'),
+            exitBtn: document.getElementById('exitBtn'),
+            filenameInput: document.getElementById('filenameInput'),
+            fileModal: document.getElementById('fileModal'),
+            colorModal: document.getElementById('colorModal'),
+            findReplaceModal: document.getElementById('findReplaceModal'),
+            // عناصر نافذة الملفات الجديدة
+            fileSearchInput: document.getElementById('fileSearchInput'),
+            selectFilesBtn: document.getElementById('selectFilesBtn'),
+            deleteFilesBtn: document.getElementById('deleteFilesBtn'),
+            reverseSortBtn: document.getElementById('reverseSortBtn'), // زر عكس الترتيب
+            sortControl: document.getElementById('sortControl'),
+            fileList: document.getElementById('fileList')
+        };
+        
+        // --- حالة نافذة الملفات (للتحديد) ---
+        let fileModalSelectMode = false;
+        let fileModalSelectedFiles = new Set();
+
+
+        // --- تحميل وحفظ الإعدادات والملفات ---
+
+        function loadConfig() {
+            const config = localStorage.getItem('zeusEditorConfig');
+            if (config) {
+                const parsed = JSON.parse(config);
+                state.fontSize = parsed.fontSize || 18;
+                state.lineSpacing = parsed.lineSpacing || 1.5;
+                state.fontName = parsed.fontName || 'Geeza Pro';
+                state.theme = parsed.theme || 'white';
+                state.interfaceColor = parsed.interfaceColor || 'white';
+                state.selectedFile = parsed.lastOpenedFile || null;
+                // ==== تحميل حالة الفرز ====
+                state.fileSortType = parsed.fileSortType || 'modified';
+                state.fileSortReversed = parsed.fileSortReversed || false;
+                
+                applyTheme(state.theme);
+                applyFont(state.fontName);
+                applyFontSize(state.fontSize);
+                applyLineSpacing(state.lineSpacing);
+                
+                // ==== تم تعديل هذا القسم (لتطبيق الثيم على كل شيء) ====
+                const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                const allModals = document.querySelectorAll('.modal-content');
+
+                if (state.interfaceColor === 'white') {
+                    document.body.style.background = gradient;
+                    elements.header.style.background = gradient; 
+                    elements.controls.classList.remove('dark-interface');
+                    elements.stats.classList.remove('dark-interface');
+                    allModals.forEach(modal => modal.classList.remove('dark-interface'));
+                } else if (state.interfaceColor === 'black') {
+                   document.body.style.background = state.interfaceColor;
+                   elements.header.style.background = state.interfaceColor; 
+                   elements.controls.classList.add('dark-interface');
+                   elements.stats.classList.add('dark-interface');
+                   allModals.forEach(modal => modal.classList.add('dark-interface'));
+                } else { // للألوان الأخرى (بيج، رمادي)
+                   document.body.style.background = state.interfaceColor;
+                   elements.header.style.background = state.interfaceColor; 
+                   elements.controls.classList.remove('dark-interface'); 
+                   elements.stats.classList.remove('dark-interface');
+                   allModals.forEach(modal => modal.classList.remove('dark-interface'));
+                }
+            }
+            
+            const filesData = localStorage.getItem('zeusEditorFiles');
+            if (filesData) {
+                state.files = JSON.parse(filesData);
+            }
+            
+            if (state.selectedFile && state.files[state.selectedFile]) {
+                loadFile(state.selectedFile);
+            }
+            updateStats();
+        }
+
+        function saveConfig() {
+            const config = {
+                fontSize: state.fontSize,
+                lineSpacing: state.lineSpacing,
+                fontName: state.fontName,
+                theme: state.theme,
+                interfaceColor: state.interfaceColor,
+                lastOpenedFile: state.selectedFile,
+                // ==== حفظ حالة الفرز ====
+                fileSortType: state.fileSortType,
+                fileSortReversed: state.fileSortReversed
+            };
+            localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
+        }
+
+        function saveFiles() {
+            localStorage.setItem('zeusEditorFiles', JSON.stringify(state.files));
+        }
+
+        // --- نظام الإشعارات ---
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- دوال ربط الأزرار (سيتم تفعيلها عند تحميل الصفحة) ---
+
+        function setupEventListeners() {
+            document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
+            document.getElementById('importFileBtn').addEventListener('click', importFile);
+            document.getElementById('bgColorBtn').addEventListener('click', openColorModal);
+            document.getElementById('readBtn').addEventListener('click', toggleReadMode);
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+            document.getElementById('exitBtn').addEventListener('click', exitSpecialMode);
+            document.getElementById('saveBtn').addEventListener('click', saveChanges);
+            document.getElementById('increaseFontBtn').addEventListener('click', increaseFont);
+            document.getElementById('decreaseFontBtn').addEventListener('click', decreaseFont);
+            document.getElementById('spacingBtn').addEventListener('click', toggleSpacing);
+            document.getElementById('undoBtn').addEventListener('click', undo);
+            document.getElementById('redoBtn').addEventListener('click', redo);
+            document.getElementById('findReplaceBtn').addEventListener('click', openFindReplaceModal);
+
+            // إغلاق النوافذ
+            document.getElementById('closeFileModalBtn').addEventListener('click', closeFileModal);
+            document.getElementById('closeColorModalBtn').addEventListener('click', closeColorModal);
+            document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
+            document.getElementById('performFindReplaceBtn').addEventListener('click', performFindReplace);
+
+            // أزرار التحكم المقسمة (خلفية/خط)
+            document.getElementById('themeControl').addEventListener('click', (e) => {
+                if (e.target.classList.contains('segment')) {
+                    document.querySelectorAll('#themeControl .segment').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
+                    applyTheme(e.target.dataset.theme);
+                }
+            });
+
+            document.getElementById('fontControl').addEventListener('click', (e) => {
+                if (e.target.classList.contains('segment')) {
+                    document.querySelectorAll('#fontControl .segment').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
+                    applyFont(e.target.dataset.font);
+                }
+            });
+
+            // مراقبة المحرر
+            elements.textEditor.addEventListener('input', () => {
+                if (!state.readMode) {
+                    setTimeout(() => {
+                        state.undoStack.push(elements.textEditor.value);
+                        state.redoStack = [];
+                        updateStats();
+                    }, 500);
+                }
+            });
+
+            elements.filenameInput.addEventListener('change', renameFile);
+            elements.filenameInput.addEventListener('blur', renameFile);
+            
+            // ==== ربط أحداث نافذة الملفات الجديدة ====
+            elements.fileSearchInput.addEventListener('input', updateFileListView);
+            elements.sortControl.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('segment')) {
+                    document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
+                    // ==== حفظ اختيار الفرز ====
+                    state.fileSortType = e.target.dataset.sort;
+                    saveConfig();
+                    updateFileListView(); // تحديث العرض عند تغيير الفرز
+                }
+            });
+            // ==== ربط زر عكس الترتيب ====
+            elements.reverseSortBtn.addEventListener('click', () => {
+                state.fileSortReversed = !state.fileSortReversed; // عكس الحالة
+                elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed); // تحديث شكل الزر
+                saveConfig(); // حفظ الحالة
+                updateFileListView(); // إعادة الفرز
+            });
+            elements.selectFilesBtn.addEventListener('click', toggleSelectMode);
+            elements.deleteFilesBtn.addEventListener('click', deleteSelectedFiles);
+        }
+
+        // --- دوال تعديل النص ---
+
+        function applyTheme(theme) {
+            elements.textEditor.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
+            elements.textEditor.classList.add(`theme-${theme}`);
+            state.theme = theme;
+            saveConfig();
+        }
+
+        function applyFont(fontName) {
+            elements.textEditor.style.fontFamily = fontName;
+            state.fontName = fontName;
+            saveConfig();
+        }
+
+        function applyFontSize(size) {
+            elements.textEditor.style.fontSize = `${size}px`;
+            state.fontSize = size;
+            saveConfig();
+        }
+
+        function applyLineSpacing(spacing) {
+            elements.textEditor.style.lineHeight = spacing;
+            state.lineSpacing = spacing;
+            saveConfig();
+        }
+
+        function increaseFont() {
+            applyFontSize(state.fontSize + 1);
+        }
+
+        function decreaseFont() {
+            if (state.fontSize > 8) {
+                applyFontSize(state.fontSize - 1);
+            }
+        }
+
+        function toggleSpacing() {
+            let newSpacing = state.lineSpacing;
+            if (state.lineSpacing === 1.5) newSpacing = 2.0;
+            else if (state.lineSpacing === 2.0) newSpacing = 1.0;
+            else newSpacing = 1.5;
+            applyLineSpacing(newSpacing);
+            showNotification(`تم ضبط التباعد إلى ${newSpacing}`, 'warning');
+        }
+
+        function undo() {
+            if (state.undoStack.length > 1) { 
+                state.redoStack.push(state.undoStack.pop());
+                elements.textEditor.value = state.undoStack[state.undoStack.length - 1];
+            } else {
+                 showNotification('لا يوجد شيء للتراجع عنه', 'warning');
+            }
+             updateStats();
+        }
+
+        function redo() {
+            if (state.redoStack.length > 0) {
+                const nextState = state.redoStack.pop();
+                state.undoStack.push(nextState);
+                elements.textEditor.value = nextState;
+            } else {
+                 showNotification('لا يوجد شيء للإعادة', 'warning');
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            const text = elements.textEditor.value;
+            const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const lineCount = text.split('\n').length;
+            elements.stats.textContent = `📝 ${wordCount} كلمة | 📏 ${lineCount} سطر`;
+        }
+
+        // --- دوال إدارة الملفات ---
+
+        function importFile() {
+            if (typeof JSZip === 'undefined') {
+                showNotification('خطأ: مكتبة فك الضغط (JSZip) غير موجودة. تأكد من اتصالك بالإنترنت أو أضف ملف jszip.min.js المحلي.', 'error');
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.zip'; 
+            input.multiple = true; 
+            input.click(); 
+
+            input.onchange = async (e) => {
+                const files = e.target.files;
+                if (files.length === 0) return;
+
+                let importedFileNames = [];
+                showNotification(`جاري استيراد ${files.length} ملفات...`, 'warning');
+
+                for (const file of files) {
+                    const fileNameLower = file.name.toLowerCase();
+
+                    if (fileNameLower.endsWith('.zip')) {
+                        try {
+                            const zip = await JSZip.loadAsync(file); 
+                            const txtFilesEntries = [];
+                            zip.forEach((relativePath, zipEntry) => {
+                                if (zipEntry.name.toLowerCase().endsWith('.txt') && !zipEntry.dir) {
+                                    txtFilesEntries.push(zipEntry);
+                                }
+                            });
+
+                            if (txtFilesEntries.length === 0) {
+                                showNotification(`ملف ZIP ${file.name} لا يحتوي على ملفات .txt`, 'warning');
+                                continue;
+                            }
+
+                            for (const zipEntry of txtFilesEntries) {
+                                const content = await zipEntry.async('string');
+                                const filename = zipEntry.name.split('/').pop(); 
+                                
+                                state.files[filename] = { content: content, modified: Date.now() };
+                                importedFileNames.push(filename);
+                            }
+                        } catch (err) {
+                            showNotification(`فشل في فك ضغط ${file.name}`, 'error');
+                            console.error(err);
+                        }
+
+                    } else if (fileNameLower.endsWith('.txt')) {
+                        try {
+                            const content = await file.text(); 
+                            const filename = file.name;
+
+                            state.files[filename] = { content: content, modified: Date.now() };
+                            importedFileNames.push(filename);
+                        } catch (err) {
+                             showNotification(`فشل في قراءة ${file.name}`, 'error');
+                             console.error(err);
+                        }
+                    } else {
+                        showNotification(`تم تخطي ${file.name} (نوع غير مدعوم)`, 'warning');
+                    }
+                }
+
+                if (importedFileNames.length > 0) {
+                    saveFiles(); 
+                    loadFile(importedFileNames[importedFileNames.length - 1]); 
+                    showNotification(`✅ تم استيراد ${importedFileNames.length} فصول بنجاح!`);
+                } else {
+                     showNotification('لم يتم استيراد أي ملفات .txt جديدة', 'warning');
+                }
+            };
+        }
+
+        function renameFile() {
+            if (!state.selectedFile) {
+                showNotification('⚠️ لا يوجد ملف مفتوح لتغيير اسمه', 'error');
+                elements.filenameInput.disabled = true;
+                elements.filenameInput.value = '';
+                return;
+            }
+
+            const oldName = state.selectedFile;
+            let newName = elements.filenameInput.value.trim();
+
+            if (!newName) {
+                showNotification('❌ اسم الملف لا يمكن أن يكون فارغاً', 'error');
+                elements.filenameInput.value = oldName;
+                return;
+            }
+
+            if (!newName.toLowerCase().endsWith('.txt')) {
+                newName += '.txt';
+                elements.filenameInput.value = newName;
+            }
+
+            if (newName === oldName) return;
+
+            if (state.files[newName]) {
+                showNotification(`❌ ملف بالاسم '${newName}' موجود بالفعل`, 'error');
+                elements.filenameInput.value = oldName;
+                return;
+            }
+
+            state.files[newName] = state.files[oldName];
+            state.files[newName].modified = Date.now();
+            delete state.files[oldName];
+            state.selectedFile = newName;
+            saveFiles();
+            saveConfig();
+            showNotification(`✅ تم تغيير الاسم إلى\n${newName}`);
+        }
+
+        function saveChanges() {
+            let filename = state.selectedFile;
+            
+            if (!filename) {
+                filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
+                if (!filename) {
+                    showNotification('تم إلغاء الحفظ', 'warning');
+                    return;
+                }
+                if (!filename.toLowerCase().endsWith('.txt')) {
+                    filename += '.txt';
+                }
+            }
+            
+            if (state.files[filename] && state.files[filename].content === elements.textEditor.value) {
+                 showNotification('لا توجد تغييرات لحفظها', 'warning');
+                 return;
+            }
+
+            state.files[filename] = {
+                content: elements.textEditor.value,
+                modified: Date.now()
+            };
+            
+            state.selectedFile = filename;
+            elements.filenameInput.value = filename;
+            elements.filenameInput.disabled = false;
+            
+            saveFiles();
+            saveConfig();
+            showNotification(`✅ تم حفظ ${filename} بنجاح`);
+        }
+
+        function loadFile(filename) {
+            if (state.files[filename]) {
+                const file = state.files[filename];
+                elements.textEditor.value = file.content;
+                state.selectedFile = filename;
+                elements.filenameInput.value = filename;
+                elements.filenameInput.disabled = false;
+                state.undoStack = [file.content]; 
+                state.redoStack = [];
+                updateStats();
+                saveConfig();
+                showNotification(`📖 تم فتح ${filename}`);
+                elements.textEditor.scrollTop = 0;
+                elements.textEditor.setSelectionRange(0, 0);
+            }
+        }
+
+
+        // --- دوال النوافذ المنبثقة (Modal) ---
+        
+        function openFileModal() {
+            // 1. إعادة تعيين حالة التحديد والبحث
+            fileModalSelectMode = false;
+            fileModalSelectedFiles.clear();
+            
+            // 2. إعادة تعيين واجهة المستخدم
+            elements.fileSearchInput.value = '';
+            elements.selectFilesBtn.textContent = 'تحديد';
+            elements.deleteFilesBtn.style.display = 'none';
+            elements.fileList.classList.remove('selection-active');
+            
+            // ==== تطبيق حالة الفرز المحفوظة ====
+            // تفعيل الزر الصحيح
+            elements.sortControl.querySelectorAll('.segment').forEach(s => {
+                s.classList.toggle('active', s.dataset.sort === state.fileSortType);
+            });
+            // تفعيل زر العكس
+            elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
+
+            // 3. عرض القائمة (سيستخدم حالة الفرز المحفوظة)
+            updateFileListView();
+
+            // 4. إظهار النافذة
+            elements.fileModal.classList.add('show');
+        }
+
+        function closeFileModal() {
+            elements.fileModal.classList.remove('show');
+        }
+        
+        function updateFileListView() {
+            const searchTerm = elements.fileSearchInput.value.toLowerCase();
+            // قراءة نوع الفرز من الحالة (بدلاً من الـ DOM)
+            const sortType = state.fileSortType; 
+
+            const fileArray = Object.entries(state.files).map(([name, data]) => ({
+                name,
+                ...data
+            }));
+            
+            if (fileArray.length === 0) {
+                 elements.fileList.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">❌ لا توجد فصول محفوظة. استخدم زر 📥 للاستيراد.</li>';
+                 return;
+            }
+
+            const filteredArray = fileArray.filter(f => f.name.toLowerCase().includes(searchTerm));
+            
+            sortFiles(filteredArray, sortType);
+            
+            renderFileList(filteredArray);
+        }
+
+        // ==== تم تعديل دالة الفرز (SortFiles) ====
+        function sortFiles(fileArray, sortType) {
+            // دالة مساعدة لاستخراج الأرقام من اسم الملف
+            const getFileNumber = (name) => {
+                const match = name.match(/(\d+)/); // البحث عن أول مجموعة أرقام
+                return match ? parseInt(match[0], 10) : 0; // إرجاع الرقم أو 0
+            };
+
+            if (sortType === 'modified') {
+                fileArray.sort((a, b) => b.modified - a.modified);
+            } else if (sortType === 'alphabetical') {
+                fileArray.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+            } else if (sortType === 'numerical') {
+                fileArray.sort((a, b) => getFileNumber(a.name) - getFileNumber(b.name));
+            }
+            
+            // تطبيق العكس (إذا كان مفعلاً) بعد الفرز
+            if (state.fileSortReversed) {
+                fileArray.reverse();
+            }
+        }
+
+        function renderFileList(fileArray) {
+            elements.fileList.innerHTML = ''; 
+            
+            if (fileArray.length === 0) {
+                 elements.fileList.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">❌ لا توجد فصول تطابق البحث.</li>';
+                 return;
+            }
+            
+            fileArray.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.dataset.filename = file.name; 
+                
+                const sizeKB = (file.content.length / 1024).toFixed(2);
+                const modifiedDate = new Date(file.modified).toLocaleString('ar-SA');
+                const isChecked = fileModalSelectedFiles.has(file.name);
+                
+                if (isChecked) {
+                    li.classList.add('selected');
+                }
+                
+                li.innerHTML = `
+                    <div class="file-checkbox-container">
+                        <input type="checkbox" class="file-checkbox" ${isChecked ? 'checked' : ''}>
+                    </div>
+                    <div class="file-details">
+                        <div>${file.name}</div>
+                        <div class="file-info">${sizeKB} KB | ${modifiedDate}</div>
+                    </div>
+                `;
+                
+                li.addEventListener('click', (e) => {
+                    const filename = li.dataset.filename;
+                    
+                    if (fileModalSelectMode) {
+                        const checkbox = li.querySelector('.file-checkbox');
+                        
+                        if (fileModalSelectedFiles.has(filename)) {
+                            fileModalSelectedFiles.delete(filename);
+                            li.classList.remove('selected');
+                            checkbox.checked = false;
+                        } else {
+                            fileModalSelectedFiles.add(filename);
+                            li.classList.add('selected');
+                            checkbox.checked = true;
+                        }
+                        elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
+                        
+                    } else {
+                        loadFile(filename);
+                        closeFileModal();
+                    }
+                });
+                
+                elements.fileList.appendChild(li);
+            });
+        }
+        
+        function toggleSelectMode() {
+            fileModalSelectMode = !fileModalSelectMode;
+            elements.fileList.classList.toggle('selection-active', fileModalSelectMode);
+            
+            if (fileModalSelectMode) {
+                elements.selectFilesBtn.textContent = 'إلغاء التحديد';
+                elements.deleteFilesBtn.style.display = 'block';
+                elements.deleteFilesBtn.textContent = 'حذف';
+            } else {
+                elements.selectFilesBtn.textContent = 'تحديد';
+                elements.deleteFilesBtn.style.display = 'none';
+                fileModalSelectedFiles.clear(); 
+                updateFileListView(); 
+            }
+        }
+        
+        function deleteSelectedFiles() {
+            if (fileModalSelectedFiles.size === 0) {
+                showNotification('لم يتم تحديد أي ملفات للحذف', 'warning');
+                return;
+            }
+            
+            if (!confirm(`هل أنت متأكد من حذف ${fileModalSelectedFiles.size} ملفات؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                return;
+            }
+            
+            let fileWasReset = false;
+            for (const filename of fileModalSelectedFiles) {
+                delete state.files[filename]; 
+                
+                if (state.selectedFile === filename) {
+                    fileWasReset = true;
+                }
+            }
+            
+            if (fileWasReset) {
+                state.selectedFile = null;
+                elements.filenameInput.value = 'لم يتم فتح ملف';
+                elements.filenameInput.placeholder = 'لم يتم فتح ملف';
+                elements.filenameInput.disabled = true;
+                elements.textEditor.value = '';
+                updateStats();
+                saveConfig();
+            }
+            
+            saveFiles(); 
+            showNotification(`✅ تم حذف ${fileModalSelectedFiles.size} ملفات بنجاح`);
+            
+            toggleSelectMode(); 
+        }
+
+        function openColorModal() {
+            const colors = {
+                'افتراضي': 'white',
+                'رمادي': '#DDDDDD',
+                'بيج': '#F5F5DC',
+                'كريمي': '#FFF8DC',
+                'اسود': 'black'
+            };
+
+            const colorList = document.getElementById('colorList');
+            colorList.innerHTML = '';
+
+            Object.entries(colors).forEach(([name, value]) => {
+                const div = document.createElement('div');
+                div.className = 'color-item';
+                div.style.background = value;
+                div.style.color = (value === 'black' || value === 'blue') ? 'white' : 'black';
+                div.textContent = name;
+                
+                // ==== تم تعديل هذا القسم (لتطبيق الثيم على كل شيء) ====
+                div.addEventListener('click', () => {
+                    state.interfaceColor = value;
+                    const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    const allModals = document.querySelectorAll('.modal-content');
+                    
+                    if (value === 'white') {
+                        document.body.style.background = gradient;
+                        elements.header.style.background = gradient;
+                        elements.controls.classList.remove('dark-interface');
+                        elements.stats.classList.remove('dark-interface');
+                        allModals.forEach(modal => modal.classList.remove('dark-interface'));
+                    } else if (value === 'black') {
+                        document.body.style.background = value;
+                        elements.header.style.background = value;
+                        elements.controls.classList.add('dark-interface');
+                        elements.stats.classList.add('dark-interface');
+                        allModals.forEach(modal => modal.classList.add('dark-interface'));
+                    } else { // للألوان الأخرى
+                        document.body.style.background = value;
+                        elements.header.style.background = value;
+                        elements.controls.classList.remove('dark-interface');
+                        elements.stats.classList.remove('dark-interface');
+                        allModals.forEach(modal => modal.classList.remove('dark-interface'));
+                    }
+                    saveConfig();
+                    showNotification(`✅ تم تغيير لون الواجهة إلى ${name}`);
+                    closeColorModal();
+                });
+                
+                colorList.appendChild(div);
+            });
+
+            elements.colorModal.classList.add('show');
+        }
+
+        function closeColorModal() {
+            elements.colorModal.classList.remove('show');
+        }
+
+        function openFindReplaceModal() {
+            elements.findReplaceModal.classList.add('show');
+            document.getElementById('findText').focus();
+        }
+
+        function closeFindReplaceModal() {
+            elements.findReplaceModal.classList.remove('show');
+        }
+
+        function performFindReplace() {
+            const findText = document.getElementById('findText').value;
+            const replaceText = document.getElementById('replaceText').value;
+
+            if (!findText) {
+                showNotification('الرجاء إدخال نص للبحث عنه', 'error');
+                return;
+            }
+
+            const currentText = elements.textEditor.value;
+            const newText = currentText.replace(new RegExp(findText, 'g'), replaceText);
+            
+            if (currentText === newText) {
+                 showNotification('لم يتم العثور على النص', 'warning');
+            } else {
+                 elements.textEditor.value = newText;
+                 state.undoStack.push(newText); 
+                 state.redoStack = [];
+                 updateStats();
+                 showNotification('✅ تم الاستبدال بنجاح');
+                 closeFindReplaceModal();
+            }
+        }
+
+
+        // --- دوال أوضاع العرض (قراءة، شاشة كاملة) ---
+
+        function toggleReadMode() {
+            state.readMode = !state.readMode;
+            elements.controls.classList.toggle('hidden', state.readMode);
+            elements.header.classList.toggle('hidden', state.readMode);
+            elements.stats.classList.toggle('hidden', state.readMode);
+            elements.exitBtn.classList.toggle('show', state.readMode && !state.fullscreen); 
+            elements.textEditor.readOnly = state.readMode;
+            elements.textEditor.classList.toggle('read-only', state.readMode);
+        }
+
+        function toggleFullscreen() {
+            state.fullscreen = !state.fullscreen;
+            elements.header.classList.toggle('hidden', state.fullscreen);
+            elements.controls.classList.toggle('hidden', state.fullscreen);
+            elements.stats.classList.toggle('hidden', state.fullscreen);
+            elements.exitBtn.classList.toggle('show', state.fullscreen); 
+            
+            if(state.readMode) {
+                 elements.exitBtn.classList.toggle('show', state.fullscreen);
+            }
+        }
+
+        function exitSpecialMode() {
+            if (state.fullscreen) {
+                toggleFullscreen(); 
+            }
+            if (state.readMode) {
+                toggleReadMode();
+            }
+            elements.exitBtn.classList.remove('show');
+        }
+
+        // --- نقطة بداية التطبيق ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadConfig();
+        });
+
+    </script>
+</body>
+</html>
