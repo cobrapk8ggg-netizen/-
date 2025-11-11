@@ -58,6 +58,8 @@
             transition: all 0.3s ease;
             flex-shrink: 0;
             padding-top: calc(15px + env(safe-area-inset-top, 0px));
+            flex-wrap: wrap; /* ==== تعديل: للسماح بالالتفاف ==== */
+            justify-content: center; /* ==== تعديل: لتوسيط العناصر عند الالتفاف ==== */
         }
 
         .header.hidden {
@@ -66,14 +68,14 @@
 
         .btn {
             background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4); /* ==== تعديل: تحسين بصري ==== */
             color: white;
             padding: 10px 15px;
             border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px); /* ==== تعديل: تحسين بصري ==== */
         }
 
         .btn:hover {
@@ -91,19 +93,21 @@
             height: 40px;
             padding: 8px;
             font-size: 20px;
+            flex-shrink: 0; /* ==== إضافة: ضمان عدم انكماش الأزرار ==== */
         }
 
         .filename-input {
             flex: 1;
             padding: 10px 15px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.4); /* ==== تعديل: تحسين بصري ==== */
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             font-size: 16px;
             text-align: center;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px); /* ==== تعديل: تحسين بصري ==== */
             transition: all 0.3s ease;
+            min-width: 150px; /* ==== تعديل: منع الانكماش الزائد ==== */
         }
 
         .filename-input::placeholder {
@@ -124,7 +128,7 @@
         .controls {
             padding: 20px;
             background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef; /* ==== تعديل: تحسين بصري ==== */
             transition: all 0.3s ease;
             flex-shrink: 0;
         }
@@ -176,6 +180,7 @@
         .btn-group {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap; /* ==== تعديل: السماح بالتفاف أزرار التحكم ==== */
         }
 
         .control-btn {
@@ -199,11 +204,19 @@
         }
 
         .control-btn.save {
-            background: #28a745;
+            /* ==== تعديل: تحسين بصري لزر الحفظ ==== */
+            background: linear-gradient(135deg, #28a745, #218838);
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        /* ==== إضافة: لجعل زر الحفظ بعرض كامل (بدل الـ inline style) ==== */
+        .control-row .control-btn.save {
+             width: 100%;
         }
 
         .control-btn.save:hover {
-            background: #218838;
+            background: linear-gradient(135deg, #218838, #1e7e34); /* ==== تعديل: تحسين بصري ==== */
         }
 
         .text-editor {
@@ -233,7 +246,7 @@
         .stats {
             padding: 15px 20px;
             background: #f8f9fa;
-            border-top: 2px solid #e9ecef;
+            border-top: 1px solid #e9ecef; /* ==== تعديل: تحسين بصري ==== */
             color: #6c757d;
             font-size: 12px;
             text-align: right;
@@ -251,7 +264,7 @@
         .stats.dark-interface {
             background: #222; 
             color: #f1f1f1; 
-            border-color: #444; 
+            border-color: #333; /* ==== تعديل: تحسين بصري ==== */
         }
         .controls.dark-interface .segmented-control {
             background: #444;
@@ -656,11 +669,34 @@
 
             .btn-group {
                 width: 100%;
+                /* ==== تعديل: توسيط مجموعة الأزرار ==== */
+                justify-content: center;
             }
 
             .control-btn {
-                flex: 1;
+                /* ==== تعديل: منع التمدد وجعل الحجم تلقائي ==== */
+                flex: 0 1 auto; /* هذا هو التغيير الأهم: لا تنمو، تقلص، الحجم تلقائي */
             }
+            
+            /* ==== تعديل: منع زر الحفظ من التمدد ==== */
+            .control-row .control-btn.save {
+                width: auto; /* إلغاء العرض 100% */
+            }
+            
+            /* ==== تعديل: تصغير عناصر الشريط العلوي ==== */
+            .header .btn-icon {
+                width: 36px;
+                height: 36px;
+                padding: 6px;
+                font-size: 18px;
+            }
+            .header .filename-input {
+                padding: 8px 10px;
+                font-size: 14px;
+                min-width: 100px;
+            }
+            /* ======================================= */
+
             .editor-container {
                  height: 100%; 
                  padding: 0;
@@ -757,7 +793,7 @@
             </div>
 
             <div class="control-row">
-                <button class="control-btn save" id="saveBtn" style="width: 100%;">💾 حفظ</button>
+                <button class="control-btn save" id="saveBtn">💾 حفظ</button>
             </div>
         </div>
 
@@ -1018,13 +1054,13 @@
             elements.fileSearchInput.addEventListener('input', updateFileListView);
             elements.sortControl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('segment')) {
-                    document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
-                    // ==== حفظ اختيار الفرز ====
-                    state.fileSortType = e.target.dataset.sort;
-                    saveConfig();
-                    updateFileListView(); // تحديث العرض عند تغيير الفرز
-                }
+                      document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
+                      e.target.classList.add('active');
+                      // ==== حفظ اختيار الفرز ====
+                      state.fileSortType = e.target.dataset.sort;
+                      saveConfig();
+                      updateFileListView(); // تحديث العرض عند تغيير الفرز
+                 }
             });
             // ==== ربط زر عكس الترتيب ====
             elements.reverseSortBtn.addEventListener('click', () => {
