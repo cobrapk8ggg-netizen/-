@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>⚡️ مترجم زيوس المتقدم</title>
+	<!-- أفترض أن لديك ملف CSS بهذا الاسم. إذا لم يكن كذلك، يمكنك إزالة السطر التالي أو تعديله -->
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<div class="app-container">
+		<header class="app-header">
+			<h1>⚡️ مترجم زيوس المتقدم</h1>
+		</header>
+
+		<main class="app-main">
+			<!-- قسم اختيار المزود والمفاتيح -->
+			<section class="provider-section">
+				<div class="segmented-control">
+					<button class="segment active" data-provider="Gemini">Gemini</button>
+					<button class="segment" data-provider="Together">Together</button>
+					<button class="segment" data-provider="OpenAI">OpenAI</button>
+					<button class="segment" data-provider="Google">Google</button>
+				</div>
+
+				<div class="api-keys-container">
+					<label class="input-label">مفاتيح API</label>
+					<textarea id="apiKeysField" class="api-keys-field" placeholder="أدخل مفاتيح API (كل مفتاح في سطر منفصل)" rows="5"></textarea>
+					<p class="keys-info">(كل مفتاح API في سطر منفصل - سيتم التبديل التلقائي)</p>
+				</div>
+
+				<div class="keys-buttons-row">
+					<button id="saveKeysBtn" class="btn btn-save">💾 حفظ المفاتيح</button>
+					<button id="testApiBtn" class="btn btn-test">✅ اختبار</button>
+					<div id="keysCount" class="keys-count">🔑 0 مفتاح</div>
+				</div>
+			</section>
+
+			<!-- قسم اسم الفصل -->
+			<section class="chapter-section">
+				<input type="text" id="chapterNameField" class="chapter-input" placeholder="📝 اسم الفصل الجديد (مثلاً: الفصل 12)">
+			</section>
+
+			<!-- زر تحميل فصل انجليزي -->
+			<section class="load-chapter-section">
+				<button id="loadChapterBtn" class="btn btn-load-chapter">📂 فتح فصل انجليزي</button>
+			</section>
+
+			<!-- حقل النص الإنجليزي -->
+			<section class="text-section">
+				<label class="input-label">النص الإنجليزي</label>
+				<textarea id="englishInput" class="text-area english-text" placeholder="أدخل النص الإنجليزي هنا..." rows="10"></textarea>
+			</section>
+
+			<!-- زر الترجمة ومؤشر التحميل -->
+			<section class="translation-section">
+				<button id="translateBtn" class="btn btn-translate">🔁 ترجمة الفصل</button>
+				<div id="loadingIndicator" class="loading-indicator" style="display: none;">
+					<div class="spinner"></div>
+					<p id="statusText" class="status-text"></p>
+				</div>
+			</section>
+
+			<!-- حقل النص العربي -->
+			<section class="text-section">
+				<label class="input-label">الترجمة العربية</label>
+				<textarea id="arabicOutput" class="text-area arabic-text" placeholder="ستظهر الترجمة هنا..." rows="10" readonly></textarea>
+			</section>
+
+			<!-- زر نسخ الترجمة -->
+			<section class="copy-section">
+				<button id="copyBtn" class="btn btn-copy">📋 نسخ الترجمة</button>
+			</section>
+
+			<!-- قسم استخراج المصطلحات -->
+			<section class="terms-section">
+				<button id="extractTermsBtn" class="btn btn-extract">📚 استخراج مصطلحات المسرد (Gemini)</button>
+				<div class="terms-output-container">
+					<label class="input-label">المصطلحات المستخرجة</label>
+					<textarea id="extractedTermsOutput" class="text-area terms-text" placeholder="ستظهر المصطلحات المستخرجة هنا..." rows="8" readonly></textarea>
+				</div>
+			</section>
+		</main>
+	</div>
+
+	<!-- مودال لاختيار الفصول -->
+	<div id="chapterModal" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2>اختر فصلًا انجليزيًا</h2>
+				<button class="modal-close">&times;</button>
+			</div>
+			<div class="modal-body">
+				<input type="text" id="chapterSearch" class="chapter-search" placeholder="🔍 ابحث عن فصل...">
+				<ul id="chapterList" class="chapter-list"></ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- مودال للإشعارات -->
+	<div id="toast" class="toast"></div>
+
+	<!-- تأكد من أن هذه الملفات موجودة في نفس المجلد أو قم بتعديل المسار -->
+	<script src="config.js"></script>
+	<script src="translator_core.js"></script>
+	<script src="app.js"></script>
+
+</body>
+
+</html>
