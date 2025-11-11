@@ -793,7 +793,13 @@
         }
         /* === نهاية الإضافة === */
     </style>
-</head>
+
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="theme-color" content="#002145">
+    
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    </head>
 <body>
 
     <div class="editor-container" id="editorContainer">
@@ -1805,5 +1811,18 @@
         });
 
     </script>
-</body>
+<script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('ServiceWorker registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    </body>
 </html>
