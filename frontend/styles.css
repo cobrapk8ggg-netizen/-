@@ -1,132 +1,482 @@
-// config.js - إعدادات المسارات والثوابت
+/* إعدادات عامة */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-// المسارات (سيتم استخدام LocalStorage في بيئة المتصفح)
-const CONFIG = {
-  // أسماء مفاتيح LocalStorage
-  STORAGE_KEYS: {
-    API_KEYS: 'zeus_translator_api_keys',
-    GLOSSARY: 'zeus_translator_glossary',
-    ENGLISH_CHAPTERS: 'zeus_translator_english_chapters',
-    TRANSLATED_CHAPTERS: 'zeus_translator_translated_chapters',
-    CURRENT_KEY_INDICES: 'zeus_translator_key_indices',
-    FAILED_KEYS: 'zeus_translator_failed_keys'
-  },
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  // المهلة الزمنية للطلبات (بالثواني)
-  DEFAULT_TIMEOUT: 120,
+/* حاوية التطبيق */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
 
-  // عدد المحاولات القصوى للتبديل بين المفاتيح
-  MAX_KEY_ATTEMPTS: 10,
+/* رأس التطبيق */
+.app-header {
+  text-align: center;
+  padding: 30px 0;
+  background: linear-gradient(135deg, #002145 0%, #004080 100%);
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0, 33, 69, 0.5);
+  animation: slideDown 0.6s ease-out;
+}
 
-  // المزودات المتاحة
-  PROVIDERS: ['Google', 'OpenAI', 'Together', 'Gemini'],
+.app-header h1 {
+  font-size: 2.5em;
+  font-weight: bold;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
 
-  // نماذج المزودات
-  MODELS: {
-    OpenAI: 'gpt-3.5-turbo',
-    Together: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
-    Gemini: 'gemini-2.5-pro',
-    GeminiFlash: 'gemini-2.5-flash'
+/* الجسم الرئيسي */
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* الأقسام */
+section {
+  background: rgba(44, 44, 46, 0.9);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(68, 68, 68, 0.5);
+  animation: fadeIn 0.5s ease-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* التحكم المجزأ */
+.segmented-control {
+  display: flex;
+  background: #363636;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.segment {
+  flex: 1;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.segment::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.segment:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.segment.active {
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+}
+
+/* حقول الإدخال */
+.input-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #5AC8FA;
+  font-size: 14px;
+}
+
+.api-keys-field,
+.chapter-input,
+.text-area,
+.chapter-search {
+  width: 100%;
+  padding: 15px;
+  background: #000000;
+  border: 1px solid #444444;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.api-keys-field:focus,
+.chapter-input:focus,
+.text-area:focus,
+.chapter-search:focus {
+  outline: none;
+  border-color: #5AC8FA;
+  box-shadow: 0 0 20px rgba(90, 200, 250, 0.3);
+}
+
+.keys-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888888;
+  text-align: center;
+}
+
+/* صف الأزرار */
+.keys-buttons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.keys-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(90, 200, 250, 0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5AC8FA;
+  border: 1px solid rgba(90, 200, 250, 0.3);
+}
+
+/* الأزرار */
+.btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::after {
+  width: 400px;
+  height: 400px;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #5AC8FA 0%, #4AB8EA 100%);
+  box-shadow: 0 6px 20px rgba(90, 200, 250, 0.4);
+}
+
+.btn-test {
+  background: linear-gradient(135deg, #FF9500 0%, #E68500 100%);
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.4);
+}
+
+.btn-load-chapter {
+  width: 100%;
+  background: linear-gradient(135deg, #000000 0%, #1c1c1e 100%);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+.btn-translate {
+  width: 100%;
+  background: linear-gradient(135deg, #002145 0%, #003366 100%);
+  box-shadow: 0 6px 20px rgba(0, 33, 69, 0.6);
+  font-size: 18px;
+  padding: 18px 30px;
+}
+
+.btn-copy {
+  width: 100%;
+  background: linear-gradient(135deg, #0c2c14 0%, #165c25 100%);
+  box-shadow: 0 6px 20px rgba(12, 44, 20, 0.6);
+}
+
+.btn-extract {
+  width: 100%;
+  background: linear-gradient(135deg, #58585a 0%, #3a3a3c 100%);
+  box-shadow: 0 6px 20px rgba(88, 88, 90, 0.6);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* مؤشر التحميل */
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(90, 200, 250, 0.3);
+  border-top-color: #5AC8FA;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  animation: spin 1s linear infinite;
+}
+
+.status-text {
+  color: #5AC8FA;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* حقول النص */
+.english-text {
+  font-size: 14px;
+  min-height: 200px;
+}
+
+.arabic-text {
+  font-family: 'Geeza Pro', 'Traditional Arabic', serif;
+  font-size: 16px;
+  min-height: 200px;
+  line-height: 1.8;
+}
+
+.terms-text {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  min-height: 150px;
+}
+
+/* المودال */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  position: relative;
+  background: #2c2c2e;
+  margin: 5% auto;
+  padding: 0;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.4s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #444444;
+}
+
+.modal-header h2 {
+  font-size: 1.5em;
+  color: #5AC8FA;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 30px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.modal-close:hover {
+  transform: rotate(90deg);
+  color: #ff4444;
+}
+
+.modal-body {
+  padding: 20px 25px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.chapter-list {
+  list-style: none;
+  margin-top: 15px;
+}
+
+.chapter-list li {
+  padding: 15px;
+  margin: 8px 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.chapter-list li:hover {
+  background: rgba(90, 200, 250, 0.2);
+  border-color: #5AC8FA;
+  transform: translateX(-5px);
+}
+
+/* الإشعارات */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: linear-gradient(135deg, #00ff88 0%, #00cc70 100%);
+  color: #000000;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 2000;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(255, 68, 68, 0.4);
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(255, 170, 0, 0.4);
+}
+
+/* الرسوم المتحركة */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-};
-
-// دوال مساعدة للتخزين المحلي
-const Storage = {
-  // حفظ بيانات
-  set: (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (e) {
-      console.error('خطأ في حفظ البيانات:', e);
-      return false;
-    }
-  },
-
-  // جلب بيانات
-  get: (key, defaultValue = null) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (e) {
-      console.error('خطأ في جلب البيانات:', e);
-      return defaultValue;
-    }
-  },
-
-  // حذف بيانات
-  remove: (key) => {
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch (e) {
-      console.error('خطأ في حذف البيانات:', e);
-      return false;
-    }
-  },
-
-  // مسح كل البيانات
-  clear: () => {
-    try {
-      localStorage.clear();
-      return true;
-    } catch (e) {
-      console.error('خطأ في مسح البيانات:', e);
-      return false;
-    }
-  }
-};
-
-// تهيئة البيانات الافتراضية
-function initializeStorage() {
-  // مفاتيح API
-  if (!Storage.get(CONFIG.STORAGE_KEYS.API_KEYS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.API_KEYS, {
-      Google: [],
-      OpenAI: [],
-      Together: [],
-      Gemini: []
-    });
-  }
-
-  // المسرد
-  if (!Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY)) {
-    Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, {
-      manual_terms: {},
-      extracted_terms: {}
-    });
-  }
-
-  // الفصول الإنجليزية
-  if (!Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
-  }
-
-  // الفصول المترجمة
-  if (!Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-  }
-
-  // مؤشرات المفاتيح الحالية
-  if (!Storage.get(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES)) {
-    Storage.set(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES, {
-      Google: 0,
-      OpenAI: 0,
-      Together: 0,
-      Gemini: 0
-    });
-  }
-
-  // المفاتيح الفاشلة
-  if (!Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, {
-      Google: [],
-      OpenAI: [],
-      Together: [],
-      Gemini: []
-    });
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-// تهيئة التخزين عند تحميل الصفحة
-initializeStorage();
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* التمرير المخصص */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1c1e;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #5AC8FA 0%, #4AB8EA 100%);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #4AB8EA 0%, #3AA8DA 100%);
+}
+
+/* التجاوب */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.8em;
+  }
+
+  .keys-buttons-row {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-control {
+    flex-wrap: wrap;
+  }
+
+  .segment {
+    min-width: 48%;
+  }
+}
