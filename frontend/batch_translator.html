@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 الترجمة الجماعية للفصول</title>
+    <link rel="stylesheet" href="batch_styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>📦 الترجمة الجماعية للفصول</h1>
+        </header>
+
+        <main class="app-main">
+            <!-- قسم اختيار المزود -->
+            <section class="provider-section">
+                <div class="segmented-control">
+                    <button class="segment active" data-provider="Gemini">Gemini</button>
+                    <button class="segment" data-provider="Together">Together</button>
+                    <button class="segment" data-provider="OpenAI">OpenAI</button>
+                    <button class="segment" data-provider="Google">Google</button>
+                </div>
+
+                <!-- معلومات المفاتيح والفصول -->
+                <div id="infoLabel" class="info-display">
+                    <p>🔑 عدد المفاتيح (Gemini): 0</p>
+                    <p>🔑 عدد مفاتيح المسرد: 0</p>
+                    <p>📚 عدد الفصول الإنجليزية: 0</p>
+                    <p>✅ عدد الفصول المترجمة: 0</p>
+                </div>
+            </section>
+
+            <!-- قسم وقت الانتظار -->
+            <section class="settings-section">
+                <label class="input-label">⏱️ وقت الانتظار بين الفصول (ثانية):</label>
+                <input 
+                    type="number" 
+                    id="waitTimeField" 
+                    class="wait-time-input" 
+                    value="30"
+                    min="0"
+                >
+            </section>
+
+            <!-- قسم الخيارات -->
+            <section class="options-section">
+                <div class="option-row">
+                    <label class="switch-container">
+                        <input type="checkbox" id="skipTranslatedSwitch" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                    <span class="option-label">✅ تخطي الفصول المترجمة مسبقًا</span>
+                </div>
+
+                <div class="option-row">
+                    <label class="switch-container">
+                        <input type="checkbox" id="extractTermsSwitch" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                    <span class="option-label">📚 استخراج المصطلحات بعد كل ترجمة (Gemini)</span>
+                </div>
+            </section>
+
+            <!-- قسم مفاتيح المسرد -->
+            <section id="glossaryKeysSection" class="glossary-keys-section">
+                <label class="input-label glossary-label">🔑 مفاتيح Gemini للمسرد:</label>
+                <textarea 
+                    id="glossaryKeysField" 
+                    class="glossary-keys-field" 
+                    placeholder="أدخل مفاتيح Gemini للمسرد (كل مفتاح في سطر منفصل)"
+                    rows="4"
+                ></textarea>
+                <p class="keys-info">(كل مفتاح في سطر منفصل - للمسرد فقط)</p>
+
+                <div class="glossary-keys-buttons">
+                    <button id="saveGlossaryKeysBtn" class="btn btn-save-glossary">💾 حفظ مفاتيح المسرد</button>
+                    <div id="glossaryKeysCount" class="glossary-keys-count">🔑 0 مفتاح للمسرد</div>
+                </div>
+            </section>
+
+            <!-- أزرار التحكم -->
+            <section class="control-section">
+                <button id="startBtn" class="btn btn-start">▶️ بدء الترجمة الجماعية</button>
+                <button id="stopBtn" class="btn btn-stop" disabled>⏹️ إيقاف الترجمة</button>
+            </section>
+
+            <!-- مؤشر التقدم -->
+            <section class="progress-section">
+                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                    <div class="spinner-large"></div>
+                </div>
+                <div id="progressLabel" class="progress-label"></div>
+            </section>
+
+            <!-- سجل الترجمة -->
+            <section class="log-section">
+                <label class="input-label">📋 سجل الترجمة:</label>
+                <textarea 
+                    id="logOutput" 
+                    class="log-output" 
+                    placeholder="سيظهر سجل الترجمة هنا..."
+                    readonly
+                    rows="15"
+                ></textarea>
+            </section>
+        </main>
+    </div>
+
+    <!-- مودال للإشعارات -->
+    <div id="toast" class="toast"></div>
+
+    <!-- مودال للتأكيد -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="confirmTitle">تحذير</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmYes" class="btn btn-confirm-yes">نعم</button>
+                <button id="confirmNo" class="btn btn-confirm-no">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="translator_core.js"></script>
+    <script src="batch_translator.js"></script>
+</body>
+</html>
