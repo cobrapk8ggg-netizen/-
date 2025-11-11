@@ -1,5 +1,6 @@
 // translator_core.js - الوظائف الأساسية للترجمة
 
+
 // ====== إدارة المسرد ======
 
 function loadGlossary() {
