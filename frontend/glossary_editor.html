@@ -3,11 +3,17 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>📚 محرر مسرد زيوس</title>
     <link rel="stylesheet" href="translator.css">
     <link rel="stylesheet" href="glossary_editor.css">
-</head>
+
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="theme-color" content="#002145">
+    
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    </head>
 
 <body>
     <div class="app-container">
@@ -58,6 +64,20 @@
     <script src="translator_core.js"></script>
     
     <script src="glossary_editor.js"></script>
-</body>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('ServiceWorker registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    </body>
 
 </html>
