@@ -104,6 +104,19 @@
 	<script src="translator_core.js"></script>
 	<script src="app.js"></script>
 
-</body>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('ServiceWorker registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    </body>
 
 </html>
