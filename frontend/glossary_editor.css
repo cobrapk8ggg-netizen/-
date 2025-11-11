@@ -1,0 +1,173 @@
+/* glossary_editor.css */
+
+/* تعديلات طفيفة على الأنماط المستوردة لتناسب المحرر */
+body {
+    /* ضمان أن الخلفية تغطي الصفحة دائماً */
+    min-height: 100vh; 
+}
+
+.app-main {
+    /* تحديد عرض أقصى للجسم الرئيسي لسهولة القراءة */
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.text-area {
+    font-size: 14px;
+    height: 50px; /* جعل حقول الإدخال أقصر */
+    min-height: 50px;
+}
+
+.arabic-text {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* تصميم شبكة قسم التحرير */
+.editor-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 15px;
+}
+
+/* جعل حقول الإدخال تمتد على عرض العمود */
+#enTermField {
+    grid-column: 1 / 2;
+}
+#arTermField {
+    grid-column: 2 / 3;
+}
+
+/* جعل الأزرار تمتد على عرض العمود */
+#addBtn {
+    grid-column: 1 / 2;
+    width: 100%;
+    padding: 15px; /* توحيد ارتفاع الأزرار */
+}
+#deleteBtn {
+    grid-column: 2 / 3;
+    width: 100%;
+    padding: 15px;
+}
+
+/* زر الحذف (نمط جديد) */
+.btn-delete {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, #ff5555 0%, #dd1111 100%);
+}
+
+/* تصميم قائمة المصطلحات */
+.glossary-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    max-height: 60vh; /* ارتفاع أقصى مع شريط تمرير */
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.glossary-list li {
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.4);
+    margin: 0; /* إزالة الهوامش لتظهر كجدول */
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.glossary-list li:last-child {
+    border-bottom: none;
+}
+
+.glossary-list li:hover {
+    background: rgba(90, 200, 250, 0.2);
+    transform: translateX(-5px);
+}
+
+/* نمط العنصر المحدد */
+.glossary-list li.selected {
+    background: rgba(90, 200, 250, 0.4);
+    border-left: 4px solid #5AC8FA;
+    transform: translateX(0);
+}
+
+.glossary-list li .term-icon {
+    font-size: 1.2em;
+    flex-shrink: 0;
+}
+
+.glossary-list li .term-text {
+    flex-grow: 1;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    /* كسر الكلمات الطويلة */
+    word-break: break-all; 
+}
+
+.glossary-list li .term-divider {
+    color: #888;
+}
+
+.glossary-list li .term-translation {
+    font-family: 'Geeza Pro', 'Traditional Arabic', serif;
+    font-size: 15px;
+    color: #f1f1f1;
+    word-break: break-all;
+}
+
+/* رسالة عند الفراغ */
+.glossary-list li.empty {
+    text-align: center;
+    color: #888;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    cursor: default;
+}
+.glossary-list li.empty:hover {
+    background: rgba(0, 0, 0, 0.4);
+    transform: translateX(0);
+}
+
+
+/* تخطيط الأجهزة المحمولة */
+@media (max-width: 768px) {
+    .editor-section {
+        grid-template-columns: 1fr; /* عمود واحد */
+        grid-template-rows: auto;
+    }
+
+    /* إعادة ترتيب العناصر لتناسب الجوال */
+    #enTermField {
+        grid-column: 1 / -1;
+    }
+    #arTermField {
+        grid-column: 1 / -1;
+    }
+    #addBtn {
+        grid-column: 1 / -1;
+    }
+    #deleteBtn {
+        grid-column: 1 / -1;
+    }
+
+    /* تعديل تنسيق القائمة للجوال */
+    .glossary-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .glossary-list li .term-divider {
+        display: none;
+    }
+}
