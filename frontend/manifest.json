@@ -1,0 +1,33 @@
+{
+  "name": "tranZEUS",
+  "short_name": "tranZEUS",
+  "description": "تطبيق ترجمة وتحرير الفصول المتقدم من زيوس.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1e1e1e",
+  "theme_color": "#002145",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-152x152.png",
+      "type": "image/png",
+      "sizes": "152x152"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    }
+  ]
+}
