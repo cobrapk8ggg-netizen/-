@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 محرر مسرد زيوس</title>
+    <link rel="stylesheet" href="translator.css">
+    <link rel="stylesheet" href="glossary_editor.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>📚 (ZEUS) إدارة المسرد</h1>
+        </header>
+
+        <main class="app-main">
+
+            <section class="controls-section">
+                <input type="text" id="searchField" class="chapter-input" placeholder="🔍 بحث في المسرد...">
+
+                <label class="input-label" style="margin-top: 15px;">فلترة حسب النوع</label>
+                <div class="segmented-control" id="typeFilter">
+                    <button class="segment active" data-filter="all">الكل</button>
+                    <button class="segment" data-filter="manual">✍️ يدوي</button>
+                    <button class="segment" data-filter="extracted">🤖 مستخرج</button>
+                </div>
+
+                <label class="input-label" style="margin-top: 15px;">فرز حسب</label>
+                <div class="segmented-control" id="sortPicker">
+                    <button class="segment active" data-sort="en">فرز (إنجليزي)</button>
+                    <button class="segment" data-sort="ar">فرز (عربي)</button>
+                </div>
+            </section>
+
+            <section class="editor-section">
+                <input type="text" id="enTermField" class="text-area" placeholder="المصطلح الإنجليزي">
+                <input type="text" id="arTermField" class="text-area arabic-text" placeholder="الترجمة العربية">
+                <button id="addBtn" class="btn btn-save">➕ إضافة / تحديث</button>
+                <button id="deleteBtn" class="btn btn-delete">🗑️ حذف المحدد</button>
+            </section>
+
+            <section class="list-section">
+                <label class="input-label">قائمة المصطلحات (<span id="termsCount">0</span>)</label>
+                <ul id="glossaryList" class="glossary-list">
+                    </ul>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="translator_core.js"></script>
+    
+    <script src="glossary_editor.js"></script>
+</body>
+
+</html>
