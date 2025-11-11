@@ -18,13 +18,19 @@ function saveGlossary(glossary) {
 // ====== إدارة الفصول ======
 
 function listEnglishChapters() {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+  // نقرأ مباشرة من قاعدة بيانات المحرر
+  const chapters = Storage.get('zeusEditorFiles', {}); 
   return Object.keys(chapters).sort();
 }
 
 function readEnglishChapter(filename) {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
-  return chapters[filename] || '';
+  // نقرأ من قاعدة بيانات المحرر
+  const chapters = Storage.get('zeusEditorFiles', {});
+  // نتأكد من أن الملف موجود وأن له محتوى
+  if (chapters[filename] && chapters[filename].content) {
+    return chapters[filename].content;
+  }
+  return '';
 }
 
 function saveEnglishChapter(filename, content) {
@@ -33,20 +39,19 @@ function saveEnglishChapter(filename, content) {
   return Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, chapters);
 }
 
-function listTranslatedChapters() {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-  return Object.keys(chapters).sort();
-}
-
-function readTranslatedChapter(filename) {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-  return chapters[filename] || '';
-}
-
 function saveTranslatedChapter(filename, content) {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-  chapters[filename] = content;
-  return Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
+  const editorFilesKey = 'zeusEditorFiles';
+  // نجلب قاعدة بيانات المحرر
+  const editorFiles = Storage.get(editorFilesKey, {});
+  
+  // نحفظ الملف بالتنسيق الجديد الذي يتضمن تاريخ التعديل
+  editorFiles[filename] = {
+    content: content,
+    modified: Date.now()
+  };
+  
+  // نحفظ قاعدة بيانات المحرر المحدثة
+  return Storage.set(editorFilesKey, editorFiles);
 }
 
 // ====== بناء البرومبت ======
