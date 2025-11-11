@@ -29,6 +29,7 @@ body {
   margin-bottom: 30px;
   box-shadow: 0 10px 40px rgba(0, 33, 69, 0.5);
   animation: slideDown 0.6s ease-out;
+  position: relative; /* <<< (التعديل الأول) أصبح مطلوباً لتثبيت زر العودة */
 }
 
 .app-header h1 {
@@ -465,7 +466,8 @@ section:hover {
 /* التجاوب */
 @media (max-width: 768px) {
   .app-header h1 {
-    font-size: 1.8em;
+    font-size: 1.6em; /* <<< (التعديل الثاني) تم تغيير الحجم من 1.8em */
+    padding: 0 50px; /* <<< (التعديل الثالث) تمت إضافة بادينغ */
   }
 
   .keys-buttons-row {
@@ -480,3 +482,40 @@ section:hover {
     min-width: 48%;
   }
 }
+
+/* === الإضافة الجديدة في نهاية الملف === */
+/* === (تبدأ الإضافة من هنا) === */
+
+/* تصميم زر العودة للرئيسية */
+.back-to-home {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 1.5em; /* حجم الأيقونة */
+    line-height: 1;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.back-to-home:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.05);
+}
+
+/* تعديل زر العودة للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .back-to-home {
+        left: 15px;
+        padding: 8px 12px;
+        font-size: 1.2em;
+    }
+}
+/* === نهاية الإضافة === */
