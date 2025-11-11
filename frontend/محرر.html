@@ -793,13 +793,7 @@
         }
         /* === نهاية الإضافة === */
     </style>
-
-    <link rel="manifest" href="manifest.json">
-    
-    <meta name="theme-color" content="#002145">
-    
-    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-    </head>
+</head>
 <body>
 
     <div class="editor-container" id="editorContainer">
@@ -936,22 +930,25 @@
     <script src="translator_core.js"></script>
     <script>
         // --- الحالة الابتدائية للتطبيق ---
-        const state = {
-            selectedFile: null,
-            selectedFileDB: 'none', // (إضافة جديدة) لتتبع قاعدة البيانات المفتوحة
-            fontSize: 18,
-            lineSpacing: 1.5,
-            fontName: 'Geeza Pro',
-            theme: 'white',
-            interfaceColor: 'white',
-            undoStack: [],
-            redoStack: [],
-            readMode: false,
-            fullscreen: false,
-            // (تم الحذف) لم نعد نستخدم state.files
-            fileSortType: 'modified', 
-            fileSortReversed: false
-        };
+        // --- الحالة الابتدائية للتطبيق ---
+        const state = {
+            selectedFile: null,
+            selectedFileDB: 'none', // (إضافة جديدة) لتتبع قاعدة البيانات المفتوحة
+            fontSize: 18,
+            lineSpacing: 1.5,
+            fontName: 'Geeza Pro',
+            theme: 'white',
+            interfaceColor: 'white',
+            undoStack: [],
+            redoStack: [],
+            readMode: false,
+            fullscreen: false,
+            // (تم الحذف) لم نعد نستخدم state.files
+            fileSortType: 'modified', 
+            fileSortReversed: false,
+            // ==== 💡 إضافة جديدة: لحفظ قسم الفصول المختار ====
+            fileDBType: 'english' 
+        };
 
         // --- جلب العناصر الأساسية ---
         const elements = {
@@ -992,20 +989,22 @@
         // --- تحميل وحفظ الإعدادات والملفات ---
 
         function loadConfig() {
-            const config = localStorage.getItem('zeusEditorConfig');
-            if (config) {
-                const parsed = JSON.parse(config);
-                state.fontSize = parsed.fontSize || 18;
-                state.lineSpacing = parsed.lineSpacing || 1.5;
-                state.fontName = parsed.fontName || 'Geeza Pro';
-                state.theme = parsed.theme || 'white';
-                state.interfaceColor = parsed.interfaceColor || 'white';
-                state.selectedFile = parsed.lastOpenedFile || null;
-                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; // (إضافة جديدة)
-                state.fileSortType = parsed.fileSortType || 'modified';
-                state.fileSortReversed = parsed.fileSortReversed || false;
-                
-                applyTheme(state.theme);
+            const config = localStorage.getItem('zeusEditorConfig');
+            if (config) {
+                const parsed = JSON.parse(config);
+                state.fontSize = parsed.fontSize || 18;
+                state.lineSpacing = parsed.lineSpacing || 1.5;
+                state.fontName = parsed.fontName || 'Geeza Pro';
+                state.theme = parsed.theme || 'white';
+                state.interfaceColor = parsed.interfaceColor || 'white';
+                state.selectedFile = parsed.lastOpenedFile || null;
+                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; // (إضافة جديدة)
+                state.fileSortType = parsed.fileSortType || 'modified';
+                state.fileSortReversed = parsed.fileSortReversed || false;
+                // ==== 💡 إضافة جديدة: تحميل القسم المختار ====
+                state.fileDBType = parsed.fileDBType || 'english';
+                
+                applyTheme(state.theme);
                 applyFont(state.fontName);
                 applyFontSize(state.fontSize);
                 applyLineSpacing(state.lineSpacing);
@@ -1053,19 +1052,21 @@
         }
 
         function saveConfig() {
-            const config = {
-                fontSize: state.fontSize,
-                lineSpacing: state.lineSpacing,
-                fontName: state.fontName,
-                theme: state.theme,
-                interfaceColor: state.interfaceColor,
-                lastOpenedFile: state.selectedFile,
-                lastOpenedFileDB: state.selectedFileDB, // (إضافة جديدة)
-                fileSortType: state.fileSortType,
-                fileSortReversed: state.fileSortReversed
-            };
-            localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
-        }
+            const config = {
+                fontSize: state.fontSize,
+                lineSpacing: state.lineSpacing,
+                fontName: state.fontName,
+                theme: state.theme,
+                interfaceColor: state.interfaceColor,
+                lastOpenedFile: state.selectedFile,
+                lastOpenedFileDB: state.selectedFileDB, // (إضافة جديدة)
+                fileSortType: state.fileSortType,
+                fileSortReversed: state.fileSortReversed,
+                // ==== 💡 إضافة جديدة: حفظ القسم المختار ====
+                fileDBType: state.fileDBType
+            };
+            localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
+        }
 
         // (تم الحذف) دالة saveFiles() لم نعد بحاجة لها
         
@@ -1140,13 +1141,20 @@
             elements.filenameInput.addEventListener('blur', renameFile);
             
             // (إضافة جديدة) التبديل بين قواعد البيانات في نافذة الفتح
-            elements.dbTypeControl.addEventListener('click', (e) => {
-                 if (e.target.classList.contains('segment')) {
-                    document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
-                    updateFileListView(); // تحديث القائمة عند تغيير القسم
-                }
-            });
+            elements.dbTypeControl.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('segment')) {
+                    const selectedDB = e.target.dataset.db; // ==== 💡 إضافة: جلب النوع المختار ====
+                    document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    // ==== 💡 إضافة: تحديث الحالة والحفظ ====
+                    state.fileDBType = selectedDB;
+                    saveConfig(); 
+                    // ===================================
+
+                    updateFileListView(); // تحديث القائمة عند تغيير القسم
+                }
+            });
             
             // ==== ربط أحداث نافذة الملفات ====
             elements.fileSearchInput.addEventListener('input', updateFileListView);
@@ -1491,11 +1499,13 @@
             elements.fileList.classList.remove('selection-active');
             
             // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
-            document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
-                s.classList.toggle('active', s.dataset.db === 'english');
-            });
-            
-            elements.sortControl.querySelectorAll('.segment').forEach(s => {
+            // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
+            // ==== 💡 تعديل: تطبيق القسم المحفوظ من الحالة (state) ====
+            document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
+                s.classList.toggle('active', s.dataset.db === state.fileDBType);
+            });
+            
+            elements.sortControl.querySelectorAll('.segment').forEach(s => {
                 s.classList.toggle('active', s.dataset.sort === state.fileSortType);
             });
             elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
@@ -1811,18 +1821,5 @@
         });
 
     </script>
-<script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('ServiceWorker registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('ServiceWorker registration failed: ', registrationError);
-            });
-        });
-      }
-    </script>
-    </body>
+</body>
 </html>
