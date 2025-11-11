@@ -1,0 +1,576 @@
+/* إعدادات عامة */
+* { /* تم تصحيح المحدد العام */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* تم تصحيح ' */
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* حاوية التطبيق */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* رأس التطبيق */
+.app-header {
+  text-align: center;
+  padding: 30px 0;
+  background: linear-gradient(135deg, #00A86B 0%, #008556 100%);
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 40px rgba(0, 168, 107, 0.5);
+  animation: slideDown 0.6s ease-out;
+}
+
+.app-header h1 {
+  font-size: 2.5em;
+  font-weight: bold;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* الجسم الرئيسي */
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* الأقسام */
+section {
+  background: rgba(44, 44, 46, 0.9);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(68, 68, 68, 0.5);
+  animation: fadeIn 0.5s ease-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* التحكم المجزأ */
+.segmented-control {
+  display: flex;
+  background: #363636;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.segment {
+  flex: 1;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.segment::before {
+  content: ''; /* تم تصحيح ' */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.segment:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.segment.active {
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+}
+
+/* عرض المعلومات */
+.info-display {
+  background: rgba(90, 200, 250, 0.1);
+  border: 1px solid rgba(90, 200, 250, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+}
+
+.info-display p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #5AC8FA;
+  font-weight: 600;
+}
+
+/* التسميات */
+.input-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #5AC8FA;
+  font-size: 14px;
+}
+
+.glossary-label {
+  color: #FFD700;
+}
+
+/* حقل وقت الانتظار */
+.wait-time-input {
+  width: 100%;
+  padding: 15px;
+  background: #000000;
+  border: 1px solid #444444;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace; /* تم تصحيح ' */
+  font-size: 16px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.wait-time-input:focus {
+  outline: none;
+  border-color: #5AC8FA;
+  box-shadow: 0 0 20px rgba(90, 200, 250, 0.3);
+}
+
+/* قسم الخيارات */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+}
+
+.option-label {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* مفتاح التبديل المخصص */
+.switch-container {
+  position: relative;
+  display: inline-block;
+  width: 51px;
+  height: 31px;
+}
+
+.switch-container input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 31px;
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: ""; /* تم تصحيح " */
+  height: 23px;
+  width: 23px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.switch-container input:checked + .switch-slider {
+  background-color: #00A86B;
+}
+
+.switch-container input:checked + .switch-slider:before {
+  transform: translateX(20px);
+}
+
+/* قسم مفاتيح المسرد */
+.glossary-keys-field {
+  width: 100%;
+  padding: 15px;
+  background: #000000;
+  border: 1px solid #FFD700;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace; /* تم تصحيح ' */
+  font-size: 11px;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.glossary-keys-field:focus {
+  outline: none;
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.keys-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888888;
+  text-align: center;
+}
+
+.glossary-keys-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.glossary-keys-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 10px;
+}
+
+/* الأزرار */
+.btn {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.btn::after {
+  content: ''; /* تم تصحيح ' */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::after {
+  width: 400px;
+  height: 400px;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
+
+.btn-save-glossary {
+  background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+  color: #000000;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.btn-start {
+  width: 100%;
+  background: linear-gradient(135deg, #00A86B 0%, #008556 100%);
+  box-shadow: 0 6px 20px rgba(0, 168, 107, 0.6);
+  font-size: 18px;
+  padding: 18px 30px;
+}
+
+.btn-stop {
+  width: 100%;
+  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6);
+  font-size: 18px;
+  padding: 18px 30px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* قسم التحكم */
+.control-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* مؤشر التحميل */
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+}
+
+.spinner-large {
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(90, 200, 250, 0.3);
+  border-top-color: #5AC8FA;
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  animation: spin 1s linear infinite;
+}
+
+/* تسمية التقدم */
+.progress-label {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5AC8FA;
+  line-height: 1.6;
+  min-height: 60px;
+  padding: 10px;
+  background: rgba(90, 200, 250, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(90, 200, 250, 0.3);
+}
+
+/* سجل الترجمة */
+.log-output {
+  width: 100%;
+  padding: 15px;
+  background: #2C2C2E;
+  border: 1px solid #444444;
+  border-radius: 8px;
+  color: #00FF00;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace; /* تم تصحيح ' */
+  font-size: 11px;
+  resize: vertical;
+  min-height: 300px;
+}
+
+/* المودال */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  position: relative;
+  background: #2c2c2e;
+  margin: 15% auto;
+  padding: 0;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.4s ease;
+}
+
+.modal-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid #444444;
+}
+
+.modal-header h2 {
+  font-size: 1.5em;
+  color: #FFD700;
+  text-align: center;
+}
+
+.modal-body {
+  padding: 20px 25px;
+}
+
+.modal-body p {
+  font-size: 16px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.modal-footer {
+  padding: 20px 25px;
+  display: flex;
+  gap: 15px;
+  border-top: 1px solid #444444;
+}
+
+.btn-confirm-yes {
+  flex: 1;
+  background: linear-gradient(135deg, #00A86B 0%, #008556 100%);
+  box-shadow: 0 6px 20px rgba(0, 168, 107, 0.4);
+}
+
+.btn-confirm-no {
+  flex: 1;
+  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+}
+
+/* الإشعارات */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: linear-gradient(135deg, #00ff88 0%, #00cc70 100%);
+  color: #000000;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 2000;
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(255, 68, 68, 0.4);
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(255, 170, 0, 0.4);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #5AC8FA 0%, #4AB8EA 100%);
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(90, 200, 250, 0.4);
+}
+
+/* الرسوم المتحركة */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* التمرير المخصص */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1c1c1e;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00A86B 0%, #008556 100%);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #008556 0%, #006b45 100%);
+}
+
+/* إخفاء عناصر */
+.hidden {
+  display: none !important;
+}
+
+/* التجاوب */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.8em;
+  }
+
+  .glossary-keys-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .segmented-control {
+    flex-wrap: wrap;
+  }
+
+  .segment {
+    min-width: 48%;
+  }
+
+  .modal-content {
+    margin: 30% auto;
+  }
+}
