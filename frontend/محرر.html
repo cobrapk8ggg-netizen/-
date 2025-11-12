@@ -421,6 +421,7 @@
             gap: 10px;
             margin-bottom: 15px;
             flex-shrink: 0;
+            flex-wrap: wrap; /* ==== 💡 إضافة: للسماح بالتفاف الأزرار ==== */
         }
         .modal-btn {
             flex: 1;
@@ -872,6 +873,9 @@
 
             <div class="modal-controls">
                 <button class="modal-btn select" id="selectFilesBtn">تحديد</button>
+                
+                <button class="modal-btn" id="selectAllFilesBtn" style="display: none; background: #007bff; color: white; flex-grow: 1;">تحديد الكل</button>
+                <button class="modal-btn" id="deselectAllFilesBtn" style="display: none; background: #6c757d; color: white; flex-grow: 1;">إلغاء الكل</button>
                 <button class="modal-btn" id="reverseSortBtn" title="عكس الترتيب">🔃</button>
                 <button class="modal-btn danger" id="deleteFilesBtn" style="display: none;">حذف</button>
             </div>
@@ -1001,7 +1005,12 @@
             deleteFilesBtn: document.getElementById('deleteFilesBtn'),
             reverseSortBtn: document.getElementById('reverseSortBtn'),
             sortControl: document.getElementById('sortControl'),
-            fileList: document.getElementById('fileList')
+            fileList: document.getElementById('fileList'),
+            
+            // ==== 💡 إضافة جديدة ====
+            selectAllFilesBtn: document.getElementById('selectAllFilesBtn'),
+            deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn')
+            // ==== نهاية الإضافة ====
         };
         
         // --- حالة نافذة الملفات (للتحديد) ---
@@ -1212,6 +1221,11 @@
             });
             elements.selectFilesBtn.addEventListener('click', toggleSelectMode);
             elements.deleteFilesBtn.addEventListener('click', deleteSelectedFiles);
+            
+            // ==== 💡 إضافة جديدة ====
+            elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
+            elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
+            // ==== نهاية الإضافة ====
         }
 
         // --- دوال تعديل النص ---
@@ -1669,9 +1683,17 @@
                 elements.selectFilesBtn.textContent = 'إلغاء التحديد';
                 elements.deleteFilesBtn.style.display = 'block';
                 elements.deleteFilesBtn.textContent = 'حذف';
+                // ==== 💡 إضافة جديدة ====
+                elements.selectAllFilesBtn.style.display = 'block';
+                elements.deselectAllFilesBtn.style.display = 'block';
+                // ==== نهاية الإضافة ====
             } else {
                 elements.selectFilesBtn.textContent = 'تحديد';
                 elements.deleteFilesBtn.style.display = 'none';
+                // ==== 💡 إضافة جديدة ====
+                elements.selectAllFilesBtn.style.display = 'none';
+                elements.deselectAllFilesBtn.style.display = 'none';
+                // ==== نهاية الإضافة ====
                 fileModalSelectedFiles.clear(); 
                 updateFileListView(); 
             }
@@ -1719,6 +1741,55 @@
             toggleSelectMode(); 
         }
 
+
+        // ==== 💡 إضافة جديدة: تحديد الكل / إلغاء الكل ====
+
+        /**
+         * دالة لتحديد كل الفصول (المفلترة) المعروضة حالياً
+         */
+        function selectAllFiles() {
+            if (!fileModalSelectMode) return;
+
+            const fileItems = elements.fileList.querySelectorAll('.file-item');
+            if (fileItems.length === 0) {
+                showNotification('لا توجد فصول لتحديدها', 'warning');
+                return;
+            }
+            
+            fileItems.forEach(li => {
+                const filename = li.dataset.filename;
+                if (filename && !li.classList.contains('selected')) { // نتأكد أنه غير محدد
+                    fileModalSelectedFiles.add(filename); // إضافة إلى Set
+                    li.classList.add('selected');
+                    const checkbox = li.querySelector('.file-checkbox');
+                    if (checkbox) checkbox.checked = true;
+                }
+            });
+
+            // تحديث زر الحذف
+            elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
+        }
+
+        /**
+         * دالة لإلغاء تحديد كل الفصول
+         */
+        function deselectAllFiles() {
+            if (!fileModalSelectMode) return;
+
+            fileModalSelectedFiles.clear(); // إفراغ Set
+            
+            const fileItems = elements.fileList.querySelectorAll('.file-item');
+            fileItems.forEach(li => {
+                li.classList.remove('selected');
+                const checkbox = li.querySelector('.file-checkbox');
+                if (checkbox) checkbox.checked = false;
+            });
+
+            // تحديث زر الحذف
+            elements.deleteFilesBtn.textContent = 'حذف (0)';
+        }
+        // ==== نهاية الإضافة ====		
+		
         function openColorModal() {
             const colors = {
                 'افتراضي': 'white',
