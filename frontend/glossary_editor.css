@@ -87,6 +87,36 @@ body {
 /* === نهاية الإضافة === */
 
 
+/* === الإضافة الجديدة (تنسيق رأس القائمة) === */
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px; /* مسافة قبل القائمة */
+}
+
+.list-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #5AC8FA; /* استخدام لون من الثيم */
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    font-family: inherit; /* لضمان تطابق الخط */
+}
+
+.btn-link:hover {
+    color: #FFF;
+    text-decoration: underline;
+}
+/* === نهاية الإضافة === */
+
+
 /* تصميم قائمة المصطلحات */
 .glossary-list {
     list-style: none;
@@ -192,6 +222,15 @@ body {
     }
     #importBtn {
         grid-column: 1 / -1;
+    }
+    /* === نهاية الإضافة === */
+
+    /* === الإضافة الجديدة (تنسيق رأس القائمة للجوال) === */
+    .list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        margin-bottom: 10px;
     }
     /* === نهاية الإضافة === */
 
