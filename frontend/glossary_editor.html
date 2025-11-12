@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 محرر مسرد زيوس</title>
     <link rel="stylesheet" href="translator.css">
     <link rel="stylesheet" href="glossary_editor.css">
@@ -47,7 +47,12 @@
                 <input type="text" id="arTermField" class="text-area arabic-text" placeholder="الترجمة العربية">
                 <button id="addBtn" class="btn btn-save">➕ إضافة / تحديث</button>
                 <button id="deleteBtn" class="btn btn-delete">🗑️ حذف المحدد</button>
-            </section>
+
+                <button id="exportBtn" class="btn btn-secondary">📤 تصدير المسرد</button>
+                <button id="importBtn" class="btn btn-secondary">📥 استيراد المسرد</button>
+                
+                <input type="file" id="importFile" accept=".json" style="display:none;">
+                </section>
 
             <section class="list-section">
                 <label class="input-label">قائمة المصطلحات (<span id="termsCount">0</span>)</label>
