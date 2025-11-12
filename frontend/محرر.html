@@ -751,8 +751,9 @@
             flex-shrink: 0; 
         }
         
-        /* === (إضافة جديدة) تصميم نافذة اختيار نوع الاستيراد === */
-        #importTypeModal .modal-content {
+        /* === (تعديل) تصميم نافذة اختيار نوع الاستيراد + التصدير === */
+        #importTypeModal .modal-content,
+        #exportZipModal .modal-content {
             max-height: 50vh;
         }
         .import-options {
@@ -777,20 +778,23 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
-         #importTypeModal.dark-interface .modal-content {
-             /* (إضافة) ضمان تطبيق الواجهة الداكنة */
+         #importTypeModal.dark-interface .modal-content,
+         #exportZipModal.dark-interface .modal-content {
+            /* (إضافة) ضمان تطبيق الواجهة الداكنة */
             background: #222;
             color: #f1f1f1;
-        }
-         #importTypeModal.dark-interface .import-btn {
+         }
+         #importTypeModal.dark-interface .import-btn,
+         #exportZipModal.dark-interface .import-btn {
             background: #333;
             border-color: #555;
             color: #f1f1f1;
-        }
-        #importTypeModal.dark-interface .import-btn:hover {
+         }
+         #importTypeModal.dark-interface .import-btn:hover,
+         #exportZipModal.dark-interface .import-btn:hover {
             background: #004080;
             border-color: #667eea;
-        }
+         }
         /* === نهاية الإضافة === */
     </style>
 </head>
@@ -801,6 +805,7 @@
             <a href="index.html" class="btn btn-icon" title="العودة للرئيسية" style="text-decoration: none;">🏠</a>
             <button class="btn btn-icon" id="openChapterBtn" title="فتح فصل">📂</button>
             <button class="btn btn-icon" id="importFileBtn" title="استيراد ملف">📥</button>
+            <button class="btn btn-icon" id="exportZipBtn" title="تصدير ZIP">📦</button>
             <input type="text" class="filename-input" id="filenameInput" placeholder="لم يتم فتح ملف" disabled>
             <button class="btn btn-icon" id="bgColorBtn" title="لون الواجهة">🎨</button>
             <button class="btn btn-icon" id="readBtn" title="وضع القراءة">👁️</button>
@@ -879,7 +884,7 @@
             </div>
             
             <ul class="file-list" id="fileList">
-                 </ul>
+               </ul>
         </div>
     </div>
 
@@ -924,31 +929,43 @@
             </div>
         </div>
     </div>
+    
+    <div class="modal" id="exportZipModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">تصدير الفصول كـ ZIP</h2>
+                <button class="close-modal" id="closeExportZipModalBtn">×</button>
+            </div>
+            <p style="margin-bottom: 20px; color: #6c757d;">أي الفصول تريد تصديرها؟</p>
+            <div class="import-options"> <button class="import-btn" id="exportEnglishZipBtn">📖 تصدير الفصول الإنجليزية</button>
+                <button class="import-btn" id="exportTranslatedZipBtn">✅ تصدير الفصول المترجمة</button>
+            </div>
+        </div>
+    </div>
     <div class="notification" id="notification"></div>
 
     <script src="config.js"></script>
     <script src="translator_core.js"></script>
     <script>
         // --- الحالة الابتدائية للتطبيق ---
-        // --- الحالة الابتدائية للتطبيق ---
-        const state = {
-            selectedFile: null,
-            selectedFileDB: 'none', // (إضافة جديدة) لتتبع قاعدة البيانات المفتوحة
-            fontSize: 18,
-            lineSpacing: 1.5,
-            fontName: 'Geeza Pro',
-            theme: 'white',
-            interfaceColor: 'white',
-            undoStack: [],
-            redoStack: [],
-            readMode: false,
-            fullscreen: false,
-            // (تم الحذف) لم نعد نستخدم state.files
-            fileSortType: 'modified', 
-            fileSortReversed: false,
+        const state = {
+            selectedFile: null,
+            selectedFileDB: 'none', // (إضافة جديدة) لتتبع قاعدة البيانات المفتوحة
+            fontSize: 18,
+            lineSpacing: 1.5,
+            fontName: 'Geeza Pro',
+            theme: 'white',
+            interfaceColor: 'white',
+            undoStack: [],
+            redoStack: [],
+            readMode: false,
+            fullscreen: false,
+            // (تم الحذف) لم نعد نستخدم state.files
+            fileSortType: 'modified', 
+            fileSortReversed: false,
             // ==== 💡 إضافة جديدة: لحفظ قسم الفصول المختار ====
-            fileDBType: 'english' 
-        };
+            fileDBType: 'english' 
+        };
 
         // --- جلب العناصر الأساسية ---
         const elements = {
@@ -969,6 +986,13 @@
             importEnglishBtn: document.getElementById('importEnglishBtn'),
             importTranslatedBtn: document.getElementById('importTranslatedBtn'),
             
+            // ==== 💡 إضافة جديدة: نافذة التصدير ====
+            exportZipModal: document.getElementById('exportZipModal'),
+            closeExportZipModalBtn: document.getElementById('closeExportZipModalBtn'),
+            exportEnglishZipBtn: document.getElementById('exportEnglishZipBtn'),
+            exportTranslatedZipBtn: document.getElementById('exportTranslatedZipBtn'),
+            // ===================================
+
             // (إضافة جديدة) نافذة فتح الملفات
             dbTypeControl: document.getElementById('dbTypeControl'), 
             fileSearchInput: document.getElementById('fileSearchInput'),
@@ -989,22 +1013,22 @@
         // --- تحميل وحفظ الإعدادات والملفات ---
 
         function loadConfig() {
-            const config = localStorage.getItem('zeusEditorConfig');
-            if (config) {
-                const parsed = JSON.parse(config);
-                state.fontSize = parsed.fontSize || 18;
-                state.lineSpacing = parsed.lineSpacing || 1.5;
-                state.fontName = parsed.fontName || 'Geeza Pro';
-                state.theme = parsed.theme || 'white';
-                state.interfaceColor = parsed.interfaceColor || 'white';
-                state.selectedFile = parsed.lastOpenedFile || null;
-                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; // (إضافة جديدة)
-                state.fileSortType = parsed.fileSortType || 'modified';
-                state.fileSortReversed = parsed.fileSortReversed || false;
+            const config = localStorage.getItem('zeusEditorConfig');
+            if (config) {
+                const parsed = JSON.parse(config);
+                state.fontSize = parsed.fontSize || 18;
+                state.lineSpacing = parsed.lineSpacing || 1.5;
+                state.fontName = parsed.fontName || 'Geeza Pro';
+                state.theme = parsed.theme || 'white';
+                state.interfaceColor = parsed.interfaceColor || 'white';
+                state.selectedFile = parsed.lastOpenedFile || null;
+                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; // (إضافة جديدة)
+                state.fileSortType = parsed.fileSortType || 'modified';
+                state.fileSortReversed = parsed.fileSortReversed || false;
                 // ==== 💡 إضافة جديدة: تحميل القسم المختار ====
-                state.fileDBType = parsed.fileDBType || 'english';
-                
-                applyTheme(state.theme);
+                state.fileDBType = parsed.fileDBType || 'english';
+                
+                applyTheme(state.theme);
                 applyFont(state.fontName);
                 applyFontSize(state.fontSize);
                 applyLineSpacing(state.lineSpacing);
@@ -1020,6 +1044,7 @@
                     elements.stats.classList.remove('dark-interface');
                     allModals.forEach(modal => modal.classList.remove('dark-interface'));
                     elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                    elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
                 } else if (state.interfaceColor === 'black') {
                    document.body.style.background = state.interfaceColor;
                    elements.header.style.background = state.interfaceColor; 
@@ -1027,6 +1052,7 @@
                    elements.stats.classList.add('dark-interface');
                    allModals.forEach(modal => modal.classList.add('dark-interface'));
                    elements.importTypeModal.classList.add('dark-interface'); // (إضافة جديدة)
+                   elements.exportZipModal.classList.add('dark-interface'); // (إضافة جديدة)
                 } else { // للألوان الأخرى (بيج، رمادي)
                    document.body.style.background = state.interfaceColor;
                    elements.header.style.background = state.interfaceColor; 
@@ -1034,6 +1060,7 @@
                    elements.stats.classList.remove('dark-interface');
                    allModals.forEach(modal => modal.classList.remove('dark-interface'));
                    elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                   elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
                 }
             }
             
@@ -1052,21 +1079,21 @@
         }
 
         function saveConfig() {
-            const config = {
-                fontSize: state.fontSize,
-                lineSpacing: state.lineSpacing,
-                fontName: state.fontName,
-                theme: state.theme,
-                interfaceColor: state.interfaceColor,
-                lastOpenedFile: state.selectedFile,
-                lastOpenedFileDB: state.selectedFileDB, // (إضافة جديدة)
-                fileSortType: state.fileSortType,
-                fileSortReversed: state.fileSortReversed,
+            const config = {
+                fontSize: state.fontSize,
+                lineSpacing: state.lineSpacing,
+                fontName: state.fontName,
+                theme: state.theme,
+                interfaceColor: state.interfaceColor,
+                lastOpenedFile: state.selectedFile,
+                lastOpenedFileDB: state.selectedFileDB, // (إضافة جديدة)
+                fileSortType: state.fileSortType,
+                fileSortReversed: state.fileSortReversed,
                 // ==== 💡 إضافة جديدة: حفظ القسم المختار ====
-                fileDBType: state.fileDBType
-            };
-            localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
-        }
+                fileDBType: state.fileDBType
+            };
+            localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
+        }
 
         // (تم الحذف) دالة saveFiles() لم نعد بحاجة لها
         
@@ -1086,6 +1113,7 @@
         function setupEventListeners() {
             document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
             document.getElementById('importFileBtn').addEventListener('click', onImportClick); // (تم التعديل)
+            document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); // ==== 💡 إضافة جديدة ====
             document.getElementById('bgColorBtn').addEventListener('click', openColorModal);
             document.getElementById('readBtn').addEventListener('click', toggleReadMode);
             document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
@@ -1108,6 +1136,12 @@
             elements.closeImportTypeModalBtn.addEventListener('click', () => elements.importTypeModal.classList.remove('show'));
             elements.importEnglishBtn.addEventListener('click', () => startImportProcess('english'));
             elements.importTranslatedBtn.addEventListener('click', () => startImportProcess('translated'));
+
+            // ==== 💡 إضافة جديدة: نافذة التصدير ====
+            elements.closeExportZipModalBtn.addEventListener('click', () => elements.exportZipModal.classList.remove('show'));
+            elements.exportEnglishZipBtn.addEventListener('click', () => startZipExport('english'));
+            elements.exportTranslatedZipBtn.addEventListener('click', () => startZipExport('translated'));
+            // ===================================
 
             // أزرار التحكم المقسمة (خلفية/خط)
             document.getElementById('themeControl').addEventListener('click', (e) => {
@@ -1141,20 +1175,20 @@
             elements.filenameInput.addEventListener('blur', renameFile);
             
             // (إضافة جديدة) التبديل بين قواعد البيانات في نافذة الفتح
-            elements.dbTypeControl.addEventListener('click', (e) => {
-                 if (e.target.classList.contains('segment')) {
+            elements.dbTypeControl.addEventListener('click', (e) => {
+                 if (e.target.classList.contains('segment')) {
                     const selectedDB = e.target.dataset.db; // ==== 💡 إضافة: جلب النوع المختار ====
-                    document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
+                    document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
+                    e.target.classList.add('active');
                     
                     // ==== 💡 إضافة: تحديث الحالة والحفظ ====
                     state.fileDBType = selectedDB;
                     saveConfig(); 
                     // ===================================
 
-                    updateFileListView(); // تحديث القائمة عند تغيير القسم
-                }
-            });
+                    updateFileListView(); // تحديث القائمة عند تغيير القسم
+                }
+            });
             
             // ==== ربط أحداث نافذة الملفات ====
             elements.fileSearchInput.addEventListener('input', updateFileListView);
@@ -1501,11 +1535,11 @@
             // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
             // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
             // ==== 💡 تعديل: تطبيق القسم المحفوظ من الحالة (state) ====
-            document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
-                s.classList.toggle('active', s.dataset.db === state.fileDBType);
-            });
-            
-            elements.sortControl.querySelectorAll('.segment').forEach(s => {
+            document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
+                s.classList.toggle('active', s.dataset.db === state.fileDBType);
+            });
+            
+            elements.sortControl.querySelectorAll('.segment').forEach(s => {
                 s.classList.toggle('active', s.dataset.sort === state.fileSortType);
             });
             elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
@@ -1716,6 +1750,7 @@
                         elements.stats.classList.remove('dark-interface');
                         allModals.forEach(modal => modal.classList.remove('dark-interface'));
                         elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                        elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
                     } else if (value === 'black') {
                         document.body.style.background = value;
                         elements.header.style.background = value;
@@ -1723,6 +1758,7 @@
                         elements.stats.classList.add('dark-interface');
                         allModals.forEach(modal => modal.classList.add('dark-interface'));
                         elements.importTypeModal.classList.add('dark-interface'); // (إضافة جديدة)
+                        elements.exportZipModal.classList.add('dark-interface'); // (إضافة جديدة)
                     } else { // للألوان الأخرى
                         document.body.style.background = value;
                         elements.header.style.background = value;
@@ -1730,6 +1766,7 @@
                         elements.stats.classList.remove('dark-interface');
                         allModals.forEach(modal => modal.classList.remove('dark-interface'));
                         elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                        elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
                     }
                     saveConfig();
                     showNotification(`✅ تم تغيير لون الواجهة إلى ${name}`);
@@ -1778,6 +1815,96 @@
                  closeFindReplaceModal();
             }
         }
+
+        // ==== 💡 الدوال الجديدة لتصدير ZIP ====
+        
+        /**
+         * يفتح نافذة اختيار نوع التصدير
+         */
+        function openExportZipModal() {
+            // تطبيق الواجهة الداكنة إذا كانت مفعلة
+            elements.exportZipModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
+            elements.exportZipModal.classList.add('show');
+        }
+
+        /**
+         * يبدأ عملية تجميع وتصدير الفصول كملف ZIP
+         * @param {string} dbType - 'english' أو 'translated'
+         */
+        async function startZipExport(dbType) {
+            elements.exportZipModal.classList.remove('show'); // 1. إغلاق النافذة
+
+            if (typeof JSZip === 'undefined') {
+                showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
+                return;
+            }
+
+            // 2. تحديد قاعدة البيانات والأسماء
+            const isEnglish = (dbType === 'english');
+            const dbKey = isEnglish ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const folderName = isEnglish ? 'English_Chapters' : 'Arabic_Chapters';
+            const zipFileName = isEnglish ? 'English_Chapters.zip' : 'Arabic_Chapters.zip';
+            const dbFriendlyName = isEnglish ? 'الإنجليزية' : 'المترجمة';
+
+            showNotification(`جاري تحضير ملفات ${dbFriendlyName} للضغط...`, 'warning');
+
+            try {
+                // 3. جلب جميع الملفات من التخزين
+                const files = Storage.get(dbKey, {});
+                const fileNames = Object.keys(files);
+
+                if (fileNames.length === 0) {
+                    showNotification(`لا توجد فصول في "${dbFriendlyName}" لتصديرها.`, 'error');
+                    return;
+                }
+
+                // 4. إنشاء مجلد ZIP
+                const zip = new JSZip();
+                const folder = zip.folder(folderName); // إنشاء مجلد داخل الـ ZIP
+
+                // 5. إضافة كل ملف إلى المجلد
+                for (const filename of fileNames) {
+                    const fileData = files[filename];
+                    const content = fileData.content || ""; // جلب المحتوى
+                    folder.file(filename, content); // إضافة الملف (الاسم، المحتوى)
+                }
+
+                // 6. توليد ملف الـ ZIP
+                showNotification('جاري ضغط الملفات...', 'warning');
+                const zipContent = await zip.generateAsync({ 
+                    type: "blob",
+                    compression: "DEFLATE", // نوع الضغط
+                    compressionOptions: {
+                        level: 9 // أعلى مستوى ضغط
+                    }
+                });
+
+                // 7. تفعيل التحميل
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(zipContent);
+                link.download = zipFileName;
+                document.body.appendChild(link); // يجب إضافته أولاً
+                link.click(); // بدء التحميل
+
+                // 💡 *** التعديل الأهم ***
+                // لا تقم بإزالة الرابط أو إلغاء الـ URL فوراً
+                // انتظر قليلاً لضمان بدء التحميل الفعلي
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href); // تنظيف الذاكرة
+                }, 100); // 100 ميلي ثانية يجب أن تكون كافية
+                
+                // (تم نقل الإشعار من هنا)
+                // كان الإشعار يظهر قبل بدء التحميل الفعلي،
+                // الآن سيظهر الكود ويتبعه التحميل
+                showNotification(`✅ تم تصدير ${fileNames.length} فصول بنجاح!`, 'success');
+
+            } catch (err) {
+                console.error("خطأ أثناء إنشاء ملف ZIP:", err);
+                showNotification('❌ حدث خطأ أثناء إنشاء ملف ZIP.', 'error');
+            }
+        }
+        // ======================================
 
 
         // --- دوال أوضاع العرض (قراءة، شاشة كاملة) ---
