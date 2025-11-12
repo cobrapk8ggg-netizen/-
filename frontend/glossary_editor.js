@@ -6,8 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. تعريف الحالة (State) العالمية ---
     let glossaryData = { manual_terms: {}, extracted_terms: {} };
     let currentDisplayedPairs = []; // لحفظ القائمة المفلترة حالياً
-    let selectedKey = null;
-    let selectedSource = null;
+    
+    // === تعديل: تغيير الحالة من تتبع عنصر واحد إلى مصفوفة عناصر ===
+    let selectedItems = []; // (يستبدل selectedKey و selectedSource)
+    // === نهاية التعديل ===
 
     // --- 2. جلب عناصر الصفحة (DOM Elements) ---
     const searchField = document.getElementById('searchField');
@@ -26,6 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const importBtn = document.getElementById('importBtn');
     const importFile = document.getElementById('importFile');
     // === نهاية الإضافة ===
+
+    // === إضافة جديدة (أزرار تحديد الكل) ===
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    // === نهاية الإضافة ===
+
 
     // --- 3. دوال مساعدة (Helpers) ---
 
@@ -54,17 +62,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * دالة لتنظيف حقول الإدخال وإلغاء التحديد
+     * === تعديل: دالة لتنظيف حقول الإدخال وإلغاء التحديد ===
+     * تم تعديلها لتعمل مع مصفوفة التحديد
      */
     function clearSelection() {
-        selectedKey = null;
-        selectedSource = null;
+        selectedItems = []; // إفراغ مصفوفة التحديد
         enTermField.value = '';
         arTermField.value = '';
+        
+        // استعادة النص الأصلي للحقول
+        enTermField.placeholder = "المصطلح الإنجليزي";
+        arTermField.placeholder = "الترجمة العربية";
 
         // إلغاء التحديد بصرياً
         glossaryList.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
+
+        // إخفاء زر إلغاء التحديد
+        deselectAllBtn.style.display = 'none';
     }
+    // === نهاية التعديل ===
 
     // --- 4. الدوال الأساسية (Core Logic) ---
 
@@ -117,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * (مطابق لـ tableview_cell_for_row في بايثون)
-     * يقوم برسم القائمة في HTML
+     * === تعديل: يقوم برسم القائمة في HTML مع تذكر التحديد ===
      */
     function renderList(pairs) {
         glossaryList.innerHTML = ''; // إفراغ القائمة
@@ -145,35 +161,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="term-translation">${p.value}</span>
             `;
 
+            // === تعديل: التحقق إذا كان العنصر محدداً في الحالة ===
+            const isSelected = selectedItems.findIndex(item => item.key === p.key && item.source === p.source) > -1;
+            if (isSelected) {
+                li.classList.add('selected');
+            }
+            // === نهاية التعديل ===
+
             // ربط حدث الضغط (مطابق لـ tableview_did_select)
             li.addEventListener('click', () => handleSelection(li, p));
             
             glossaryList.appendChild(li);
         });
     }
+    // === نهاية التعديل ===
+
 
     /**
+     * === تعديل: دالة التعامل مع التحديد (لوحة مفاتيح أو لمس) ===
      * (مطابق لـ tableview_did_select في بايثون)
-     * يتم استدعاؤه عند الضغط على عنصر
+     * يتم استدعاؤه عند الضغط على عنصر - الآن يدعم التحديد المتعدد
      */
     function handleSelection(liElement, termData) {
-        // إزالة التحديد السابق
-        glossaryList.querySelectorAll('li').forEach(li => li.classList.remove('selected'));
-        // إضافة التحديد الحالي
-        liElement.classList.add('selected');
+        // البحث عن العنصر في مصفوفة التحديد
+        const findIndex = selectedItems.findIndex(item => item.key === termData.key && item.source === termData.source);
 
-        // ملء الحقول (مطابق لـ `self.tf_en.text = ...`)
-        selectedKey = termData.key;
-        selectedSource = termData.source;
-        enTermField.value = termData.key;
-        arTermField.value = termData.value;
+        if (findIndex > -1) {
+            // --- موجود مسبقاً: قم بإلغاء تحديده ---
+            selectedItems.splice(findIndex, 1); // إزالته من المصفوفة
+            liElement.classList.remove('selected'); // إزالة النمط
+        } else {
+            // --- غير موجود: قم بإضافته للتحديد ---
+            selectedItems.push(termData); // إضافته للمصفوفة
+            liElement.classList.add('selected'); // إضافة النمط
+        }
+
+        // --- تحديث واجهة حقول الإدخال بناءً على عدد العناصر المحددة ---
+        if (selectedItems.length === 1) {
+            // عنصر واحد فقط محدد: املأ الحقول لتمكين التعديل
+            const item = selectedItems[0];
+            enTermField.value = item.key;
+            arTermField.value = item.value;
+            enTermField.placeholder = "المصطلح الإنجليزي";
+            arTermField.placeholder = "الترجمة العربية";
+
+        } else if (selectedItems.length > 1) {
+            // أكثر من عنصر محدد: اعرض العدد (لا يمكن التعديل المتعدد)
+            enTermField.value = '';
+            arTermField.value = '';
+            enTermField.placeholder = `${selectedItems.length} مصطلحات محددة`;
+            arTermField.placeholder = `(لا يمكن التعديل المتعدد)`;
+
+        } else {
+            // صفر عناصر محددة: قم بالتنظيف
+            clearSelection();
+        }
+        
+        // إظهار أو إخفاء زر "إلغاء تحديد الكل"
+        deselectAllBtn.style.display = selectedItems.length > 0 ? 'inline' : 'none';
     }
+    // === نهاية التعديل ===
+
 
     /**
      * (مطابق لـ add_or_update في بايثون)
      * إضافة أو تحديث مصطلح
+     * (لا تحتاج هذه الدالة لتعديل لأنها تعتمد على الحقول النصية)
      */
     function addOrUpdate() {
+        // === تعديل: إذا كان هناك تحديد متعدد، لا تقم بالإضافة ===
+        if (selectedItems.length > 1) {
+            showToast('⚠️ لا يمكن الإضافة أثناء تحديد عناصر متعددة', 'warning');
+            return;
+        }
+        // === نهاية التعديل ===
+
         const key = enTermField.value.trim();
         const val = arTermField.value.trim();
 
@@ -203,40 +265,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * === تعديل: حذف المصطلحات المحددة (يدعم الحذف المتعدد) ===
      * (مطابق لـ delete_selected في بايثون)
-     * حذف مصطلح محدد
      */
     function deleteSelected() {
-        if (!selectedKey || !selectedSource) {
-            showToast('⚠️ يرجى تحديد مصطلح للحذف', 'error');
+        // إذا لم يتم تحديد أي عناصر
+        if (selectedItems.length === 0) {
+            showToast('⚠️ يرجى تحديد مصطلح واحد على الأقل للحذف', 'error');
             return;
         }
 
-        let deleted = false;
-        
-        // (مطابق لـ `if self.selected_source == 'manual' ...`)
-        if (selectedSource === 'manual' && glossaryData.manual_terms[selectedKey]) {
-            delete glossaryData.manual_terms[selectedKey];
-            deleted = true;
-        } 
-        // (مطابق لـ `elif self.selected_source == 'extracted' ...`)
-        else if (selectedSource === 'extracted' && glossaryData.extracted_terms[selectedKey]) {
-            delete glossaryData.extracted_terms[selectedKey];
-            deleted = true;
-        }
+        let itemsDeleted = 0;
 
-        if (deleted) {
+        // المرور على كل العناصر المحددة وحذفها
+        selectedItems.forEach(item => {
+            const { key, source } = item;
+            
+            if (source === 'manual' && glossaryData.manual_terms[key]) {
+                delete glossaryData.manual_terms[key];
+                itemsDeleted++;
+            } 
+            else if (source === 'extracted' && glossaryData.extracted_terms[key]) {
+                delete glossaryData.extracted_terms[key];
+                itemsDeleted++;
+            }
+        });
+
+
+        if (itemsDeleted > 0) {
             // --- الربط مع المترجم ---
-            // استخدام الدالة المستوردة من translator_core.js للحفظ
             saveGlossary(glossaryData); 
             
-            clearSelection();
+            clearSelection(); // هذا سيقوم بإفراغ selectedItems = []
             filterAndSortGlossary(); // إعادة تحميل القائمة
-            showToast('✅ تم حذف المصطلح', 'success');
+            showToast(`✅ تم حذف ${itemsDeleted} مصطلح (مصطلحات)`, 'success');
         } else {
-            showToast('⚠️ لم يتم العثور على المصطلح للحذف', 'error');
+            showToast('⚠️ لم يتم العثور على المصطلحات المحددة للحذف', 'error');
         }
     }
+    // === نهاية التعديل ===
+
 
     // === الإضافة الجديدة هنا ===
 
@@ -371,6 +439,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     importFile.addEventListener('change', handleFileImport);
+    // === نهاية الإضافة ===
+
+    // === إضافة جديدة (أحداث أزرار تحديد الكل) ===
+    selectAllBtn.addEventListener('click', () => {
+        // تحديد الكل من القائمة *المعروضة حالياً* فقط
+        selectedItems = [...currentDisplayedPairs];
+        
+        // تطبيق النمط البصري على كل العناصر
+        glossaryList.querySelectorAll('li').forEach(li => {
+            if (!li.classList.contains('empty')) {
+                li.classList.add('selected');
+            }
+        });
+
+        // تحديث واجهة الحقول
+        if (selectedItems.length > 0) {
+            enTermField.value = '';
+            arTermField.value = '';
+            enTermField.placeholder = `${selectedItems.length} مصطلحات محددة`;
+            arTermField.placeholder = `(لا يمكن التعديل المتعدد)`;
+            deselectAllBtn.style.display = 'inline';
+        }
+    });
+
+    deselectAllBtn.addEventListener('click', () => {
+        clearSelection(); // هذه الدالة تقوم بكل التنظيف المطلوب
+    });
     // === نهاية الإضافة ===
 
 
