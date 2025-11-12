@@ -21,6 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const termsCount = document.getElementById('termsCount');
     const toast = document.getElementById('toast');
 
+    // === الإضافة الجديدة هنا ===
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    // === نهاية الإضافة ===
+
     // --- 3. دوال مساعدة (Helpers) ---
 
     /**
@@ -232,6 +238,90 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // === الإضافة الجديدة هنا ===
+
+    /**
+     * دالة لتصدير المسرد كملف JSON
+     */
+    function exportGlossary() {
+        try {
+            // استخدام glossaryData الحالية في الذاكرة
+            const jsonString = JSON.stringify(glossaryData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'zeus_glossary.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('📤 تم تصدير المسرد بنجاح', 'success');
+
+        } catch (error) {
+            console.error('Export failed:', error);
+            showToast('⚠️ فشل تصدير المسرد', 'error');
+        }
+    }
+
+    /**
+     * دالة لمعالجة الملف المستورد
+     */
+    function handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.type !== 'application/json') {
+            showToast('⚠️ يرجى اختيار ملف .json فقط', 'error');
+            event.target.value = null; // إعادة تعيين الحقل
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            try {
+                const content = e.target.result;
+                const importedData = JSON.parse(content);
+
+                // التحقق من صحة هيكل الملف
+                if (importedData && typeof importedData.manual_terms === 'object' && typeof importedData.extracted_terms === 'object') {
+                    
+                    // اعتماد البيانات الجديدة (استبدال كامل)
+                    glossaryData = importedData;
+
+                    // --- الربط مع المترجم ---
+                    saveGlossary(glossaryData); // حفظ البيانات الجديدة في التخزين
+
+                    // إعادة تحميل الواجهة بالبيانات الجديدة
+                    clearSelection();
+                    filterAndSortGlossary(); 
+                    
+                    showToast('📥 تم استيراد المسرد بنجاح', 'success');
+
+                } else {
+                    showToast('⚠️ ملف JSON غير صالح أو لا يحتوي على الهيكل المطلوب (manual_terms, extracted_terms)', 'error');
+                }
+            } catch (error) {
+                console.error('Import parse failed:', error);
+                showToast('⚠️ فشل في قراءة ملف JSON', 'error');
+            } finally {
+                event.target.value = null; // إعادة تعيين الحقل للسماح بإعادة الرفع
+            }
+        };
+
+        reader.onerror = () => {
+            showToast('⚠️ فشل في قراءة الملف', 'error');
+            event.target.value = null; // إعادة تعيين الحقل
+        };
+
+        reader.readAsText(file);
+    }
+
+    // === نهاية الإضافة ===
+
     /**
      * (مطابق لـ reload في بايثون)
      * تحميل البيانات الأولية عند فتح الصفحة
@@ -271,6 +361,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // أزرار التحكم
     addBtn.addEventListener('click', addOrUpdate);
     deleteBtn.addEventListener('click', deleteSelected);
+
+    // === الإضافة الجديدة هنا ===
+    // أزرار الاستيراد والتصدير
+    exportBtn.addEventListener('click', exportGlossary);
+    
+    importBtn.addEventListener('click', () => {
+        importFile.click(); // فتح نافذة اختيار الملف
+    });
+
+    importFile.addEventListener('change', handleFileImport);
+    // === نهاية الإضافة ===
+
 
     // --- 6. بدء التشغيل ---
     initialLoad();
