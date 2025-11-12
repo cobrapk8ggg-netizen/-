@@ -55,7 +55,13 @@
                 </section>
 
             <section class="list-section">
-                <label class="input-label">قائمة المصطلحات (<span id="termsCount">0</span>)</label>
+                <div class="list-header">
+                    <label class="input-label">قائمة المصطلحات (<span id="termsCount">0</span>)</label>
+                    <div class="list-controls">
+                        <button id="selectAllBtn" class="btn-link">تحديد الكل</button>
+                        <button id="deselectAllBtn" class="btn-link" style="display: none;">إلغاء تحديد الكل</button>
+                    </div>
+                </div>
                 <ul id="glossaryList" class="glossary-list">
                     </ul>
             </section>
