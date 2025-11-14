@@ -1,0 +1,80 @@
+/* settings_styles.css */
+
+/* تعديلات طفيفة على الأنماط المستوردة من translator.css */
+body {
+    min-height: 100vh;
+}
+
+.app-main {
+    max-width: 900px; /* جعل المحتوى أعرض قليلاً ليناسب المحررات */
+    margin: 0 auto;
+}
+
+/* تصميم محرر البرومبت (Textarea) */
+.prompt-editor {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace; /* خط مبرمجين */
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 400px; /* ارتفاع كبير */
+    background: #000000;
+    border: 1px solid #444444;
+    color: #f1f1f1;
+}
+
+.prompt-editor:focus {
+    border-color: #5AC8FA;
+    box-shadow: 0 0 20px rgba(90, 200, 250, 0.3);
+}
+
+/* معلومات البرومبت */
+.prompt-info {
+    font-size: 14px;
+    color: #cccccc;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    line-height: 1.7;
+    border: 1px solid #444;
+}
+
+.prompt-info code {
+    background: #000;
+    color: #FFD700; /* لون أصفر للمتغيرات */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-weight: bold;
+}
+
+/* تصميم أزرار التحكم */
+.controls-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* زر استعادة الافتراضيات (باستخدام نمط الحذف) */
+.btn-restore {
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+}
+
+.btn-restore:hover {
+    background: linear-gradient(135deg, #ff5555 0%, #dd1111 100%);
+}
+
+/* تصميم الأجهزة المحمولة */
+@media (max-width: 768px) {
+    .app-main {
+        max-width: 100%;
+    }
+
+    .controls-section {
+        grid-template-columns: 1fr; /* عمود واحد */
+    }
+
+    .prompt-editor {
+        min-height: 300px; /* تقليل الارتفاع للجوال */
+    }
+}
