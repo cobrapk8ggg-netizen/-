@@ -9,7 +9,11 @@ const CONFIG = {
     ENGLISH_CHAPTERS: 'zeus_translator_english_chapters',
     TRANSLATED_CHAPTERS: 'zeus_translator_translated_chapters',
     CURRENT_KEY_INDICES: 'zeus_translator_key_indices',
-    FAILED_KEYS: 'zeus_translator_failed_keys'
+    FAILED_KEYS: 'zeus_translator_failed_keys',
+    // --- الإضافة الجديدة هنا ---
+    PROMPT_TRANSLATE: 'zeus_translator_prompt_translate',
+    PROMPT_EXTRACT: 'zeus_translator_prompt_extract'
+    // --- نهاية الإضافة ---
   },
 
   // المهلة الزمنية للطلبات (بالثواني)
@@ -126,6 +130,8 @@ function initializeStorage() {
       Gemini: []
     });
   }
+  
+  // (ملاحظة: لا نقوم بتهيئة البرومبت هنا، سيعتمد على القيمة الافتراضية null)
 }
 
 // تهيئة التخزين عند تحميل الصفحة
