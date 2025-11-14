@@ -1,5 +1,5 @@
 // اسم ذاكرة التخزين المؤقت
-const CACHE_NAME = 'tranZEUS-cache-v1';
+const CACHE_NAME = 'tranZEUS-cache-v1'; // يمكنك تغيير الإصدار إلى v2 إذا أردت فرض تحديث
 
 // قائمة الملفات الأساسية لتخزينها مؤقتًا
 const urlsToCache = [
@@ -9,6 +9,7 @@ const urlsToCache = [
   'محرر.html',
   'glossary_editor.html',
   'batch_translator.html',
+  'settings.html', // <-- إضافة جديدة
   'manifest.json',
   
   // ملفات CSS
@@ -16,6 +17,7 @@ const urlsToCache = [
   'translator.css',
   'batch_styles.css',
   'glossary_editor.css',
+  'settings_styles.css', // <-- إضافة جديدة
   
   // ملفات JS
   'config.js',
@@ -23,6 +25,7 @@ const urlsToCache = [
   'app.js',
   'batch_translator.js',
   'glossary_editor.js',
+  'settings.js', // <-- إضافة جديدة
   'jszip.min.js',
 
   // الأيقونات
@@ -37,7 +40,11 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
+        // استخدام addAll لضمان تحميل كل شيء
         return cache.addAll(urlsToCache);
+      })
+      .catch(err => {
+          console.error('Failed to cache urlsToCache:', err);
       })
   );
 });
@@ -49,6 +56,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName); // <-- إضافة سطر توضيحي
             return caches.delete(cacheName);
           }
         })
@@ -66,8 +74,13 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
+        
         // وإلا، اطلبه من الشبكة
-        return fetch(event.request);
+        // (ملاحظة: هذا يعني أن التطبيق سيعمل دون اتصال للملفات المخزنة فقط)
+        return fetch(event.request).catch(err => {
+            console.error('Fetch failed:', err, event.request.url);
+            // يمكنك إرجاع صفحة خطأ مخصصة هنا إذا أردت
+        });
       }
     )
   );
