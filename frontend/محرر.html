@@ -888,6 +888,7 @@
         <div class="header" id="header">
             <button class="btn btn-icon" id="fullscreenBtn" title="ملء الشاشة">🔳</button>
             <button class="btn btn-icon" id="openChapterBtn" title="فتح فصل">📂</button>
+            <button class="btn btn-icon" id="newChapterBtn" title="فصل جديد">➕</button>
             <button class="btn btn-icon" id="importFileBtn" title="استيراد ملف">📥</button>
             <button class="btn btn-icon" id="exportZipBtn" title="تصدير ZIP">📦</button>
             <input type="text" class="filename-input" id="filenameInput" placeholder="لم يتم فتح ملف" disabled>
@@ -1081,6 +1082,9 @@
             stats: document.getElementById('stats'),
             exitBtn: document.getElementById('exitBtn'),
             filenameInput: document.getElementById('filenameInput'),
+            // === 💡 (إضافة) جلب الزر الجديد ===
+            newChapterBtn: document.getElementById('newChapterBtn'),
+            // ===================================
             fileModal: document.getElementById('fileModal'),
             colorModal: document.getElementById('colorModal'),
             findReplaceModal: document.getElementById('findReplaceModal'), 
@@ -1201,6 +1205,9 @@
 
         function setupEventListeners() {
             document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
+            // === 💡 (إضافة) ربط الزر الجديد ===
+            document.getElementById('newChapterBtn').addEventListener('click', createNewChapter);
+            // ===================================
             document.getElementById('importFileBtn').addEventListener('click', onImportClick); 
             document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); 
             document.getElementById('bgColorBtn').addEventListener('click', openColorModal);
@@ -1539,9 +1546,9 @@
                     return;
                 }
                 const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
-                if (saveLocation && saveLocation.toLowerCase().includes('انجليزي')) {
+                if (saveLocation && (saveLocation.toLowerCase().includes('انجليزي') || saveLocation.toLowerCase().includes('english'))) {
                     dbType = 'english';
-                } else if (saveLocation && saveLocation.toLowerCase().includes('مترجم')) {
+                } else if (saveLocation && (saveLocation.toLowerCase().includes('مترجم') || saveLocation.toLowerCase().includes('translated'))) {
                     dbType = 'translated';
                 } else {
                     showNotification('تم إلغاء الحفظ. يجب تحديد الموقع.', 'warning');
@@ -1558,8 +1565,13 @@
             const contentToSave = cmEditor.getValue();
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
             const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
-            const currentContentInDB = readFunction(filename);
-            if (currentContentInDB && currentContentInDB === contentToSave) {
+            
+            // تعديل طفيف: نحتاج إلى التحقق من `files` مباشرة
+            const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const files = Storage.get(dbKey, {});
+            const currentContentInDB = (files[filename]) ? files[filename].content : null;
+
+            if (currentContentInDB !== null && currentContentInDB === contentToSave) {
                  if (!isAutoSave) {
                      showNotification('لا توجد تغييرات لحفظها', 'warning');
                  }
@@ -1576,14 +1588,60 @@
             }
         }
 
+        // --- 💡 (إضافة) دالة لإنشاء فصل جديد ---
+        function createNewChapter() {
+            // 1. طلب اسم الملف
+            let filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
+            if (!filename) {
+                showNotification('تم إلغاء الإنشاء', 'warning');
+                return;
+            }
+
+            // 2. طلب مكان الحفظ
+            const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
+            let dbType;
+            if (saveLocation && (saveLocation.toLowerCase().includes('انجليزي') || saveLocation.toLowerCase().includes('english'))) {
+                dbType = 'english';
+            } else if (saveLocation && (saveLocation.toLowerCase().includes('مترجم') || saveLocation.toLowerCase().includes('translated'))) {
+                dbType = 'translated';
+            } else {
+                showNotification('تم إلغاء الإنشاء. يجب تحديد الموقع.', 'warning');
+                return;
+            }
+
+            // 3. التحقق من امتداد الملف
+            if (!filename.toLowerCase().endsWith('.txt')) {
+                filename += '.txt';
+            }
+
+            // 4. التحقق من وجود الملف مسبقاً (الطريقة الصحيحة)
+            const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const files = Storage.get(dbKey, {});
+            if (files[filename]) {
+                showNotification(`❌ ملف بالاسم '${filename}' موجود بالفعل.`, 'error');
+                return;
+            }
+
+            // 5. إنشاء الملف (فارغ)
+            const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
+            saveFunction(filename, ""); // حفظ محتوى فارغ
+
+            // 6. تحميل الملف الجديد في المحرر
+            loadFile(filename, dbType);
+            showNotification(`✅ تم إنشاء ${filename} بنجاح`, 'success');
+        }
+
         function loadFile(filename, dbType) {
             if (!cmEditor) {
                 showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
                 return;
             }
-            const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
-            const fileContent = readFunction(filename);
-            if (fileContent !== null && fileContent !== undefined) {
+            // 💡 تعديل: استخدام الطريقة الصحيحة للتحقق من وجود المحتوى
+            const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const files = Storage.get(dbKey, {});
+            
+            if (files[filename] !== undefined) {
+                const fileContent = files[filename].content || ""; // جلب المحتوى (أو سلسلة فارغة إذا كان فارغاً)
                 cmEditor.setValue(fileContent);
                 state.selectedFile = filename;
                 state.selectedFileDB = dbType; 
@@ -1592,11 +1650,15 @@
                 cmEditor.clearHistory();
                 updateStats();
                 saveConfig();
-                showNotification(`📖 تم فتح ${filename}`);
+                if (fileContent === "") {
+                    showNotification(`📄 تم فتح ${filename} (ملف جديد)`);
+                } else {
+                    showNotification(`📖 تم فتح ${filename}`);
+                }
                 cmEditor.scrollTo(0, 0); 
                 cmEditor.setCursor(0, 0); 
             } else {
-                showNotification(`خطأ: لم يتم العثور على محتوى الملف ${filename}`, 'error');
+                showNotification(`خطأ: لم يتم العثور على الملف ${filename}`, 'error');
             }
         }
 
