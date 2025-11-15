@@ -245,7 +245,7 @@
 
         .CodeMirror {
             flex-grow: 1; 
-            height: auto;  
+            height: auto; 
             font-family: 'Geeza Pro', 'Arial', sans-serif; 
             font-size: 18px; 
             line-height: 1.5; 
@@ -420,6 +420,7 @@
             overflow-y: auto; 
             max-height: 35vh; 
             padding-right: 10px; 
+            overflow-x: hidden; /* يمنع ظهور شريط التمرير الأفقي */
         }
         
         /* ==== 💡 (إضافة) تنسيق قوائم الاختيار الجديدة ==== */
@@ -1164,7 +1165,7 @@
                     } else {
                          // هذا احتياطي، سيضمن التحميل بعد تهيئة cmEditor
                         document.addEventListener('DOMContentLoaded', () => {
-                             loadFile(state.selectedFile, state.selectedFileDB);
+                            loadFile(state.selectedFile, state.selectedFileDB);
                         });
                     }
                 } else {
@@ -1270,24 +1271,24 @@
             
             elements.dbTypeControl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('segment')) {
-                    const selectedDB = e.target.dataset.db; 
-                    document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
-                    state.fileDBType = selectedDB;
-                    saveConfig(); 
-                    updateFileListView(); 
-                }
+                     const selectedDB = e.target.dataset.db; 
+                     document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
+                     e.target.classList.add('active');
+                     state.fileDBType = selectedDB;
+                     saveConfig(); 
+                     updateFileListView(); 
+                 }
             });
             
             elements.fileSearchInput.addEventListener('input', updateFileListView);
             elements.sortControl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('segment')) {
-                    document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
-                    e.target.classList.add('active');
-                    state.fileSortType = e.target.dataset.sort;
-                    saveConfig();
-                    updateFileListView(); 
-                }
+                     document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
+                     e.target.classList.add('active');
+                     state.fileSortType = e.target.dataset.sort;
+                     saveConfig();
+                     updateFileListView(); 
+                 }
             });
             elements.reverseSortBtn.addEventListener('click', () => {
                 state.fileSortReversed = !state.fileSortReversed; 
@@ -1740,7 +1741,8 @@
                 li.className = 'file-item';
                 li.dataset.filename = file.name; 
                 const sizeKB = (file.content.length / 1024).toFixed(2);
-                const modifiedDate = new Date(file.modified).toLocaleString('ar-SA');
+                // const modifiedDate = new Date(file.modified).toLocaleString('ar-SA'); // <-- السطر القديم
+                const modifiedDate = formatFileDate(file.modified); // <-- 💡 (تعديل) السطر الجديد
                 const isChecked = fileModalSelectedFiles.has(file.name);
                 if (isChecked) {
                     li.classList.add('selected');
@@ -1859,6 +1861,42 @@
             });
             elements.deleteFilesBtn.textContent = 'حذف (0)';
         }
+
+        // --- 💡 (إضافة) دالة تنسيق التاريخ والوقت ---
+        function formatFileDate(timestamp) {
+            const now = new Date();
+            const fileDate = new Date(timestamp);
+            const diffMs = now - fileDate;
+            const diffHours = diffMs / (1000 * 60 * 60);
+
+            // e.g., "2:16 PM"
+            const timeFormat = fileDate.toLocaleString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            }); 
+
+            if (diffHours < 24) {
+                // Rule 1: Less than 24 hours ago
+                return timeFormat;
+            } else {
+                // Rule 2: 24 hours or more ago
+                const diffDays = Math.floor(diffHours / 24);
+                
+                // Check if it was *actually* "Yesterday"
+                const yesterday = new Date(now);
+                yesterday.setDate(now.getDate() - 1);
+                
+                if (yesterday.toDateString() === fileDate.toDateString()) {
+                     return `Yesterday at ${timeFormat}`;
+                } else {
+                    // More than 1 day ago. Just show the date.
+                    // e.g., "11/14/2025"
+                    return fileDate.toLocaleDateString('en-US');
+                }
+            }
+        }
+        // --- نهاية الإضافة ---
 		
         function applyInterfaceColor(value) {
             state.interfaceColor = value;
@@ -2096,7 +2134,7 @@
             
             cmEditor = CodeMirror.fromTextArea(elements.textEditor, {
                 lineNumbers: false,
-                direction: "rtl",   
+                direction: "rtl",  
                 lineWrapping: true, 
                 readOnly: state.readMode,
             });
