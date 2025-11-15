@@ -120,9 +120,37 @@ const DEFAULT_EXTRACTION_PROMPT = `
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- جلب عناصر الصفحة ---
-    const translatePromptField = document.getElementById('translatePromptField');
-    const extractPromptField = document.getElementById('extractPromptField');
+    // --- 💡 (إضافة) تعريف وضع التلوين للمتغيرات ---
+    const variableOverlay = {
+        token: function(stream) {
+            if (stream.match(/\{\{.*?\}\}/)) {
+                return "variable-template"; // اسم الكلاس في CSS
+            }
+            while (stream.next() != null && !stream.match(/\{\{.*?\}\}/, false)) {}
+            return null;
+        }
+    };
+
+    // --- 💡 (تعديل) تهيئة محررات CodeMirror ---
+    const cmTranslateEditor = CodeMirror.fromTextArea(document.getElementById('translatePromptField'), {
+        lineNumbers: true,
+        lineWrapping: true,
+        mode: "text/plain", // الوضع الأساسي
+        direction: "rtl", // <-- ✅✅ (إضافة) تفعيل اتجاه اليمين لليسار
+        styleActiveLine: true // <-- ✅ (إضافة) تظليل السطر النشط
+    });
+    cmTranslateEditor.addOverlay(variableOverlay); // إضافة تلوين المتغيرات
+
+    const cmExtractEditor = CodeMirror.fromTextArea(document.getElementById('extractPromptField'), {
+        lineNumbers: true,
+        lineWrapping: true,
+        mode: "text/plain",
+        direction: "rtl", // <-- ✅✅ (إضافة) تفعيل اتجاه اليمين لليسار
+        styleActiveLine: true // <-- ✅ (إضافة) تظليل السطر النشط
+    });
+    cmExtractEditor.addOverlay(variableOverlay); // إضافة تلوين المتغيرات
+    
+    // --- جلب باقي العناصر ---
     const saveBtn = document.getElementById('saveBtn');
     const restoreBtn = document.getElementById('restoreBtn');
     const toast = document.getElementById('toast');
@@ -140,19 +168,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    // --- تحميل البرومبت عند فتح الصفحة ---
+    // --- 💡 (تعديل) تحميل البرومبت في CodeMirror ---
     function loadPrompts() {
         const savedTranslate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE);
         const savedExtract = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT);
 
-        translatePromptField.value = savedTranslate || DEFAULT_TRANSLATION_PROMPT;
-        extractPromptField.value = savedExtract || DEFAULT_EXTRACTION_PROMPT;
+        cmTranslateEditor.setValue(savedTranslate || DEFAULT_TRANSLATION_PROMPT);
+        cmExtractEditor.setValue(savedExtract || DEFAULT_EXTRACTION_PROMPT);
     }
 
-    // --- حفظ الإعدادات ---
+    // --- 💡 (تعديل) حفظ الإعدادات من CodeMirror ---
     function savePrompts() {
-        const newTranslate = translatePromptField.value;
-        const newExtract = extractPromptField.value;
+        const newTranslate = cmTranslateEditor.getValue();
+        const newExtract = cmExtractEditor.getValue();
 
         // التحقق من وجود المتغيرات المطلوبة
         if (!newTranslate.includes('{{TEXT}}') || !newTranslate.includes('{{GLOSSARY}}')) {
@@ -172,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('✅ تم حفظ الإعدادات بنجاح!', 'success');
     }
 
-    // --- استعادة الافتراضيات ---
+    // --- 💡 (تعديل) استعادة الافتراضيات لـ CodeMirror ---
     function restoreDefaults() {
         if (confirm('هل أنت متأكد من رغبتك في استعادة الإعدادات الافتراضية؟ سيتم حذف أي تعديلات قمت بها.')) {
             // إزالة المفاتيح المحفوظة
