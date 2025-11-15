@@ -8,6 +8,8 @@
     <script src="jszip.min.js"></script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.css">
     <style>
         * {
             margin: 0;
@@ -59,8 +61,8 @@
             transition: all 0.3s ease;
             flex-shrink: 0;
             padding-top: calc(15px + env(safe-area-inset-top, 0px));
-            flex-wrap: wrap; /* ==== تعديل: للسماح بالالتفاف ==== */
-            justify-content: center; /* ==== تعديل: لتوسيط العناصر عند الالتفاف ==== */
+            flex-wrap: wrap; 
+            justify-content: center; 
         }
 
         .header.hidden {
@@ -69,14 +71,14 @@
 
         .btn {
             background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4); /* ==== تعديل: تحسين بصري ==== */
+            border: 1px solid rgba(255, 255, 255, 0.4); 
             color: white;
             padding: 10px 15px;
             border-radius: 10px;
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(8px); /* ==== تعديل: تحسين بصري ==== */
+            backdrop-filter: blur(8px); 
         }
 
         .btn:hover {
@@ -94,21 +96,21 @@
             height: 40px;
             padding: 8px;
             font-size: 20px;
-            flex-shrink: 0; /* ==== إضافة: ضمان عدم انكماش الأزرار ==== */
+            flex-shrink: 0; 
         }
 
         .filename-input {
             flex: 1;
             padding: 10px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.4); /* ==== تعديل: تحسين بصري ==== */
+            border: 1px solid rgba(255, 255, 255, 0.4); 
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
             font-size: 16px;
             text-align: center;
-            backdrop-filter: blur(8px); /* ==== تعديل: تحسين بصري ==== */
+            backdrop-filter: blur(8px); 
             transition: all 0.3s ease;
-            min-width: 150px; /* ==== تعديل: منع الانكماش الزائد ==== */
+            min-width: 150px; 
         }
 
         .filename-input::placeholder {
@@ -129,7 +131,7 @@
         .controls {
             padding: 20px;
             background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef; /* ==== تعديل: تحسين بصري ==== */
+            border-bottom: 1px solid #e9ecef; 
             transition: all 0.3s ease;
             flex-shrink: 0;
         }
@@ -181,7 +183,7 @@
         .btn-group {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap; /* ==== تعديل: السماح بالتفاف أزرار التحكم ==== */
+            flex-wrap: wrap; 
         }
 
         .control-btn {
@@ -204,20 +206,26 @@
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
+        /* ==== 💡 (إضافة) تنسيق الزر النشط ==== */
+        .control-btn.active {
+             background: #3a4bb7;
+             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        /* ===================================== */
+
+
         .control-btn.save {
-            /* ==== تعديل: تحسين بصري لزر الحفظ ==== */
             background: linear-gradient(135deg, #28a745, #218838);
             font-weight: bold;
             font-size: 16px;
         }
         
-        /* ==== إضافة: لجعل زر الحفظ بعرض كامل (بدل الـ inline style) ==== */
         .control-row .control-btn.save {
              width: 100%;
         }
 
         .control-btn.save:hover {
-            background: linear-gradient(135deg, #218838, #1e7e34); /* ==== تعديل: تحسين بصري ==== */
+            background: linear-gradient(135deg, #218838, #1e7e34); 
         }
 
         .text-editor {
@@ -228,12 +236,7 @@
             width: 100%;
             resize: none;
             font-family: 'Geeza Pro', 'Arial', sans-serif;
-            /* ==== 💡 (تم التعديل) حذف السطر المسبب للبطء ==== */
-            /* transition: all 0.3s ease; */ 
-            
-            /* ==== 💡 (إضافة) تحديد الخصائص المطلوب تحريكها فقط ==== */
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-
             direction: rtl;
             flex-grow: 1; 
             padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
@@ -242,12 +245,22 @@
 
         /* ==== 💡 (إضافة) تنسيق محرر CodeMirror ==== */
         .CodeMirror {
-            flex-grow: 1; /* لجعل المحرر يملأ المساحة المتبقية */
-            height: auto;  /* يتمدد ليملأ flex-grow */
-            font-family: 'Geeza Pro', 'Arial', sans-serif; /* توحيد الخط */
-            font-size: 18px; /* توحيد حجم الخط */
-            line-height: 1.5; /* توحيد تباعد الأسطر */
+            flex-grow: 1; 
+            height: auto;  
+            font-family: 'Geeza Pro', 'Arial', sans-serif; 
+            font-size: 18px; 
+            line-height: 1.5; 
             direction: rtl;
+        }
+        /* ======================================= */
+
+        /* ==== 💡 (إضافة) تنسيق النصوص الملونة ==== */
+        .cm-system-text {
+            color: #007bff; /* لون أزرق */
+            font-weight: bold;
+        }
+        .cm-dialogue-text {
+            color: #28a745; /* لون أخضر */
         }
         /* ======================================= */
 
@@ -264,7 +277,7 @@
         .stats {
             padding: 15px 20px;
             background: #f8f9fa;
-            border-top: 1px solid #e9ecef; /* ==== تعديل: تحسين بصري ==== */
+            border-top: 1px solid #e9ecef; 
             color: #6c757d;
             font-size: 12px;
             text-align: right;
@@ -277,12 +290,11 @@
             display: none;
         }
         
-        /* ==== CSS جديد: للواجهة الداكنة (الأشرطة) ==== */
         .controls.dark-interface,
         .stats.dark-interface {
             background: #222; 
             color: #f1f1f1; 
-            border-color: #333; /* ==== تعديل: تحسين بصري ==== */
+            border-color: #333; 
         }
         .controls.dark-interface .segmented-control {
             background: #444;
@@ -293,7 +305,6 @@
         .controls.dark-interface .segment:hover:not(.active) {
             background: #555;
         }
-        /* ================================ */
 
 
         .exit-btn {
@@ -357,7 +368,7 @@
             padding: 20px;
             max-width: 500px;
             width: 90%;
-            max-height: 80vh; /* ==== تعديل: زيادة الارتفاع الأقصى قليلاً ==== */
+            max-height: 80vh; 
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: slideUp 0.3s ease;
             display: flex; 
@@ -411,7 +422,6 @@
         .file-list {
             list-style: none;
             overflow-y: auto; 
-            /* === (تعديل) تم تقليل الارتفاع لإفساح المجال للأقسام === */
             max-height: 35vh; 
             padding-right: 10px; 
         }
@@ -439,7 +449,7 @@
             gap: 10px;
             margin-bottom: 15px;
             flex-shrink: 0;
-            flex-wrap: wrap; /* ==== 💡 إضافة: للسماح بالتفاف الأزرار ==== */
+            flex-wrap: wrap; 
         }
         .modal-btn {
             flex: 1;
@@ -463,9 +473,8 @@
              background: #c82333;
         }
         
-        /* ==== CSS جديد: زر عكس الترتيب ==== */
         #reverseSortBtn {
-            flex: 0 0 50px; /* لا يتمدد */
+            flex: 0 0 50px; 
             background: #e9ecef;
             color: #495057;
             font-size: 18px;
@@ -561,7 +570,6 @@
             border-color: #667eea;
         }
         
-        /* ==== CSS جديد: للواجهة الداكنة (النوافذ) ==== */
         .modal-content.dark-interface {
             background: #222;
             color: #f1f1f1;
@@ -629,7 +637,7 @@
             color: #888;
         }
         .modal-content.dark-interface .file-list.selection-active .file-item.selected {
-            background: #004080; /* لون أزرق داكن للتحديد */
+            background: #004080; 
             color: white;
             border-color: #667eea;
         }
@@ -639,7 +647,29 @@
          .modal-content.dark-interface .color-item {
              border: 2px solid #555;
          }
-        /* ================================ */
+        
+        .CodeMirror-dialog {
+            background: #333;
+            color: #f1f1f1;
+            border-color: #555;
+        }
+        .CodeMirror-dialog input {
+            background: #222;
+            color: #f1f1f1;
+            border: 1px solid #555;
+        }
+
+        /* ==== 💡 (إضافة) تنسيق CSS لنافذة الاستبدال الداكنة ==== */
+        .modal-content.dark-interface .input-group label {
+             color: #ccc;
+        }
+        .modal-content.dark-interface .input-group input {
+            background: #333;
+            color: #f1f1f1;
+            border-color: #555;
+        }
+        /* ================================================== */
+
 
         .input-group {
             margin-bottom: 15px;
@@ -689,21 +719,17 @@
 
             .btn-group {
                 width: 100%;
-                /* ==== تعديل: توسيط مجموعة الأزرار ==== */
                 justify-content: center;
             }
 
             .control-btn {
-                /* ==== تعديل: منع التمدد وجعل الحجم تلقائي ==== */
-                flex: 0 1 auto; /* هذا هو التغيير الأهم: لا تنمو، تقلص، الحجم تلقائي */
+                flex: 0 1 auto; 
             }
             
-            /* ==== تعديل: منع زر الحفظ من التمدد ==== */
             .control-row .control-btn.save {
-                 width: auto; /* إلغاء العرض 100% */
+                 width: auto; 
             }
             
-            /* ==== تعديل: تصغير عناصر الشريط العلوي ==== */
             .header .btn-icon {
                  width: 36px;
                  height: 36px;
@@ -715,7 +741,6 @@
                  font-size: 14px;
                  min-width: 100px;
             }
-            /* ======================================= */
 
             .editor-container {
                  height: 100%; 
@@ -770,7 +795,6 @@
             flex-shrink: 0; 
         }
         
-        /* === (تعديل) تصميم نافذة اختيار نوع الاستيراد + التصدير === */
         #importTypeModal .modal-content,
         #exportZipModal .modal-content {
             max-height: 50vh;
@@ -799,7 +823,6 @@
         }
          #importTypeModal.dark-interface .modal-content,
          #exportZipModal.dark-interface .modal-content {
-            /* (إضافة) ضمان تطبيق الواجهة الداكنة */
             background: #222;
             color: #f1f1f1;
          }
@@ -814,7 +837,6 @@
             background: #004080;
             border-color: #667eea;
          }
-        /* === نهاية الإضافة === */
     </style>
 </head>
 <body>
@@ -856,8 +878,10 @@
                     <button class="control-btn" id="spacingBtn">⤴️ تباعد</button>
                     <button class="control-btn" id="undoBtn">↩️</button>
                     <button class="control-btn" id="redoBtn">↪️</button>
-                    <button class="control-btn" id="findReplaceBtn">🔍</button>
-                </div>
+                    <button class="control-btn" id="cmFindBtn">🔍 بحث</button>
+                    <button class="control-btn" id="cmReplaceBtn">🔄 استبدال</button>
+                    <button class="control-btn" id="toggleDialogueBtn">🎨 حوار</button>
+                    </div>
             </div>
 
             <div class="control-row">
@@ -924,7 +948,7 @@
     <div class="modal" id="findReplaceModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">بحث واستبدال</h2>
+                <h2 class="modal-title">بحث واستبدال الكل</h2>
                 <button class="close-modal" id="closeFindReplaceModalBtn">×</button>
             </div>
             <div class="input-group">
@@ -938,7 +962,6 @@
             <button class="control-btn save" id="performFindReplaceBtn" style="width: 100%;">✅ استبدال الكل</button>
         </div>
     </div>
-
     <div class="modal" id="importTypeModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -971,26 +994,29 @@
     <script src="translator_core.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/mode/overlay.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/searchcursor.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/search.js"></script>
     <script>
         // --- الحالة الابتدائية للتطبيق ---
         const state = {
             selectedFile: null,
-            selectedFileDB: 'none', // (إضافة جديدة) لتتبع قاعدة البيانات المفتوحة
+            selectedFileDB: 'none', 
             fontSize: 18,
             lineSpacing: 1.5,
             fontName: 'Geeza Pro',
             theme: 'white',
             interfaceColor: 'white',
-            // ==== 💡 (تم الحذف) حذف نظام الـ Undo القديم ====
-            // undoStack: [],
-            // redoStack: [],
             readMode: false,
             fullscreen: false,
-            // (تم الحذف) لم نعد نستخدم state.files
             fileSortType: 'modified', 
             fileSortReversed: false,
-            // ==== 💡 إضافة جديدة: لحفظ قسم الفصول المختار ====
-            fileDBType: 'english' 
+            fileDBType: 'english',
+            
+            // ==== 💡 (إضافة) حالة تلوين الحوارات ====
+            dialogueHighlighting: false
         };
 
         // --- جلب العناصر الأساسية ---
@@ -1004,22 +1030,20 @@
             filenameInput: document.getElementById('filenameInput'),
             fileModal: document.getElementById('fileModal'),
             colorModal: document.getElementById('colorModal'),
-            findReplaceModal: document.getElementById('findReplaceModal'),
             
-            // (إضافة جديدة) نافذة الاستيراد
+            // ==== 💡 (إعادة إضافة) نافذة البحث القديمة ====
+            findReplaceModal: document.getElementById('findReplaceModal'), 
+            
             importTypeModal: document.getElementById('importTypeModal'),
             closeImportTypeModalBtn: document.getElementById('closeImportTypeModalBtn'),
             importEnglishBtn: document.getElementById('importEnglishBtn'),
             importTranslatedBtn: document.getElementById('importTranslatedBtn'),
             
-            // ==== 💡 إضافة جديدة: نافذة التصدير ====
             exportZipModal: document.getElementById('exportZipModal'),
             closeExportZipModalBtn: document.getElementById('closeExportZipModalBtn'),
             exportEnglishZipBtn: document.getElementById('exportEnglishZipBtn'),
             exportTranslatedZipBtn: document.getElementById('exportTranslatedZipBtn'),
-            // ===================================
 
-            // (إضافة جديدة) نافذة فتح الملفات
             dbTypeControl: document.getElementById('dbTypeControl'), 
             fileSearchInput: document.getElementById('fileSearchInput'),
             selectFilesBtn: document.getElementById('selectFilesBtn'),
@@ -1028,10 +1052,11 @@
             sortControl: document.getElementById('sortControl'),
             fileList: document.getElementById('fileList'),
             
-            // ==== 💡 إضافة جديدة ====
             selectAllFilesBtn: document.getElementById('selectAllFilesBtn'),
-            deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn')
-            // ==== نهاية الإضافة ====
+            deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn'),
+            
+            // ==== 💡 (إضافة) زر تلوين الحوارات ====
+            toggleDialogueBtn: document.getElementById('toggleDialogueBtn')
         };
         
         // ==== 💡 (إضافة) متغير لحفظ محرر CodeMirror ====
@@ -1041,7 +1066,6 @@
         // --- حالة نافذة الملفات (للتحديد) ---
         let fileModalSelectMode = false;
         let fileModalSelectedFiles = new Set();
-        // (إضافة جديدة) لتخزين ملفات الاستيراد مؤقتاً
         let pendingImportFiles = null;
 
 
@@ -1057,10 +1081,9 @@
                 state.theme = parsed.theme || 'white';
                 state.interfaceColor = parsed.interfaceColor || 'white';
                 state.selectedFile = parsed.lastOpenedFile || null;
-                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; // (إضافة جديدة)
+                state.selectedFileDB = parsed.lastOpenedFileDB || 'none'; 
                 state.fileSortType = parsed.fileSortType || 'modified';
                 state.fileSortReversed = parsed.fileSortReversed || false;
-                // ==== 💡 إضافة جديدة: تحميل القسم المختار ====
                 state.fileDBType = parsed.fileDBType || 'english';
                 
                 applyTheme(state.theme);
@@ -1068,7 +1091,6 @@
                 applyFontSize(state.fontSize);
                 applyLineSpacing(state.lineSpacing);
                 
-                // ==== تم تعديل هذا القسم (لتطبيق الثيم على كل شيء) ====
                 const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                 const allModals = document.querySelectorAll('.modal-content');
 
@@ -1078,38 +1100,32 @@
                     elements.controls.classList.remove('dark-interface');
                     elements.stats.classList.remove('dark-interface');
                     allModals.forEach(modal => modal.classList.remove('dark-interface'));
-                    elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
-                    elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                    elements.importTypeModal.classList.remove('dark-interface'); 
+                    elements.exportZipModal.classList.remove('dark-interface'); 
                 } else if (state.interfaceColor === 'black') {
                    document.body.style.background = state.interfaceColor;
                    elements.header.style.background = state.interfaceColor; 
                    elements.controls.classList.add('dark-interface');
                    elements.stats.classList.add('dark-interface');
                    allModals.forEach(modal => modal.classList.add('dark-interface'));
-                   elements.importTypeModal.classList.add('dark-interface'); // (إضافة جديدة)
-                   elements.exportZipModal.classList.add('dark-interface'); // (إضافة جديدة)
-                } else { // للألوان الأخرى (بيج، رمادي)
+                   elements.importTypeModal.classList.add('dark-interface'); 
+                   elements.exportZipModal.classList.add('dark-interface'); 
+                } else { 
                    document.body.style.background = state.interfaceColor;
                    elements.header.style.background = state.interfaceColor; 
                    elements.controls.classList.remove('dark-interface'); 
                    elements.stats.classList.remove('dark-interface');
                    allModals.forEach(modal => modal.classList.remove('dark-interface'));
-                   elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
-                   elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                   elements.importTypeModal.classList.remove('dark-interface'); 
+                   elements.exportZipModal.classList.remove('dark-interface'); 
                 }
             }
             
-            // (تم الحذف) لا داعي لتحميل state.files
-            
-            // (تم التعديل) تحميل الملف الأخير من قاعدة البيانات الصحيحة
             if (state.selectedFile && state.selectedFileDB !== 'none') {
-                // التأكد من وجود دوال القراءة قبل محاولة التحميل
                 if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
-                    // ==== 💡 (تعديل) التأكد من أن cmEditor جاهز ====
                     if (cmEditor) {
                         loadFile(state.selectedFile, state.selectedFileDB);
                     } else {
-                        // إذا لم يكن جاهزاً، انتظر حدث DOMContentLoaded
                         document.addEventListener('DOMContentLoaded', () => {
                              loadFile(state.selectedFile, state.selectedFileDB);
                         });
@@ -1118,7 +1134,6 @@
                     console.error("لم يتم تحميل دوال قراءة الفصول (translator_core.js)!");
                 }
             }
-            // ==== 💡 (تعديل) استدعاء updateStats فقط إذا كان cmEditor جاهزاً ====
             if (cmEditor) {
                 updateStats();
             }
@@ -1132,16 +1147,14 @@
                 theme: state.theme,
                 interfaceColor: state.interfaceColor,
                 lastOpenedFile: state.selectedFile,
-                lastOpenedFileDB: state.selectedFileDB, // (إضافة جديدة)
+                lastOpenedFileDB: state.selectedFileDB, 
                 fileSortType: state.fileSortType,
                 fileSortReversed: state.fileSortReversed,
-                // ==== 💡 إضافة جديدة: حفظ القسم المختار ====
                 fileDBType: state.fileDBType
             };
             localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
         }
 
-        // (تم الحذف) دالة saveFiles() لم نعد بحاجة لها
         
         // --- نظام الإشعارات ---
 
@@ -1158,8 +1171,8 @@
 
         function setupEventListeners() {
             document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
-            document.getElementById('importFileBtn').addEventListener('click', onImportClick); // (تم التعديل)
-            document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); // ==== 💡 إضافة جديدة ====
+            document.getElementById('importFileBtn').addEventListener('click', onImportClick); 
+            document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); 
             document.getElementById('bgColorBtn').addEventListener('click', openColorModal);
             document.getElementById('readBtn').addEventListener('click', toggleReadMode);
             document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
@@ -1170,24 +1183,33 @@
             document.getElementById('spacingBtn').addEventListener('click', toggleSpacing);
             document.getElementById('undoBtn').addEventListener('click', undo);
             document.getElementById('redoBtn').addEventListener('click', redo);
-            document.getElementById('findReplaceBtn').addEventListener('click', openFindReplaceModal);
+            
+            // ==== 💡 (تعديل) ربط أزرار البحث والتلوين الجديدة ====
+            document.getElementById('cmFindBtn').addEventListener('click', () => {
+                cmEditor.execCommand("find"); // (هذا يفتح نافذة البحث فقط)
+            });
+            
+            // (إضافة) ربط زر الاستبدال بالنافذة القديمة
+            document.getElementById('cmReplaceBtn').addEventListener('click', openFindReplaceModal); 
+            
+            document.getElementById('toggleDialogueBtn').addEventListener('click', toggleDialogueHighlighting);
+            
+            // (إعادة إضافة) ربط أزرار نافذة الاستبدال
+            document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
+            document.getElementById('performFindReplaceBtn').addEventListener('click', performFindReplace);
+            // ==================================================
 
             // إغلاق النوافذ
             document.getElementById('closeFileModalBtn').addEventListener('click', closeFileModal);
             document.getElementById('closeColorModalBtn').addEventListener('click', closeColorModal);
-            document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
-            document.getElementById('performFindReplaceBtn').addEventListener('click', performFindReplace);
-
-            // (إضافة جديدة) نافذة الاستيراد
+            
             elements.closeImportTypeModalBtn.addEventListener('click', () => elements.importTypeModal.classList.remove('show'));
             elements.importEnglishBtn.addEventListener('click', () => startImportProcess('english'));
             elements.importTranslatedBtn.addEventListener('click', () => startImportProcess('translated'));
 
-            // ==== 💡 إضافة جديدة: نافذة التصدير ====
             elements.closeExportZipModalBtn.addEventListener('click', () => elements.exportZipModal.classList.remove('show'));
             elements.exportEnglishZipBtn.addEventListener('click', () => startZipExport('english'));
             elements.exportTranslatedZipBtn.addEventListener('click', () => startZipExport('translated'));
-            // ===================================
 
             // أزرار التحكم المقسمة (خلفية/خط)
             document.getElementById('themeControl').addEventListener('click', (e) => {
@@ -1206,65 +1228,50 @@
                 }
             });
 
-            // ==== 💡 (تم الحذف) مستمع الإدخال القديم المسبب للبطء ====
-            // elements.textEditor.addEventListener('input', ...);
-
             elements.filenameInput.addEventListener('change', renameFile);
             elements.filenameInput.addEventListener('blur', renameFile);
             
-            // (إضافة جديدة) التبديل بين قواعد البيانات في نافذة الفتح
             elements.dbTypeControl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('segment')) {
-                    const selectedDB = e.target.dataset.db; // ==== 💡 إضافة: جلب النوع المختار ====
+                    const selectedDB = e.target.dataset.db; 
                     document.querySelectorAll('#dbTypeControl .segment').forEach(s => s.classList.remove('active'));
                     e.target.classList.add('active');
-                    
-                    // ==== 💡 إضافة: تحديث الحالة والحفظ ====
                     state.fileDBType = selectedDB;
                     saveConfig(); 
-                    // ===================================
-
-                    updateFileListView(); // تحديث القائمة عند تغيير القسم
+                    updateFileListView(); 
                 }
             });
             
-            // ==== ربط أحداث نافذة الملفات ====
             elements.fileSearchInput.addEventListener('input', updateFileListView);
             elements.sortControl.addEventListener('click', (e) => {
                  if (e.target.classList.contains('segment')) {
                     document.querySelectorAll('#sortControl .segment').forEach(s => s.classList.remove('active'));
                     e.target.classList.add('active');
-                    // ==== حفظ اختيار الفرز ====
                     state.fileSortType = e.target.dataset.sort;
                     saveConfig();
-                    updateFileListView(); // تحديث العرض عند تغيير الفرز
+                    updateFileListView(); 
                 }
             });
-            // ==== ربط زر عكس الترتيب ====
             elements.reverseSortBtn.addEventListener('click', () => {
-                state.fileSortReversed = !state.fileSortReversed; // عكس الحالة
-                elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed); // تحديث شكل الزر
-                saveConfig(); // حفظ الحالة
-                updateFileListView(); // إعادة الفرز
+                state.fileSortReversed = !state.fileSortReversed; 
+                elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed); 
+                saveConfig(); 
+                updateFileListView(); 
             });
             elements.selectFilesBtn.addEventListener('click', toggleSelectMode);
             elements.deleteFilesBtn.addEventListener('click', deleteSelectedFiles);
             
-            // ==== 💡 إضافة جديدة ====
             elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
             elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
-            // ==== نهاية الإضافة ====
         }
 
         // --- دوال تعديل النص ---
 
         function applyTheme(theme) {
-            // ==== 💡 (تعديل) تطبيق الثيم على CodeMirror ====
             if (cmEditor) {
                 const cmWrapper = cmEditor.getWrapperElement();
                 cmWrapper.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
                 cmWrapper.classList.add(`theme-${theme}`);
-                // تطبيق الثيم على الـ textarea الأصلية أيضاً (للحفاظ على الحالة)
                 elements.textEditor.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
                 elements.textEditor.classList.add(`theme-${theme}`);
             }
@@ -1273,17 +1280,15 @@
         }
 
         function applyFont(fontName) {
-            // ==== 💡 (تعديل) تطبيق الخط على CodeMirror ====
             if (cmEditor) {
                 cmEditor.getWrapperElement().style.fontFamily = fontName;
-                cmEditor.refresh(); // تحديث المحرر ليعرض الخط الجديد
+                cmEditor.refresh(); 
             }
             state.fontName = fontName;
             saveConfig();
         }
 
         function applyFontSize(size) {
-            // ==== 💡 (تعديل) تطبيق حجم الخط على CodeMirror ====
             if (cmEditor) {
                 cmEditor.getWrapperElement().style.fontSize = `${size}px`;
                 cmEditor.refresh();
@@ -1293,7 +1298,6 @@
         }
 
         function applyLineSpacing(spacing) {
-            // ==== 💡 (تعديل) تطبيق تباعد الأسطر على CodeMirror ====
             if (cmEditor) {
                 cmEditor.getWrapperElement().style.lineHeight = spacing;
                 cmEditor.refresh();
@@ -1321,7 +1325,6 @@
             showNotification(`تم ضبط التباعد إلى ${newSpacing}`, 'warning');
         }
 
-        // ==== 💡 (تعديل) دوال Undo/Redo الآن تستدعي CodeMirror ====
         function undo() {
             if (cmEditor) {
                 cmEditor.undo();
@@ -1337,33 +1340,83 @@
                 showNotification('لا يوجد شيء للإعادة', 'warning');
             }
         }
-        // ================================================
 
         function updateStats() {
-            // ==== 💡 (تعديل) القراءة من CodeMirror ====
-            if (!cmEditor) return; // التأكد أن المحرر جاهز
+            if (!cmEditor) return; 
             
             const text = cmEditor.getValue();
             const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-            const lineCount = cmEditor.lineCount(); // <-- طريقة CodeMirror لحساب الأسطر
+            const lineCount = cmEditor.lineCount(); 
             elements.stats.textContent = `📝 ${wordCount} كلمة | 📏 ${lineCount} سطر`;
         }
+        
+        // ==== 💡 (إضافة) دوال التلوين الجديدة ====
+
+        // تعريف تلوين "كلام النظام"
+        const systemTextOverlay = {
+            token: function(stream) {
+                if (stream.match(/\[.*?\]/)) { // البحث عن [...] في أي مكان
+                    return "system-text"; // اسم الكلاس في CSS
+                }
+                while (stream.next() != null && !stream.match(/\[.*?\]/, false)) {}
+                return null;
+            }
+        };
+
+        // تعريف تلوين "الحوارات"
+        const dialogueOverlay = {
+            token: function(stream) {
+                let ch;
+                if (stream.peek() === '"') {
+                    stream.next();
+                    while ((ch = stream.next()) != null) {
+                        if (ch === '"') break;
+                    }
+                    return "dialogue-text";
+                }
+                if (stream.peek() === "'") {
+                    stream.next();
+                    while ((ch = stream.next()) != null) {
+                        if (ch === "'") break;
+                    }
+                    return "dialogue-text";
+                }
+                
+                stream.next();
+                return null;
+            }
+        };
+
+
+        // دالة لتبديل تلوين الحوارات
+        function toggleDialogueHighlighting() {
+            if (!cmEditor) return;
+            state.dialogueHighlighting = !state.dialogueHighlighting; // عكس الحالة
+            
+            if (state.dialogueHighlighting) {
+                cmEditor.addOverlay(dialogueOverlay);
+                elements.toggleDialogueBtn.classList.add('active'); // تفعيل الزر بصرياً
+                showNotification('✅ تم تفعيل تلوين الحوارات', 'success');
+            } else {
+                cmEditor.removeOverlay(dialogueOverlay);
+                elements.toggleDialogueBtn.classList.remove('active'); // إلغاء تفعيل الزر بصرياً
+                showNotification('⚪️ تم إيقاف تلوين الحوارات', 'warning');
+            }
+        }
+        // ======================================
+
 
         // --- (تعديل جذري) دوال إدارة الملفات ---
 
-        // (إضافة جديدة) الخطوة الأولى عند الضغط على استيراد
         function onImportClick() {
-            // التأكد من وجود دوال الحفظ
             if (typeof saveEnglishChapter === 'undefined' || typeof saveTranslatedChapter === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل بشكل صحيح.', 'error');
                 return;
             }
-            // تطبيق الواجهة الداكنة إذا كانت مفعلة
             elements.importTypeModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
             elements.importTypeModal.classList.add('show');
         }
         
-        // (إضافة جديدة) الخطوة الثانية بعد اختيار النوع
         function startImportProcess(importType) {
             elements.importTypeModal.classList.remove('show');
             
@@ -1376,13 +1429,10 @@
             input.onchange = (e) => {
                 const files = e.target.files;
                 if (files.length === 0) return;
-                
-                // استدعاء المنطق النهائي مع تحديد قاعدة البيانات
                 processImportedFiles(files, importType);
             };
         }
 
-        // (تعديل) اسم الدالة من importFile إلى processImportedFiles
         async function processImportedFiles(files, dbType) {
             if (typeof JSZip === 'undefined') {
                 showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
@@ -1393,7 +1443,6 @@
             let importedFileNames = [];
             showNotification(`جاري استيراد ${files.length} ملفات إلى "${dbName}"...`, 'warning');
             
-            // (إضافة جديدة) اختيار دالة الحفظ الصحيحة
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
 
             for (const file of files) {
@@ -1417,8 +1466,6 @@
                         for (const zipEntry of txtFilesEntries) {
                             const content = await zipEntry.async('string');
                             const filename = zipEntry.name.split('/').pop(); 
-                            
-                            // (تم التعديل) استخدام دالة الحفظ الصحيحة
                             saveFunction(filename, content);
                             importedFileNames.push(filename);
                         }
@@ -1431,8 +1478,6 @@
                     try {
                         const content = await file.text(); 
                         const filename = file.name;
-                        
-                        // (تم التعديل) استخدام دالة الحفظ الصحيحة
                         saveFunction(filename, content);
                         importedFileNames.push(filename);
                     } catch (err) {
@@ -1445,7 +1490,6 @@
             }
 
             if (importedFileNames.length > 0) {
-                // (تم التعديل) لا نستخدم saveFiles()
                 loadFile(importedFileNames[importedFileNames.length - 1], dbType); 
                 showNotification(`✅ تم استيراد ${importedFileNames.length} فصول إلى "${dbName}"!`);
             } else {
@@ -1477,7 +1521,6 @@
 
             if (newName === oldName) return;
 
-            // (تم التعديل) التحقق والحفظ في قاعدة البيانات الصحيحة
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
 
@@ -1487,12 +1530,12 @@
                 return;
             }
 
-            files[newName] = files[oldName]; // نسخ البيانات
+            files[newName] = files[oldName]; 
             files[newName].modified = Date.now();
-            delete files[oldName]; // حذف القديم
+            delete files[oldName]; 
             state.selectedFile = newName;
             
-            Storage.set(dbKey, files); // حفظ قاعدة البيانات المحدثة
+            Storage.set(dbKey, files); 
             saveConfig();
             showNotification(`✅ تم تغيير الاسم إلى\n${newName}`);
         }
@@ -1509,7 +1552,6 @@
                     return;
                 }
                 
-                // (إضافة جديدة) يجب أن نسأل أين نحفظ الملف الجديد
                 const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
                 if (saveLocation && saveLocation.toLowerCase().includes('انجليزي')) {
                     dbType = 'english';
@@ -1525,16 +1567,12 @@
                 }
             }
             
-            // (تم التعديل) اختيار دالة الحفظ وقاعدة البيانات الصحيحة
-            // التأكد من وجود الدوال أولاً
             if (typeof saveEnglishChapter === 'undefined' || typeof readEnglishChapter === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
                 return;
             }
             
-            // ==== 💡 (تعديل) جلب النص من CodeMirror ====
             const contentToSave = cmEditor.getValue();
-            // ==========================================
             
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
             const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
@@ -1549,7 +1587,7 @@
             saveFunction(filename, contentToSave);
             
             state.selectedFile = filename;
-            state.selectedFileDB = dbType; // (إضافة جديدة)
+            state.selectedFileDB = dbType; 
             elements.filenameInput.value = filename;
             elements.filenameInput.disabled = false;
             
@@ -1558,39 +1596,28 @@
         }
 
         function loadFile(filename, dbType) {
-            // ==== 💡 (تعديل) التأكد أن cmEditor جاهز ====
             if (!cmEditor) {
                 showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
                 return;
             }
-            // ==========================================
 
-            // (تم التعديل) اختيار دالة القراءة الصحيحة
             const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
             const fileContent = readFunction(filename);
 
             if (fileContent !== null && fileContent !== undefined) {
-                // ==== 💡 (تعديل) استخدام CodeMirror لضبط النص ====
                 cmEditor.setValue(fileContent);
-                // ============================================
 
                 state.selectedFile = filename;
-                state.selectedFileDB = dbType; // (إضافة جديدة)
+                state.selectedFileDB = dbType; 
                 elements.filenameInput.value = filename;
                 elements.filenameInput.disabled = false;
                 
-                // ==== 💡 (تم الحذف) حذف نظام الـ Undo القديم ====
-                // state.undoStack = [fileContent]; 
-                // state.redoStack = [];
-
-                // ==== 💡 (إضافة) مسح سجل CodeMirror ====
                 cmEditor.clearHistory();
 
                 updateStats();
                 saveConfig();
                 showNotification(`📖 تم فتح ${filename}`);
                 
-                // ==== 💡 (تعديل) تمرير وتحديد الموقع في CodeMirror ====
                 cmEditor.scrollTo(0, 0); 
                 cmEditor.setCursor(0, 0); 
             } else {
@@ -1602,7 +1629,6 @@
         // --- دوال النوافذ المنبثقة (Modal) ---
         
         function openFileModal() {
-            // التأكد من وجود دوال القراءة
             if (typeof listEnglishChapters === 'undefined' || typeof listTranslatedChapters === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
                 return;
@@ -1616,9 +1642,6 @@
             elements.deleteFilesBtn.style.display = 'none';
             elements.fileList.classList.remove('selection-active');
             
-            // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
-            // (إضافة جديدة) تحديد القسم النشط (افتراضياً الإنجليزية)
-            // ==== 💡 تعديل: تطبيق القسم المحفوظ من الحالة (state) ====
             document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
                 s.classList.toggle('active', s.dataset.db === state.fileDBType);
             });
@@ -1628,7 +1651,7 @@
             });
             elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
 
-            updateFileListView(); // سيعرض القائمة الإنجليزية افتراضياً
+            updateFileListView(); 
             elements.fileModal.classList.add('show');
         }
 
@@ -1640,7 +1663,6 @@
             const searchTerm = elements.fileSearchInput.value.toLowerCase();
             const sortType = state.fileSortType; 
             
-            // (تم التعديل) تحديد قاعدة البيانات النشطة
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
             const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
             const files = Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
@@ -1648,7 +1670,7 @@
             const fileArray = Object.entries(files).map(([name, data]) => ({
                 name,
                 ...data,
-                content: data.content || "" // ضمان وجود محتوى
+                content: data.content || "" 
             }));
             
             const dbName = (activeDBType === 'english') ? "الإنجليزية" : "المترجمة";
@@ -1660,15 +1682,13 @@
             const filteredArray = fileArray.filter(f => f.name.toLowerCase().includes(searchTerm));
             
             sortFiles(filteredArray, sortType);
-            renderFileList(filteredArray, activeDBType); // (تم التعديل) تمرير النوع
+            renderFileList(filteredArray, activeDBType); 
         }
 
-        // ==== تم تعديل دالة الفرز (SortFiles) ====
         function sortFiles(fileArray, sortType) {
-            // دالة مساعدة لاستخراج الأرقام من اسم الملف
             const getFileNumber = (name) => {
-                const match = name.match(/(\d+)/); // البحث عن أول مجموعة أرقام
-                return match ? parseInt(match[0], 10) : 0; // إرجاع الرقم أو 0
+                const match = name.match(/(\d+)/); 
+                return match ? parseInt(match[0], 10) : 0; 
             };
 
             if (sortType === 'modified') {
@@ -1679,13 +1699,12 @@
                 fileArray.sort((a, b) => getFileNumber(a.name) - getFileNumber(b.name));
             }
             
-            // تطبيق العكس (إذا كان مفعلاً) بعد الفرز
             if (state.fileSortReversed) {
                 fileArray.reverse();
             }
         }
 
-        function renderFileList(fileArray, dbType) { // (تم التعديل) استقبال النوع
+        function renderFileList(fileArray, dbType) { 
             elements.fileList.innerHTML = ''; 
             
             if (fileArray.length === 0) {
@@ -1734,7 +1753,6 @@
                         elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
                         
                     } else {
-                        // (تم التعديل) تمرير قاعدة البيانات عند التحميل
                         loadFile(filename, dbType);
                         closeFileModal();
                     }
@@ -1752,17 +1770,13 @@
                 elements.selectFilesBtn.textContent = 'إلغاء التحديد';
                 elements.deleteFilesBtn.style.display = 'block';
                 elements.deleteFilesBtn.textContent = 'حذف';
-                // ==== 💡 إضافة جديدة ====
                 elements.selectAllFilesBtn.style.display = 'block';
                 elements.deselectAllFilesBtn.style.display = 'block';
-                // ==== نهاية الإضافة ====
             } else {
                 elements.selectFilesBtn.textContent = 'تحديد';
                 elements.deleteFilesBtn.style.display = 'none';
-                // ==== 💡 إضافة جديدة ====
                 elements.selectAllFilesBtn.style.display = 'none';
                 elements.deselectAllFilesBtn.style.display = 'none';
-                // ==== نهاية الإضافة ====
                 fileModalSelectedFiles.clear(); 
                 updateFileListView(); 
             }
@@ -1778,7 +1792,6 @@
                 return;
             }
             
-            // (تم التعديل) تحديد قاعدة البيانات للحذف
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
             const dbKey = (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
@@ -1787,7 +1800,6 @@
             for (const filename of fileModalSelectedFiles) {
                 delete files[filename]; 
                 
-                // (تم التعديل) التحقق من الملف المفتوح وقاعدة بياناته
                 if (state.selectedFile === filename && state.selectedFileDB === activeDBType) {
                     fileWasReset = true;
                 }
@@ -1795,28 +1807,22 @@
             
             if (fileWasReset) {
                 state.selectedFile = null;
-                state.selectedFileDB = 'none'; // (إضافة جديدة)
+                state.selectedFileDB = 'none'; 
                 elements.filenameInput.value = 'لم يتم فتح ملف';
                 elements.filenameInput.placeholder = 'لم يتم فتح ملف';
                 elements.filenameInput.disabled = true;
-                // ==== 💡 (تعديل) تفريغ CodeMirror ====
                 cmEditor.setValue('');
                 updateStats();
                 saveConfig();
             }
             
-            Storage.set(dbKey, files); // (تم التعديل) حفظ قاعدة البيانات الصحيحة
+            Storage.set(dbKey, files); 
             showNotification(`✅ تم حذف ${fileModalSelectedFiles.size} ملفات بنجاح`);
             
             toggleSelectMode(); 
         }
 
 
-        // ==== 💡 إضافة جديدة: تحديد الكل / إلغاء الكل ====
-
-        /**
-         * دالة لتحديد كل الفصول (المفلترة) المعروضة حالياً
-         */
         function selectAllFiles() {
             if (!fileModalSelectMode) return;
 
@@ -1828,25 +1834,21 @@
             
             fileItems.forEach(li => {
                 const filename = li.dataset.filename;
-                if (filename && !li.classList.contains('selected')) { // نتأكد أنه غير محدد
-                    fileModalSelectedFiles.add(filename); // إضافة إلى Set
+                if (filename && !li.classList.contains('selected')) { 
+                    fileModalSelectedFiles.add(filename); 
                     li.classList.add('selected');
                     const checkbox = li.querySelector('.file-checkbox');
                     if (checkbox) checkbox.checked = true;
                 }
             });
 
-            // تحديث زر الحذف
             elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
         }
 
-        /**
-         * دالة لإلغاء تحديد كل الفصول
-         */
         function deselectAllFiles() {
             if (!fileModalSelectMode) return;
 
-            fileModalSelectedFiles.clear(); // إفراغ Set
+            fileModalSelectedFiles.clear(); 
             
             const fileItems = elements.fileList.querySelectorAll('.file-item');
             fileItems.forEach(li => {
@@ -1855,10 +1857,8 @@
                 if (checkbox) checkbox.checked = false;
             });
 
-            // تحديث زر الحذف
             elements.deleteFilesBtn.textContent = 'حذف (0)';
         }
-        // ==== نهاية الإضافة ====		
 		
         function openColorModal() {
             const colors = {
@@ -1879,7 +1879,6 @@
                 div.style.color = (value === 'black' || value === 'blue') ? 'white' : 'black';
                 div.textContent = name;
                 
-                // ==== تم تعديل هذا القسم (لتطبيق الثيم على كل شيء) ====
                 div.addEventListener('click', () => {
                     state.interfaceColor = value;
                     const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
@@ -1891,24 +1890,24 @@
                         elements.controls.classList.remove('dark-interface');
                         elements.stats.classList.remove('dark-interface');
                         allModals.forEach(modal => modal.classList.remove('dark-interface'));
-                        elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
-                        elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                        elements.importTypeModal.classList.remove('dark-interface'); 
+                        elements.exportZipModal.classList.remove('dark-interface'); 
                     } else if (value === 'black') {
                         document.body.style.background = value;
                         elements.header.style.background = value;
                         elements.controls.classList.add('dark-interface');
                         elements.stats.classList.add('dark-interface');
                         allModals.forEach(modal => modal.classList.add('dark-interface'));
-                        elements.importTypeModal.classList.add('dark-interface'); // (إضافة جديدة)
-                        elements.exportZipModal.classList.add('dark-interface'); // (إضافة جديدة)
-                    } else { // للألوان الأخرى
+                        elements.importTypeModal.classList.add('dark-interface'); 
+                        elements.exportZipModal.classList.add('dark-interface'); 
+                    } else { 
                         document.body.style.background = value;
                         elements.header.style.background = value;
                         elements.controls.classList.remove('dark-interface');
                         elements.stats.classList.remove('dark-interface');
                         allModals.forEach(modal => modal.classList.remove('dark-interface'));
-                        elements.importTypeModal.classList.remove('dark-interface'); // (إضافة جديدة)
-                        elements.exportZipModal.classList.remove('dark-interface'); // (إضافة جديدة)
+                        elements.importTypeModal.classList.remove('dark-interface'); 
+                        elements.exportZipModal.classList.remove('dark-interface'); 
                     }
                     saveConfig();
                     showNotification(`✅ تم تغيير لون الواجهة إلى ${name}`);
@@ -1925,7 +1924,10 @@
             elements.colorModal.classList.remove('show');
         }
 
+        // ==== 💡 (إعادة إضافة) دوال نافذة الاستبدال القديمة ====
         function openFindReplaceModal() {
+            // تطبيق الثيم الداكن إذا كان مفعلاً
+            elements.findReplaceModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
             elements.findReplaceModal.classList.add('show');
             document.getElementById('findText').focus();
         }
@@ -1943,45 +1945,37 @@
                 return;
             }
 
-            // ==== 💡 (تعديل) جلب وضبط النص من CodeMirror ====
             const currentText = cmEditor.getValue();
+            // استخدام new RegExp(findText, 'g') للاستبدال الشامل
             const newText = currentText.replace(new RegExp(findText, 'g'), replaceText);
             
             if (currentText === newText) {
                  showNotification('لم يتم العثور على النص', 'warning');
             } else {
                  cmEditor.setValue(newText);
-                 // (تم الحذف) لا حاجة لنظام الـ Undo القديم
                  updateStats();
                  showNotification('✅ تم الاستبدال بنجاح');
                  closeFindReplaceModal();
             }
         }
+        // =================================================
+
 
         // ==== 💡 الدوال الجديدة لتصدير ZIP ====
         
-        /**
-         * يفتح نافذة اختيار نوع التصدير
-         */
         function openExportZipModal() {
-            // تطبيق الواجهة الداكنة إذا كانت مفعلة
             elements.exportZipModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
             elements.exportZipModal.classList.add('show');
         }
 
-        /**
-         * يبدأ عملية تجميع وتصدير الفصول كملف ZIP
-         * @param {string} dbType - 'english' أو 'translated'
-         */
         async function startZipExport(dbType) {
-            elements.exportZipModal.classList.remove('show'); // 1. إغلاق النافذة
+            elements.exportZipModal.classList.remove('show'); 
 
             if (typeof JSZip === 'undefined') {
                 showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
                 return;
             }
 
-            // 2. تحديد قاعدة البيانات والأسماء
             const isEnglish = (dbType === 'english');
             const dbKey = isEnglish ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const folderName = isEnglish ? 'English_Chapters' : 'Arabic_Chapters';
@@ -1991,7 +1985,6 @@
             showNotification(`جاري تحضير ملفات ${dbFriendlyName} للضغط...`, 'warning');
 
             try {
-                // 3. جلب جميع الملفات من التخزين
                 const files = Storage.get(dbKey, {});
                 const fileNames = Object.keys(files);
 
@@ -2000,45 +1993,35 @@
                     return;
                 }
 
-                // 4. إنشاء مجلد ZIP
                 const zip = new JSZip();
-                const folder = zip.folder(folderName); // إنشاء مجلد داخل الـ ZIP
+                const folder = zip.folder(folderName); 
 
-                // 5. إضافة كل ملف إلى المجلد
                 for (const filename of fileNames) {
                     const fileData = files[filename];
-                    const content = fileData.content || ""; // جلب المحتوى
-                    folder.file(filename, content); // إضافة الملف (الاسم، المحتوى)
+                    const content = fileData.content || ""; 
+                    folder.file(filename, content); 
                 }
 
-                // 6. توليد ملف الـ ZIP
                 showNotification('جاري ضغط الملفات...', 'warning');
                 const zipContent = await zip.generateAsync({ 
                     type: "blob",
-                    compression: "DEFLATE", // نوع الضغط
+                    compression: "DEFLATE", 
                     compressionOptions: {
-                        level: 9 // أعلى مستوى ضغط
+                        level: 9 
                     }
                 });
 
-                // 7. تفعيل التحميل
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(zipContent);
                 link.download = zipFileName;
-                document.body.appendChild(link); // يجب إضافته أولاً
-                link.click(); // بدء التحميل
-
-                // 💡 *** التعديل الأهم ***
-                // لا تقم بإزالة الرابط أو إلغاء الـ URL فوراً
-                // انتظر قليلاً لضمان بدء التحميل الفعلي
+                document.body.appendChild(link); 
+                link.click(); 
+                
                 setTimeout(() => {
                     document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href); // تنظيف الذاكرة
-                }, 100); // 100 ميلي ثانية يجب أن تكون كافية
+                    URL.revokeObjectURL(link.href); 
+                }, 100); 
                 
-                // (تم نقل الإشعار من هنا)
-                // كان الإشعار يظهر قبل بدء التحميل الفعلي،
-                // الآن سيظهر الكود ويتبعه التحميل
                 showNotification(`✅ تم تصدير ${fileNames.length} فصول بنجاح!`, 'success');
 
             } catch (err) {
@@ -2058,7 +2041,6 @@
             elements.stats.classList.toggle('hidden', state.readMode);
             elements.exitBtn.classList.toggle('show', state.readMode && !state.fullscreen); 
             
-            // ==== 💡 (تعديل) تطبيق وضع القراءة على CodeMirror ====
             if (cmEditor) {
                 cmEditor.setOption("readOnly", state.readMode);
                 cmEditor.getWrapperElement().classList.toggle('read-only', state.readMode);
@@ -2091,14 +2073,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
             
-            // ==== 💡 (تعديل) تهيئة CodeMirror أولاً ====
             cmEditor = CodeMirror.fromTextArea(elements.textEditor, {
-                lineNumbers: false,  // <-- ✅✅ التعديل الوحيد هنا: تم ضبطه إلى false
-                direction: "rtl",   // لدعم اللغة العربية بشكل صحيح
-                lineWrapping: true, // لتفعيل التفاف الأسطر
-                // تطبيق الإعدادات الأولية
+                lineNumbers: false,
+                direction: "rtl",   
+                lineWrapping: true, 
                 readOnly: state.readMode,
             });
+
+            // ==== 💡 (إضافة) تفعيل تلوين النظام بشكل دائم ====
+            cmEditor.addOverlay(systemTextOverlay);
 
             // ربط حدث التغيير بـ updateStats
             cmEditor.on("change", updateStats);
