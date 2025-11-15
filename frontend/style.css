@@ -6,7 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
     color: white;
     text-align: center;
@@ -36,7 +36,7 @@ h1 {
 
 .nav-buttons {
     display: flex;
-    gap: 25px;
+    gap: 15px; 
     justify-content: center;
     flex-wrap: wrap;
 }
@@ -45,11 +45,15 @@ h1 {
     background: rgba(0, 0, 0, 0.25);
     border: 2px solid rgba(255, 255, 255, 0.1);
     color: white;
-    padding: 25px;
+    padding: 20px; 
     border-radius: 10px;
     text-decoration: none;
     transition: all 0.3s ease;
-    width: 300px;
+    
+    flex: 1 1 40%;
+    min-width: 140px;
+    max-width: 350px;
+
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -72,19 +76,70 @@ h1 {
     margin-bottom: 0;
 }
 
-/* لضبط العرض على الجوال */
-@media (max-width: 768px) {
-    .nav-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 400px;
+/* === (إضافة) تصميم الإشعار العلوي (Toast) === */
+/* هذا التصميم مطابق للصورة التي أرسلتها */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: linear-gradient(135deg, #00ff88 0%, #00cc70 100%);
+  color: #000000;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 2000;
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(255, 68, 68, 0.4);
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #ffaa00 0%, #ff8800 100%);
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(255, 170, 0, 0.4);
+}
+/* === (نهاية الإضافة) === */
+
+
+/* === (تعديل) لضبط العرض على الجوال === */
+@media (max-width: 600px) { 
+    .container {
+        padding: 20px; 
     }
 
     h1 {
         font-size: 2.2rem;
+    }
+
+    .container > p {
+        font-size: 1rem;
+        margin-bottom: 25px;
+    }
+
+    .btn {
+        padding: 15px;
+    }
+
+    .btn h2 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+    }
+
+    .btn p {
+        font-size: 0.85rem;
     }
 }
