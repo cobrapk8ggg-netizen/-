@@ -7,6 +7,7 @@
     
     <script src="jszip.min.js"></script>
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css">
     <style>
         * {
             margin: 0;
@@ -227,12 +228,29 @@
             width: 100%;
             resize: none;
             font-family: 'Geeza Pro', 'Arial', sans-serif;
-            transition: all 0.3s ease;
+            /* ==== 💡 (تم التعديل) حذف السطر المسبب للبطء ==== */
+            /* transition: all 0.3s ease; */ 
+            
+            /* ==== 💡 (إضافة) تحديد الخصائص المطلوب تحريكها فقط ==== */
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
             direction: rtl;
             flex-grow: 1; 
             padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             overflow-y: auto; 
         }
+
+        /* ==== 💡 (إضافة) تنسيق محرر CodeMirror ==== */
+        .CodeMirror {
+            flex-grow: 1; /* لجعل المحرر يملأ المساحة المتبقية */
+            height: auto;  /* يتمدد ليملأ flex-grow */
+            font-family: 'Geeza Pro', 'Arial', sans-serif; /* توحيد الخط */
+            font-size: 18px; /* توحيد حجم الخط */
+            line-height: 1.5; /* توحيد تباعد الأسطر */
+            direction: rtl;
+        }
+        /* ======================================= */
+
 
         .text-editor:focus {
             outline: none;
@@ -847,7 +865,7 @@
             </div>
         </div>
 
-        <textarea class="text-editor theme-white" id="textEditor" placeholder="ابدأ الكتابة هنا..."></textarea>
+        <textarea class="text-editor theme-white" id="textEditor" placeholder="ابدأ الكتابة هنا..." style="display: none;"></textarea>
 
         <div class="stats" id="stats">📝 0 كلمة | 📏 0 سطر</div>
     </div>
@@ -951,6 +969,8 @@
 
     <script src="config.js"></script>
     <script src="translator_core.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
     <script>
         // --- الحالة الابتدائية للتطبيق ---
         const state = {
@@ -961,8 +981,9 @@
             fontName: 'Geeza Pro',
             theme: 'white',
             interfaceColor: 'white',
-            undoStack: [],
-            redoStack: [],
+            // ==== 💡 (تم الحذف) حذف نظام الـ Undo القديم ====
+            // undoStack: [],
+            // redoStack: [],
             readMode: false,
             fullscreen: false,
             // (تم الحذف) لم نعد نستخدم state.files
@@ -1013,6 +1034,10 @@
             // ==== نهاية الإضافة ====
         };
         
+        // ==== 💡 (إضافة) متغير لحفظ محرر CodeMirror ====
+        let cmEditor;
+        // ============================================
+
         // --- حالة نافذة الملفات (للتحديد) ---
         let fileModalSelectMode = false;
         let fileModalSelectedFiles = new Set();
@@ -1080,12 +1105,23 @@
             if (state.selectedFile && state.selectedFileDB !== 'none') {
                 // التأكد من وجود دوال القراءة قبل محاولة التحميل
                 if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
-                    loadFile(state.selectedFile, state.selectedFileDB);
+                    // ==== 💡 (تعديل) التأكد من أن cmEditor جاهز ====
+                    if (cmEditor) {
+                        loadFile(state.selectedFile, state.selectedFileDB);
+                    } else {
+                        // إذا لم يكن جاهزاً، انتظر حدث DOMContentLoaded
+                        document.addEventListener('DOMContentLoaded', () => {
+                             loadFile(state.selectedFile, state.selectedFileDB);
+                        });
+                    }
                 } else {
                     console.error("لم يتم تحميل دوال قراءة الفصول (translator_core.js)!");
                 }
             }
-            updateStats();
+            // ==== 💡 (تعديل) استدعاء updateStats فقط إذا كان cmEditor جاهزاً ====
+            if (cmEditor) {
+                updateStats();
+            }
         }
 
         function saveConfig() {
@@ -1170,16 +1206,8 @@
                 }
             });
 
-            // مراقبة المحرر
-            elements.textEditor.addEventListener('input', () => {
-                if (!state.readMode) {
-                    setTimeout(() => {
-                        state.undoStack.push(elements.textEditor.value);
-                        state.redoStack = [];
-                        updateStats();
-                    }, 500);
-                }
-            });
+            // ==== 💡 (تم الحذف) مستمع الإدخال القديم المسبب للبطء ====
+            // elements.textEditor.addEventListener('input', ...);
 
             elements.filenameInput.addEventListener('change', renameFile);
             elements.filenameInput.addEventListener('blur', renameFile);
@@ -1231,26 +1259,45 @@
         // --- دوال تعديل النص ---
 
         function applyTheme(theme) {
-            elements.textEditor.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
-            elements.textEditor.classList.add(`theme-${theme}`);
+            // ==== 💡 (تعديل) تطبيق الثيم على CodeMirror ====
+            if (cmEditor) {
+                const cmWrapper = cmEditor.getWrapperElement();
+                cmWrapper.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
+                cmWrapper.classList.add(`theme-${theme}`);
+                // تطبيق الثيم على الـ textarea الأصلية أيضاً (للحفاظ على الحالة)
+                elements.textEditor.classList.remove('theme-white', 'theme-dark', 'theme-blue-dark');
+                elements.textEditor.classList.add(`theme-${theme}`);
+            }
             state.theme = theme;
             saveConfig();
         }
 
         function applyFont(fontName) {
-            elements.textEditor.style.fontFamily = fontName;
+            // ==== 💡 (تعديل) تطبيق الخط على CodeMirror ====
+            if (cmEditor) {
+                cmEditor.getWrapperElement().style.fontFamily = fontName;
+                cmEditor.refresh(); // تحديث المحرر ليعرض الخط الجديد
+            }
             state.fontName = fontName;
             saveConfig();
         }
 
         function applyFontSize(size) {
-            elements.textEditor.style.fontSize = `${size}px`;
+            // ==== 💡 (تعديل) تطبيق حجم الخط على CodeMirror ====
+            if (cmEditor) {
+                cmEditor.getWrapperElement().style.fontSize = `${size}px`;
+                cmEditor.refresh();
+            }
             state.fontSize = size;
             saveConfig();
         }
 
         function applyLineSpacing(spacing) {
-            elements.textEditor.style.lineHeight = spacing;
+            // ==== 💡 (تعديل) تطبيق تباعد الأسطر على CodeMirror ====
+            if (cmEditor) {
+                cmEditor.getWrapperElement().style.lineHeight = spacing;
+                cmEditor.refresh();
+            }
             state.lineSpacing = spacing;
             saveConfig();
         }
@@ -1274,31 +1321,31 @@
             showNotification(`تم ضبط التباعد إلى ${newSpacing}`, 'warning');
         }
 
+        // ==== 💡 (تعديل) دوال Undo/Redo الآن تستدعي CodeMirror ====
         function undo() {
-            if (state.undoStack.length > 1) { 
-                state.redoStack.push(state.undoStack.pop());
-                elements.textEditor.value = state.undoStack[state.undoStack.length - 1];
+            if (cmEditor) {
+                cmEditor.undo();
             } else {
-                 showNotification('لا يوجد شيء للتراجع عنه', 'warning');
+                showNotification('لا يوجد شيء للتراجع عنه', 'warning');
             }
-             updateStats();
         }
 
         function redo() {
-            if (state.redoStack.length > 0) {
-                const nextState = state.redoStack.pop();
-                state.undoStack.push(nextState);
-                elements.textEditor.value = nextState;
+            if (cmEditor) {
+                cmEditor.redo();
             } else {
-                 showNotification('لا يوجد شيء للإعادة', 'warning');
+                showNotification('لا يوجد شيء للإعادة', 'warning');
             }
-            updateStats();
         }
+        // ================================================
 
         function updateStats() {
-            const text = elements.textEditor.value;
+            // ==== 💡 (تعديل) القراءة من CodeMirror ====
+            if (!cmEditor) return; // التأكد أن المحرر جاهز
+            
+            const text = cmEditor.getValue();
             const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
-            const lineCount = text.split('\n').length;
+            const lineCount = cmEditor.lineCount(); // <-- طريقة CodeMirror لحساب الأسطر
             elements.stats.textContent = `📝 ${wordCount} كلمة | 📏 ${lineCount} سطر`;
         }
 
@@ -1485,17 +1532,21 @@
                 return;
             }
             
+            // ==== 💡 (تعديل) جلب النص من CodeMirror ====
+            const contentToSave = cmEditor.getValue();
+            // ==========================================
+            
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
             const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
             
             const currentContentInDB = readFunction(filename);
             
-            if (currentContentInDB && currentContentInDB === elements.textEditor.value) {
+            if (currentContentInDB && currentContentInDB === contentToSave) {
                  showNotification('لا توجد تغييرات لحفظها', 'warning');
                  return;
             }
 
-            saveFunction(filename, elements.textEditor.value);
+            saveFunction(filename, contentToSave);
             
             state.selectedFile = filename;
             state.selectedFileDB = dbType; // (إضافة جديدة)
@@ -1507,23 +1558,41 @@
         }
 
         function loadFile(filename, dbType) {
+            // ==== 💡 (تعديل) التأكد أن cmEditor جاهز ====
+            if (!cmEditor) {
+                showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
+                return;
+            }
+            // ==========================================
+
             // (تم التعديل) اختيار دالة القراءة الصحيحة
             const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
             const fileContent = readFunction(filename);
 
             if (fileContent !== null && fileContent !== undefined) {
-                elements.textEditor.value = fileContent;
+                // ==== 💡 (تعديل) استخدام CodeMirror لضبط النص ====
+                cmEditor.setValue(fileContent);
+                // ============================================
+
                 state.selectedFile = filename;
                 state.selectedFileDB = dbType; // (إضافة جديدة)
                 elements.filenameInput.value = filename;
                 elements.filenameInput.disabled = false;
-                state.undoStack = [fileContent]; 
-                state.redoStack = [];
+                
+                // ==== 💡 (تم الحذف) حذف نظام الـ Undo القديم ====
+                // state.undoStack = [fileContent]; 
+                // state.redoStack = [];
+
+                // ==== 💡 (إضافة) مسح سجل CodeMirror ====
+                cmEditor.clearHistory();
+
                 updateStats();
                 saveConfig();
                 showNotification(`📖 تم فتح ${filename}`);
-                elements.textEditor.scrollTop = 0;
-                elements.textEditor.setSelectionRange(0, 0);
+                
+                // ==== 💡 (تعديل) تمرير وتحديد الموقع في CodeMirror ====
+                cmEditor.scrollTo(0, 0); 
+                cmEditor.setCursor(0, 0); 
             } else {
                 showNotification(`خطأ: لم يتم العثور على محتوى الملف ${filename}`, 'error');
             }
@@ -1730,7 +1799,8 @@
                 elements.filenameInput.value = 'لم يتم فتح ملف';
                 elements.filenameInput.placeholder = 'لم يتم فتح ملف';
                 elements.filenameInput.disabled = true;
-                elements.textEditor.value = '';
+                // ==== 💡 (تعديل) تفريغ CodeMirror ====
+                cmEditor.setValue('');
                 updateStats();
                 saveConfig();
             }
@@ -1873,15 +1943,15 @@
                 return;
             }
 
-            const currentText = elements.textEditor.value;
+            // ==== 💡 (تعديل) جلب وضبط النص من CodeMirror ====
+            const currentText = cmEditor.getValue();
             const newText = currentText.replace(new RegExp(findText, 'g'), replaceText);
             
             if (currentText === newText) {
                  showNotification('لم يتم العثور على النص', 'warning');
             } else {
-                 elements.textEditor.value = newText;
-                 state.undoStack.push(newText); 
-                 state.redoStack = [];
+                 cmEditor.setValue(newText);
+                 // (تم الحذف) لا حاجة لنظام الـ Undo القديم
                  updateStats();
                  showNotification('✅ تم الاستبدال بنجاح');
                  closeFindReplaceModal();
@@ -1987,8 +2057,12 @@
             elements.header.classList.toggle('hidden', state.readMode);
             elements.stats.classList.toggle('hidden', state.readMode);
             elements.exitBtn.classList.toggle('show', state.readMode && !state.fullscreen); 
-            elements.textEditor.readOnly = state.readMode;
-            elements.textEditor.classList.toggle('read-only', state.readMode);
+            
+            // ==== 💡 (تعديل) تطبيق وضع القراءة على CodeMirror ====
+            if (cmEditor) {
+                cmEditor.setOption("readOnly", state.readMode);
+                cmEditor.getWrapperElement().classList.toggle('read-only', state.readMode);
+            }
         }
 
         function toggleFullscreen() {
@@ -2016,7 +2090,30 @@
         // --- نقطة بداية التطبيق ---
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
+            
+            // ==== 💡 (تعديل) تهيئة CodeMirror أولاً ====
+            cmEditor = CodeMirror.fromTextArea(elements.textEditor, {
+                lineNumbers: false,  // <-- ✅✅ التعديل الوحيد هنا: تم ضبطه إلى false
+                direction: "rtl",   // لدعم اللغة العربية بشكل صحيح
+                lineWrapping: true, // لتفعيل التفاف الأسطر
+                // تطبيق الإعدادات الأولية
+                readOnly: state.readMode,
+            });
+
+            // ربط حدث التغيير بـ updateStats
+            cmEditor.on("change", updateStats);
+            
+            // تطبيق الإعدادات المحفوظة (الخط، الحجم، إلخ)
             loadConfig();
+
+            // تطبيق الثيم والخط والحجم الأولي يدوياً بعد تهيئة المحرر
+            applyTheme(state.theme);
+            applyFont(state.fontName);
+            applyFontSize(state.fontSize);
+            applyLineSpacing(state.lineSpacing);
+
+            // تحديث الإحصائيات الأولية
+            updateStats();
         });
 
     </script>
