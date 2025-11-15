@@ -42,9 +42,26 @@
                 <h2>⚙️ الإعدادات</h2>
                 <p>لتعديل برومبت الترجمة واستخراج المصطلحات.</p>
             </a>
+
+            <a href="#" class="btn btn-backup" id="backupBtn">
+                <h2>📤 تصدير نسخة احتياطية</h2>
+                <p>لحفظ كل الفصول والإعدادات والمفاتيح في ملف ZIP.</p>
+            </a>
+
+            <a href="#" class="btn btn-restore" id="restoreBtn">
+                <h2>📥 استعادة نسخة</h2>
+                <p>لاستعادة بياناتك من ملف ZIP (سيتم حذف البيانات الحالية).</p>
+            </a>
             </div>
     </div>
 
+    <div id="toast" class="toast"></div>
+    
+    <input type="file" id="restoreInput" accept=".zip" style="display: none;">
+
+    <script src="config.js"></script>
+    <script src="jszip.min.js"></script>
+    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -57,6 +74,169 @@
             });
         });
       }
+
+      // ==== 💡 (إضافة) كود النسخ الاحتياطي والاستعادة ====
+
+      // (منسوخة من app.js)
+      function showToast(message, type = 'success') {
+          const toast = document.getElementById('toast');
+          toast.textContent = message;
+          toast.className = 'toast show';
+          if (type === 'error') toast.classList.add('error');
+          if (type === 'warning') toast.classList.add('warning');
+
+          setTimeout(() => {
+              toast.classList.remove('show');
+              setTimeout(() => { toast.className = 'toast'; }, 500);
+          }, 4000);
+      }
+
+      /**
+       * دالة تصدير نسخة احتياطية كاملة
+       */
+      async function exportFullBackup() {
+          if (typeof JSZip === 'undefined') {
+              showToast('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
+              return;
+          }
+          
+          showToast('جاري تحضير النسخة الاحتياطية...', 'warning');
+
+          try {
+              const zip = new JSZip();
+              
+              // 1. جلب كل المفاتيح من CONFIG
+              const keysToBackup = Object.values(CONFIG.STORAGE_KEYS);
+              
+              // 2. إضافة المفاتيح الأخرى يدوياً (التي ليست في CONFIG)
+              keysToBackup.push('zeusEditorConfig'); // إعدادات المحرر
+              keysToBackup.push('zeus_translator_glossary_keys'); // مفاتيح مسرد الترجمة الجماعية
+
+              let filesAdded = 0;
+              
+              // 3. المرور على كل المفاتيح وحفظها في الـ ZIP
+              for (const key of keysToBackup) {
+                  const data = localStorage.getItem(key);
+                  if (data) {
+                      // نحفظ الملف بنفس اسم المفتاح
+                      zip.file(key + ".json", data);
+                      filesAdded++;
+                  }
+              }
+
+              if (filesAdded === 0) {
+                  showToast('⚠️ لا توجد بيانات لحفظها!', 'warning');
+                  return;
+              }
+
+              // 4. توليد ملف الـ ZIP
+              const zipContent = await zip.generateAsync({ type: "blob" });
+              
+              // 5. إنشاء اسم ملف بالتاريخ
+              const date = new Date();
+              const dateString = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+              const fileName = `ZEUS_Backup_${dateString}.zip`;
+
+              // 6. تفعيل التحميل
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(zipContent);
+              link.download = fileName;
+              document.body.appendChild(link);
+              link.click();
+              
+              setTimeout(() => {
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(link.href); 
+              }, 100);
+              
+              showToast(`✅ تم تصدير ${filesAdded} ملفات بيانات بنجاح!`, 'success');
+
+          } catch (err) {
+              console.error("خطأ أثناء إنشاء النسخة الاحتياطية:", err);
+              showToast('❌ حدث خطأ أثناء إنشاء ملف ZIP.', 'error');
+          }
+      }
+
+      /**
+       * دالة استعادة النسخة الاحتياطية
+       */
+      function importFullBackup(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          showToast('جاري قراءة ملف النسخة الاحتياطية...', 'warning');
+          
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+              try {
+                  const content = e.target.result;
+                  const zip = await JSZip.loadAsync(content);
+                  
+                  // تحذير: هذه الخطوة ستقوم بمسح كل البيانات الحالية
+                  if (confirm("تحذير: سيتم حذف جميع البيانات الحالية (الفصول، الإعدادات، المفاتيح) واستبدالها بالبيانات من هذا الملف. هل أنت متأكد من المتابعة؟")) {
+                      localStorage.clear(); // مسح كل شيء
+                      
+                      let filesRestored = 0;
+
+                      // المرور على كل الملفات في الـ ZIP
+                      for (const filename in zip.files) {
+                          if (!zip.files[filename].dir) {
+                              const key = filename.replace(".json", "");
+                              const fileData = await zip.files[filename].async("string");
+                              
+                              // إعادة البيانات إلى localStorage
+                              localStorage.setItem(key, fileData);
+                              filesRestored++;
+                          }
+                      }
+                      
+                      showToast(`✅ تم استعادة ${filesRestored} ملف بيانات. يرجى إعادة تحميل الصفحة الآن.`, 'success');
+                      
+                      // إعادة تحميل الصفحة لتطبيق الإعدادات
+                      setTimeout(() => {
+                          window.location.reload();
+                      }, 4000);
+                  } else {
+                      showToast('تم إلغاء عملية الاستعادة.', 'warning');
+                  }
+
+              } catch (err) {
+                  console.error("خطأ أثناء استعادة النسخة:", err);
+                  showToast('❌ ملف ZIP تالف أو غير صالح.', 'error');
+              } finally {
+                  // إعادة تعيين حقل الإدخال للسماح بالرفع مرة أخرى
+                  event.target.value = null;
+              }
+          };
+          
+          reader.onerror = () => {
+              showToast('❌ فشل في قراءة الملف.', 'error');
+              event.target.value = null;
+          };
+          
+          reader.readAsArrayBuffer(file);
+      }
+
+      // --- ربط الأحداث للأزرار الجديدة ---
+      document.addEventListener('DOMContentLoaded', () => {
+          const backupBtn = document.getElementById('backupBtn');
+          const restoreBtn = document.getElementById('restoreBtn');
+          const restoreInput = document.getElementById('restoreInput');
+
+          backupBtn.addEventListener('click', (e) => {
+              e.preventDefault(); // منع الرابط من القفز
+              exportFullBackup();
+          });
+
+          restoreBtn.addEventListener('click', (e) => {
+              e.preventDefault(); // منع الرابط من القفز
+              restoreInput.click(); // فتح نافذة اختيار الملف
+          });
+
+          restoreInput.addEventListener('change', importFullBackup);
+      });
+      // ===============================================
+
     </script>
     </body>
 </html>
