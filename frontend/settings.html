@@ -7,10 +7,54 @@
     <link rel="stylesheet" href="translator.css">
     <link rel="stylesheet" href="settings_styles.css">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/mode/overlay.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#002145">
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-</head>
+
+    <style>
+        .CodeMirror {
+            border: 1px solid #444444;
+            border-radius: 8px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 400px; /* نفس ارتفاع .prompt-editor */
+            height: auto;
+            background: #000000;
+            color: #f1f1f1;
+            /* ==== 💡 (إضافة) تفعيل اتجاه اليمين-لليسار ==== */
+            direction: rtl; 
+        }
+        .CodeMirror-focused {
+            border-color: #5AC8FA;
+            box-shadow: 0 0 20px rgba(90, 200, 250, 0.3);
+        }
+        /* تلوين المتغيرات */
+        .cm-variable-template {
+            color: #FFD700; /* لون أصفر */
+            font-weight: bold;
+        }
+
+        /* ==== ✅ (إضافة) تنسيق شريط الأرقام (Gutter) ==== */
+        .CodeMirror-gutters {
+            background: #000000 !important; /* خلفية سوداء للشريط (مهم) */
+            border-left: 1px solid #444; /* خط فاصل (لأنه الآن على اليسار) */
+            border-right: none; /* إزالة الحد الأيمن القديم */
+        }
+        .CodeMirror-linenumber {
+            color: #28a745 !important; /* أرقام باللون الأخضر */
+            padding-right: 10px; /* مسافة لليمين (للمحرر العربي) */
+            padding-left: 0;
+            white-space: nowrap; /* ضمان عدم التفاف الأرقام الطويلة */
+        }
+        /* ==== ✅ (إضافة) تنسيق السطر النشط ==== */
+        .CodeMirror-activeline-background {
+            background: rgba(255, 255, 255, 0.1); /* تلوين السطر الحالي */
+        }
+    </style>
+    </head>
 <body>
     <div class="app-container">
         <header class="app-header">
@@ -35,6 +79,7 @@
                     class="text-area prompt-editor"
                     rows="20"
                     placeholder="جاري تحميل البرومبت الافتراضي..."
+                    style="display: none;"
                 ></textarea>
             </section>
 
@@ -54,6 +99,7 @@
                     class="text-area prompt-editor"
                     rows="20"
                     placeholder="جاري تحميل البرومبت الافتراضي..."
+                    style="display: none;"
                 ></textarea>
             </section>
 
@@ -67,9 +113,10 @@
     <div id="toast" class="toast"></div>
 
     <script src="config.js"></script>
-    <script src="settings.js"></script>
-
-    <script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/mode/overlay.js"></script>
+    <script src="settings.js"></script> <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
