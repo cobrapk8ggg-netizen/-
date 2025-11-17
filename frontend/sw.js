@@ -9,7 +9,8 @@ const urlsToCache = [
   'محرر.html',
   'glossary_editor.html',
   'batch_translator.html',
-  'settings.html', // <-- إضافة جديدة
+  'settings.html', 
+  'batch_extractor.html', // <-- إضافة جديدة
   'manifest.json',
   
   // ملفات CSS
@@ -17,7 +18,7 @@ const urlsToCache = [
   'translator.css',
   'batch_styles.css',
   'glossary_editor.css',
-  'settings_styles.css', // <-- إضافة جديدة
+  'settings_styles.css', 
   
   // ملفات JS
   'config.js',
@@ -25,7 +26,8 @@ const urlsToCache = [
   'app.js',
   'batch_translator.js',
   'glossary_editor.js',
-  'settings.js', // <-- إضافة جديدة
+  'settings.js', 
+  'batch_extractor.js', // <-- إضافة جديدة
   'jszip.min.js',
 
   // الأيقونات
