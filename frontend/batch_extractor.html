@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 استخراج المصطلحات الجماعي</title>
+    <link rel="stylesheet" href="batch_styles.css">
+
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="theme-color" content="#002145">
+    
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    </head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <a href="index.html" class="back-to-home" title="العودة للرئيسية">🏠</a>
+            <h1>📚 استخراج المصطلحات الجماعي</h1>
+        </header>
+
+        <main class="app-main">
+            <section class="provider-section">
+                <div id="infoLabel" class="info-display">
+                    <p>🔑 عدد مفاتيح المسرد: 0</p>
+                    <p>📚 عدد الفصول الإنجليزية: 0</p>
+                    <p>✅ عدد الفصول المترجمة: 0</p>
+                    <p>🔄 فصول متطابقة (للمعالجة): 0</p>
+                    <p>📖 إجمالي المصطلحات الحالية: 0</p>
+                </div>
+            </section>
+
+            <section class="settings-section">
+                <label class="input-label">⏱️ وقت الانتظار بين الفصول (ثانية):</label>
+                <input 
+                    type="number" 
+                    id="waitTimeField" 
+                    class="wait-time-input" 
+                    value="5"
+                    min="0"
+                >
+            </section>
+
+            <section id="glossaryKeysSection" class="glossary-keys-section">
+                <label class="input-label glossary-label">🔑 مفاتيح Gemini للمسرد:</label>
+                <p class="keys-info" style="margin-bottom: 10px;">(هذه المفاتيح تُستخدم فقط لعملية استخراج المصطلحات)</p>
+                <textarea 
+                    id="glossaryKeysField" 
+                    class="glossary-keys-field" 
+                    placeholder="أدخل مفاتيح Gemini للمسرد (كل مفتاح في سطر منفصل)"
+                    rows="4"
+                ></textarea>
+
+                <div class="glossary-keys-buttons">
+                    <button id="saveGlossaryKeysBtn" class="btn btn-save-glossary">💾 حفظ مفاتيح المسرد</button>
+                    <div id="glossaryKeysCount" class="glossary-keys-count">🔑 0 مفتاح للمسرد</div>
+                </div>
+            </section>
+
+            <section class="control-section">
+                <button id="startBtn" class="btn btn-start">▶️ بدء الاستخراج الجماعي</button>
+                <button id="stopBtn" class="btn btn-stop" disabled>⏹️ إيقاف الاستخراج</button>
+            </section>
+
+            <section class="progress-section">
+                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                    <div class="spinner-large"></div>
+                </div>
+                <div id="progressLabel" class="progress-label"></div>
+            </section>
+
+            <section class="log-section">
+                <label class="input-label">📋 سجل الاستخراج:</label>
+                <textarea 
+                    id="logOutput" 
+                    class="log-output" 
+                    placeholder="سيظهر سجل الاستخراج هنا..."
+                    readonly
+                    rows="15"
+                ></textarea>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="translator_core.js"></script>
+    <script src="batch_extractor.js"></script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('ServiceWorker registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+    </body>
+</html>
