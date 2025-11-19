@@ -14,6 +14,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* ==== 💡 (إضافة) إخفاء أشرطة التمرير المزعجة نهائياً ==== */
+        ::-webkit-scrollbar {
+            display: none; /* يخفي شريط التمرير للمتصفح (كروم/سفاري) */
+            width: 0;
+            height: 0;
+        }
+        
+        /* إخفاء شريط تمرير CodeMirror الداخلي */
+        .CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
+            display: none !important;
+        }
+        /* ====================================================== */
+
         * {
             margin: 0;
             padding: 0;
@@ -243,9 +256,10 @@
             overflow-y: auto; 
         }
 
+        /* ==== 💡 (تعديل) إصلاح ارتفاع CodeMirror ==== */
         .CodeMirror {
-            flex-grow: 1; 
-            height: auto; 
+            flex-grow: 1;
+            height: 100% !important; /* تم التعديل من auto إلى 100% لمنع ظهور شريط التمرير المزدوج */
             font-family: 'Geeza Pro', 'Arial', sans-serif; 
             font-size: 18px; 
             line-height: 1.5; 
@@ -1897,7 +1911,7 @@
             }
         }
         // --- نهاية الإضافة ---
-		
+        
         function applyInterfaceColor(value) {
             state.interfaceColor = value;
             const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
