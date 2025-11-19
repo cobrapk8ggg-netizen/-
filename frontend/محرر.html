@@ -14,18 +14,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* ==== 💡 (إضافة) إخفاء أشرطة التمرير المزعجة نهائياً ==== */
+        /* ==== إخفاء أشرطة التمرير ==== */
         ::-webkit-scrollbar {
-            display: none; /* يخفي شريط التمرير للمتصفح (كروم/سفاري) */
+            display: none; 
             width: 0;
             height: 0;
         }
-        
-        /* إخفاء شريط تمرير CodeMirror الداخلي */
         .CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
             display: none !important;
         }
-        /* ====================================================== */
+        /* =========================== */
 
         * {
             margin: 0;
@@ -256,10 +254,9 @@
             overflow-y: auto; 
         }
 
-        /* ==== 💡 (تعديل) إصلاح ارتفاع CodeMirror ==== */
         .CodeMirror {
             flex-grow: 1;
-            height: 100% !important; /* تم التعديل من auto إلى 100% لمنع ظهور شريط التمرير المزدوج */
+            height: 100% !important; 
             font-family: 'Geeza Pro', 'Arial', sans-serif; 
             font-size: 18px; 
             line-height: 1.5; 
@@ -434,10 +431,9 @@
             overflow-y: auto; 
             max-height: 35vh; 
             padding-right: 10px; 
-            overflow-x: hidden; /* يمنع ظهور شريط التمرير الأفقي */
+            overflow-x: hidden; 
         }
         
-        /* ==== 💡 (إضافة) تنسيق قوائم الاختيار الجديدة ==== */
         .selection-list {
             list-style: none;
             overflow-y: auto;
@@ -1100,14 +1096,10 @@
             stats: document.getElementById('stats'),
             exitBtn: document.getElementById('exitBtn'),
             filenameInput: document.getElementById('filenameInput'),
-            // === 💡 (إضافة) جلب الزر الجديد ===
             newChapterBtn: document.getElementById('newChapterBtn'),
-            // ===================================
             
-            // ==== 💡 (إضافة) عناصر أزرار التنقل ====
             prevChapterBtn: document.getElementById('prevChapterBtn'),
             nextChapterBtn: document.getElementById('nextChapterBtn'),
-            // ======================================
 
             fileModal: document.getElementById('fileModal'),
             colorModal: document.getElementById('colorModal'),
@@ -1135,7 +1127,6 @@
             deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn'),
             toggleDialogueBtn: document.getElementById('toggleDialogueBtn'),
 
-            // ==== 💡 (إضافة) عناصر النوافذ الجديدة ====
             fontSelectBtn: document.getElementById('fontSelectBtn'),
             themeSelectBtn: document.getElementById('themeSelectBtn'),
             fontModal: document.getElementById('fontModal'),
@@ -1144,7 +1135,6 @@
             themeList: document.getElementById('themeList'),
             closeFontModalBtn: document.getElementById('closeFontModalBtn'),
             closeThemeModalBtn: document.getElementById('closeThemeModalBtn')
-            // ======================================
         };
         
         let cmEditor;
@@ -1155,10 +1145,6 @@
         let fileModalSelectedFiles = new Set();
         let pendingImportFiles = null;
 
-
-        // --- تحميل وحفظ الإعدادات والملفات ---
-
-        // ==== 💡 (تعديل) إصلاح دالة loadConfig ====
         function loadConfig() {
             const config = localStorage.getItem('zeusEditorConfig');
             if (config) {
@@ -1174,19 +1160,14 @@
                 state.fileSortReversed = parsed.fileSortReversed || false;
                 state.fileDBType = parsed.fileDBType || 'english';
                 
-                // (تم الحذف) لن نطبقها هنا، بل في DOMContentLoaded
-                
-                // (تم الإبقاء) هذا يطبق لون الواجهة، وهو لا يعتمد على cmEditor
                 applyInterfaceColor(state.interfaceColor); 
             }
             
-            // (تم الإبقاء) هذا الكود سيعمل بشكل صحيح
             if (state.selectedFile && state.selectedFileDB !== 'none') {
                 if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
                     if (cmEditor) {
                         loadFile(state.selectedFile, state.selectedFileDB);
                     } else {
-                         // هذا احتياطي، سيضمن التحميل بعد تهيئة cmEditor
                         document.addEventListener('DOMContentLoaded', () => {
                             loadFile(state.selectedFile, state.selectedFileDB);
                         });
@@ -1196,7 +1177,6 @@
                 }
             }
         }
-        // ============================================
 
         function saveConfig() {
             const config = {
@@ -1214,8 +1194,6 @@
             localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
         }
 
-        
-        // --- نظام الإشعارات ---
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
@@ -1225,18 +1203,12 @@
             }, 3000);
         }
 
-        // --- دوال ربط الأزرار (سيتم تفعيلها عند تحميل الصفحة) ---
-
         function setupEventListeners() {
             document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
-            // === 💡 (إضافة) ربط الزر الجديد ===
             document.getElementById('newChapterBtn').addEventListener('click', createNewChapter);
-            // ===================================
             
-            // ==== 💡 (إضافة) تشغيل أزرار التنقل ====
             elements.prevChapterBtn.addEventListener('click', () => navigateChapter('prev'));
             elements.nextChapterBtn.addEventListener('click', () => navigateChapter('next'));
-            // ======================================
 
             document.getElementById('importFileBtn').addEventListener('click', onImportClick); 
             document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); 
@@ -1244,57 +1216,39 @@
             document.getElementById('readBtn').addEventListener('click', toggleReadMode);
             document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
             document.getElementById('exitBtn').addEventListener('click', exitSpecialMode);
-            document.getElementById('saveBtn').addEventListener('click', () => saveChanges(false)); // 💡 الحفظ اليدوي
+            document.getElementById('saveBtn').addEventListener('click', () => saveChanges(false)); 
             document.getElementById('increaseFontBtn').addEventListener('click', increaseFont);
             document.getElementById('decreaseFontBtn').addEventListener('click', decreaseFont);
             document.getElementById('spacingBtn').addEventListener('click', toggleSpacing);
             document.getElementById('undoBtn').addEventListener('click', undo);
             document.getElementById('redoBtn').addEventListener('click', redo);
             
-            // ==== 💡 (تعديل) ربط زر البحث ليصبح زر تبديل (يفتح/يغلق) ====
             document.getElementById('cmFindBtn').addEventListener('click', () => {
                 const editorWrapper = cmEditor.getWrapperElement();
-                // البحث عن أي نافذة حوار مفتوحة
                 const dialogOpen = editorWrapper.querySelector('.CodeMirror-dialog');
-
                 if (dialogOpen) {
-                    // إذا كانت النافذة مفتوحة، أغلقها
                     cmEditor.execCommand("clearSearch");
                 } else {
-                    // إذا كانت مغلقة، افتحها
                     cmEditor.execCommand("find"); 
                 }
             });
             
-            // (إضافة) ربط زر الاستبدال بالنافذة القديمة
             document.getElementById('cmReplaceBtn').addEventListener('click', openFindReplaceModal); 
-            
             document.getElementById('toggleDialogueBtn').addEventListener('click', toggleDialogueHighlighting);
-            
-            // (إعادة إضافة) ربط أزرار نافذة الاستبدال
             document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
             document.getElementById('performFindReplaceBtn').addEventListener('click', performFindReplace);
-            // ==================================================
-
-            // إغلاق النوافذ
             document.getElementById('closeFileModalBtn').addEventListener('click', closeFileModal);
             document.getElementById('closeColorModalBtn').addEventListener('click', closeColorModal);
-            
             elements.closeImportTypeModalBtn.addEventListener('click', () => elements.importTypeModal.classList.remove('show'));
             elements.importEnglishBtn.addEventListener('click', () => startImportProcess('english'));
             elements.importTranslatedBtn.addEventListener('click', () => startImportProcess('translated'));
-
             elements.closeExportZipModalBtn.addEventListener('click', () => elements.exportZipModal.classList.remove('show'));
             elements.exportEnglishZipBtn.addEventListener('click', () => startZipExport('english'));
             elements.exportTranslatedZipBtn.addEventListener('click', () => startZipExport('translated'));
-
-            // ==== 💡 (إضافة) ربط مستمعات الأزرار والنوافذ الجديدة ====
             elements.fontSelectBtn.addEventListener('click', openFontModal);
             elements.themeSelectBtn.addEventListener('click', openThemeModal);
             elements.closeFontModalBtn.addEventListener('click', closeFontModal);
             elements.closeThemeModalBtn.addEventListener('click', closeThemeModal);
-            // ====================================================
-
             elements.filenameInput.addEventListener('change', renameFile);
             elements.filenameInput.addEventListener('blur', renameFile);
             
@@ -1327,24 +1281,18 @@
             });
             elements.selectFilesBtn.addEventListener('click', toggleSelectMode);
             elements.deleteFilesBtn.addEventListener('click', deleteSelectedFiles);
-            
             elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
             elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
 
-            // ==== 💡 (إضافة) تفعيل اختصارات لوحة المفاتيح للتنقل ====
+            // ==== 💡 (إضافة) تفعيل اختصارات لوحة المفاتيح (للحاسبة) ====
             document.addEventListener('keydown', function(event) {
                 const key = event.key; 
-                
-                // السهم اليسار (التالي في الواجهة العربية)
                 if (key === 'ArrowLeft') {
-                    // في وضع القراءة: السهم فقط يكفي
-                    // في وضع الكتابة: يجب ضغط Alt لتجنب تحريك المؤشر
                     if (state.readMode || event.altKey) {
                         event.preventDefault(); 
                         navigateChapter('next');
                     }
                 } 
-                // السهم اليمين (السابق في الواجهة العربية)
                 else if (key === 'ArrowRight') {
                     if (state.readMode || event.altKey) {
                         event.preventDefault();
@@ -1352,18 +1300,48 @@
                     }
                 }
             });
+
+            // ==== 💡 (إضافة) تفعيل السحب (للايباد والجوال) ====
+            // يعمل فقط في وضع القراءة (state.readMode = true)
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            });
+
+            document.addEventListener('touchend', e => {
+                if (!state.readMode) return; // فقط في وضع القراءة
+
+                let touchEndX = e.changedTouches[0].screenX;
+                let touchEndY = e.changedTouches[0].screenY;
+                
+                // التحقق من أنه سحب أفقي وليس عمودي (تجاهل التمرير)
+                if (Math.abs(touchEndY - touchStartY) > 50) return; 
+
+                const diff = touchEndX - touchStartX;
+                const threshold = 50; // المسافة المطلوبة لاعتبارها سحبة
+
+                if (Math.abs(diff) > threshold) {
+                    if (diff > 0) {
+                        // سحب لليمين (->) : السابق
+                        navigateChapter('prev');
+                    } else {
+                        // سحب لليسار (<-) : التالي
+                        navigateChapter('next');
+                    }
+                }
+            });
             // ========================================================
         }
 
-        // ==== 💡 (إضافة) دالة التنقل بين الفصول ====
         function navigateChapter(direction) {
-            // 1. التحقق من وجود ملف مفتوح وقاعدة بيانات مختارة
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ يجب فتح فصل أولاً للتنقل.', 'warning');
                 return;
             }
 
-            // 2. جلب قائمة الملفات من القسم الحالي (إنجليزي أو مترجم)
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
             const fileNames = Object.keys(files);
@@ -1373,16 +1351,13 @@
                 return;
             }
 
-            // 3. ترتيب الملفات "طبيعياً" (حيث يأتي 2 بعد 1، و 10 بعد 9)
             fileNames.sort((a, b) => {
                 return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
             });
 
-            // 4. العثور على موقع الملف الحالي
             const currentIndex = fileNames.indexOf(state.selectedFile);
             if (currentIndex === -1) return; 
 
-            // 5. تحديد الملف الهدف
             let targetFile = null;
             if (direction === 'next') {
                 if (currentIndex < fileNames.length - 1) {
@@ -1398,16 +1373,11 @@
                 }
             }
 
-            // 6. تحميل الملف إذا وجد
             if (targetFile) {
-                // حفظ التغييرات الحالية تلقائياً قبل الانتقال (اختياري)
                 saveChanges(true); 
                 loadFile(targetFile, state.selectedFileDB);
             }
         }
-        // ============================================
-
-        // --- دوال تعديل النص ---
 
         function applyTheme(theme) {
             if (cmEditor) {
@@ -1483,7 +1453,6 @@
             elements.stats.textContent = `📝 ${wordCount} كلمة | 📏 ${lineCount} سطر`;
         }
         
-        // --- دوال التلوين ---
         const systemTextOverlay = {
             token: function(stream) {
                 if (stream.match(/\[.*?\]/)) { return "system-text"; }
@@ -1524,7 +1493,6 @@
             }
         }
         
-        // --- دوال إدارة الملفات ---
         function onImportClick() {
             if (typeof saveEnglishChapter === 'undefined' || typeof saveTranslatedChapter === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل بشكل صحيح.', 'error');
@@ -1669,9 +1637,7 @@
             }
             const contentToSave = cmEditor.getValue();
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
-            const readFunction = (dbType === 'english') ? readEnglishChapter : readTranslatedChapter;
             
-            // تعديل طفيف: نحتاج إلى التحقق من `files` مباشرة
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
             const currentContentInDB = (files[filename]) ? files[filename].content : null;
@@ -1693,16 +1659,12 @@
             }
         }
 
-        // --- 💡 (إضافة) دالة لإنشاء فصل جديد ---
         function createNewChapter() {
-            // 1. طلب اسم الملف
             let filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
             if (!filename) {
                 showNotification('تم إلغاء الإنشاء', 'warning');
                 return;
             }
-
-            // 2. طلب مكان الحفظ
             const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
             let dbType;
             if (saveLocation && (saveLocation.toLowerCase().includes('انجليزي') || saveLocation.toLowerCase().includes('english'))) {
@@ -1713,25 +1675,17 @@
                 showNotification('تم إلغاء الإنشاء. يجب تحديد الموقع.', 'warning');
                 return;
             }
-
-            // 3. التحقق من امتداد الملف
             if (!filename.toLowerCase().endsWith('.txt')) {
                 filename += '.txt';
             }
-
-            // 4. التحقق من وجود الملف مسبقاً (الطريقة الصحيحة)
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
             if (files[filename]) {
                 showNotification(`❌ ملف بالاسم '${filename}' موجود بالفعل.`, 'error');
                 return;
             }
-
-            // 5. إنشاء الملف (فارغ)
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
-            saveFunction(filename, ""); // حفظ محتوى فارغ
-
-            // 6. تحميل الملف الجديد في المحرر
+            saveFunction(filename, ""); 
             loadFile(filename, dbType);
             showNotification(`✅ تم إنشاء ${filename} بنجاح`, 'success');
         }
@@ -1741,12 +1695,11 @@
                 showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
                 return;
             }
-            // 💡 تعديل: استخدام الطريقة الصحيحة للتحقق من وجود المحتوى
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
             const files = Storage.get(dbKey, {});
             
             if (files[filename] !== undefined) {
-                const fileContent = files[filename].content || ""; // جلب المحتوى (أو سلسلة فارغة إذا كان فارغاً)
+                const fileContent = files[filename].content || ""; 
                 cmEditor.setValue(fileContent);
                 state.selectedFile = filename;
                 state.selectedFileDB = dbType; 
@@ -1766,9 +1719,6 @@
                 showNotification(`خطأ: لم يتم العثور على الملف ${filename}`, 'error');
             }
         }
-
-
-        // --- دوال النوافذ المنبثقة (Modal) ---
         
         function openFileModal() {
             if (typeof listEnglishChapters === 'undefined' || typeof listTranslatedChapters === 'undefined') {
@@ -1845,8 +1795,7 @@
                 li.className = 'file-item';
                 li.dataset.filename = file.name; 
                 const sizeKB = (file.content.length / 1024).toFixed(2);
-                // const modifiedDate = new Date(file.modified).toLocaleString('ar-SA'); // <-- السطر القديم
-                const modifiedDate = formatFileDate(file.modified); // <-- 💡 (تعديل) السطر الجديد
+                const modifiedDate = formatFileDate(file.modified); 
                 const isChecked = fileModalSelectedFiles.has(file.name);
                 if (isChecked) {
                     li.classList.add('selected');
@@ -1966,14 +1915,12 @@
             elements.deleteFilesBtn.textContent = 'حذف (0)';
         }
 
-        // --- 💡 (إضافة) دالة تنسيق التاريخ والوقت ---
         function formatFileDate(timestamp) {
             const now = new Date();
             const fileDate = new Date(timestamp);
             const diffMs = now - fileDate;
             const diffHours = diffMs / (1000 * 60 * 60);
 
-            // e.g., "2:16 PM"
             const timeFormat = fileDate.toLocaleString('en-US', { 
                 hour: 'numeric', 
                 minute: '2-digit', 
@@ -1981,26 +1928,18 @@
             }); 
 
             if (diffHours < 24) {
-                // Rule 1: Less than 24 hours ago
                 return timeFormat;
             } else {
-                // Rule 2: 24 hours or more ago
-                const diffDays = Math.floor(diffHours / 24);
-                
-                // Check if it was *actually* "Yesterday"
                 const yesterday = new Date(now);
                 yesterday.setDate(now.getDate() - 1);
                 
                 if (yesterday.toDateString() === fileDate.toDateString()) {
                      return `Yesterday at ${timeFormat}`;
                 } else {
-                    // More than 1 day ago. Just show the date.
-                    // e.g., "11/14/2025"
                     return fileDate.toLocaleDateString('en-US');
                 }
             }
         }
-        // --- نهاية الإضافة ---
         
         function applyInterfaceColor(value) {
             state.interfaceColor = value;
@@ -2088,7 +2027,6 @@
             }
         }
 
-        // --- دوال تصدير ZIP ---
         function openExportZipModal() {
             elements.exportZipModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
             elements.exportZipModal.classList.add('show');
@@ -2142,7 +2080,6 @@
             }
         }
         
-        // --- دوال أوضاع العرض ---
         function toggleReadMode() {
             state.readMode = !state.readMode;
             elements.controls.classList.toggle('hidden', state.readMode);
@@ -2172,7 +2109,6 @@
             elements.exitBtn.classList.remove('show');
         }
 
-        // ==== 💡 (إضافة) دوال النوافذ الجديدة ====
         function openFontModal() {
             const fonts = [
                 { name: 'Geeza Pro (افتراضي)', family: 'Geeza Pro', cssClass: 'font-geeza' },
@@ -2182,7 +2118,7 @@
                 { name: 'Arial', family: 'Arial', cssClass: 'font-arial' },
                 { name: 'Times New Roman', family: "'Times New Roman', serif", cssClass: 'font-times' }
             ];
-            elements.fontList.innerHTML = ''; // إفراغ القائمة
+            elements.fontList.innerHTML = ''; 
             fonts.forEach(font => {
                 const li = document.createElement('li');
                 li.className = `selection-item ${font.cssClass}`;
@@ -2209,7 +2145,7 @@
                 { name: 'داكن', value: 'dark' },
                 { name: 'ازرق داكن', value: 'blue-dark' }
             ];
-            elements.themeList.innerHTML = ''; // إفراغ القائمة
+            elements.themeList.innerHTML = ''; 
             themes.forEach(theme => {
                 const li = document.createElement('li');
                 li.className = 'selection-item';
@@ -2229,10 +2165,7 @@
         function closeThemeModal() {
             elements.themeModal.classList.remove('show');
         }
-        // ======================================
 
-
-        // --- نقطة بداية التطبيق ---
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
             
@@ -2253,21 +2186,16 @@
                 }, 2000); 
             });
             
-            // ==== 💡 (تعديل) هذا هو الإصلاح الرئيسي ====
-            // 1. تحميل الإعدادات أولاً (يملأ state)
             loadConfig(); 
 
-            // 2. تطبيق الإعدادات المحملة على المحرر
             applyTheme(state.theme);
             applyFont(state.fontName);
             applyFontSize(state.fontSize);
             applyLineSpacing(state.lineSpacing);
 
-            // 3. تحديث الإحصائيات الأولية (إذا كان cmEditor جاهزاً)
             if(cmEditor) {
                 updateStats();
             }
-            // ========================================
         });
 
     </script>
