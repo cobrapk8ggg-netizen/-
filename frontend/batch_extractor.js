@@ -11,6 +11,11 @@ class BatchExtractor {
 
     this.initializeElements();
     this.attachEventListeners();
+    
+    // --- إصلاح المشكلة: عرض المفاتيح المحفوظة عند التحميل ---
+    this.updateGlossaryKeysField(); 
+    // -------------------------------------------------------
+    
     this.updateInfo();
   }
 
