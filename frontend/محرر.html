@@ -1330,6 +1330,29 @@
             
             elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
             elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
+
+            // ==== 💡 (إضافة) تفعيل اختصارات لوحة المفاتيح للتنقل ====
+            document.addEventListener('keydown', function(event) {
+                const key = event.key; 
+                
+                // السهم اليسار (التالي في الواجهة العربية)
+                if (key === 'ArrowLeft') {
+                    // في وضع القراءة: السهم فقط يكفي
+                    // في وضع الكتابة: يجب ضغط Alt لتجنب تحريك المؤشر
+                    if (state.readMode || event.altKey) {
+                        event.preventDefault(); 
+                        navigateChapter('next');
+                    }
+                } 
+                // السهم اليمين (السابق في الواجهة العربية)
+                else if (key === 'ArrowRight') {
+                    if (state.readMode || event.altKey) {
+                        event.preventDefault();
+                        navigateChapter('prev');
+                    }
+                }
+            });
+            // ========================================================
         }
 
         // ==== 💡 (إضافة) دالة التنقل بين الفصول ====
