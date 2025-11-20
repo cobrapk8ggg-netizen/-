@@ -1301,27 +1301,27 @@
                 }
             });
 
-            // ==== 💡 (إضافة) تفعيل السحب (للايباد والجوال) ====
-            // يعمل فقط في وضع القراءة (state.readMode = true)
+            // ==== 💡 (إضافة) تفعيل السحب (للايباد والجوال) في جميع الأوضاع ====
             let touchStartX = 0;
             let touchStartY = 0;
 
             document.addEventListener('touchstart', e => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
-            });
+            }, { passive: false }); // إضافة passive: false لتحسين الاستجابة
 
             document.addEventListener('touchend', e => {
-                if (!state.readMode) return; // فقط في وضع القراءة
-
+                // تمت إزالة الشرط (!state.readMode) ليعمل في كل الحالات
+                
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
                 
-                // التحقق من أنه سحب أفقي وليس عمودي (تجاهل التمرير)
-                if (Math.abs(touchEndY - touchStartY) > 50) return; 
+                // التحقق من أنه سحب أفقي وليس عمودي (تجاهل التمرير للقراءة)
+                // رفعنا القيمة قليلاً لتجنب التفعيل بالخطأ أثناء التمرير المائل
+                if (Math.abs(touchEndY - touchStartY) > 70) return; 
 
                 const diff = touchEndX - touchStartX;
-                const threshold = 50; // المسافة المطلوبة لاعتبارها سحبة
+                const threshold = 60; // المسافة المطلوبة لاعتبارها سحبة
 
                 if (Math.abs(diff) > threshold) {
                     if (diff > 0) {
@@ -1332,7 +1332,7 @@
                         navigateChapter('next');
                     }
                 }
-            });
+            }, { passive: false });
             // ========================================================
         }
 
