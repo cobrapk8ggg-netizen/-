@@ -311,32 +311,36 @@
             background: #555;
         }
 
+        /* ==== 💡 تعديل زر الخروج (الاكس) ==== */
         .exit-btn {
             position: fixed;
             top: 20px;
             left: 20px;
-            width: 50px;
-            height: 50px;
-            background: white;
+            width: auto;
+            height: auto;
+            background: transparent; /* إزالة الخلفية البيضاء */
             border: none;
-            border-radius: 50%;
-            font-size: 24px;
+            font-size: 18px; /* تصغير الحجم قليلاً */
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: none; /* إزالة الظل */
             display: none;
             z-index: 1000;
             transition: all 0.3s ease;
+            opacity: 0.6; /* إضافة شفافية */
             top: calc(20px + env(safe-area-inset-top, 0px));
         }
 
         .exit-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transform: scale(1.2);
+            opacity: 1; /* عند التمرير يصبح واضحاً تماماً */
+            background: transparent;
+            box-shadow: none;
         }
 
         .exit-btn.show {
             display: block;
         }
+        /* ==================================== */
 
         .modal {
             display: none;
