@@ -1301,14 +1301,14 @@
                 }
             });
 
-            // ==== 💡 (إضافة) تفعيل السحب (للايباد والجوال) في جميع الأوضاع ====
+            // ==== 💡 (تعديل) تفعيل السحب (للايباد والجوال) في جميع الأوضاع ====
             let touchStartX = 0;
             let touchStartY = 0;
 
             document.addEventListener('touchstart', e => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
-            }, { passive: false }); // إضافة passive: false لتحسين الاستجابة
+            }, { passive: false }); 
 
             document.addEventListener('touchend', e => {
                 // تمت إزالة الشرط (!state.readMode) ليعمل في كل الحالات
@@ -1316,12 +1316,10 @@
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
                 
-                // التحقق من أنه سحب أفقي وليس عمودي (تجاهل التمرير للقراءة)
-                // رفعنا القيمة قليلاً لتجنب التفعيل بالخطأ أثناء التمرير المائل
                 if (Math.abs(touchEndY - touchStartY) > 70) return; 
 
                 const diff = touchEndX - touchStartX;
-                const threshold = 60; // المسافة المطلوبة لاعتبارها سحبة
+                const threshold = 60; 
 
                 if (Math.abs(diff) > threshold) {
                     if (diff > 0) {
@@ -1713,8 +1711,24 @@
                 } else {
                     showNotification(`📖 تم فتح ${filename}`);
                 }
-                cmEditor.scrollTo(0, 0); 
-                cmEditor.setCursor(0, 0); 
+
+                // ==== 💡 التعديل هنا: إصلاح التمرير ====
+                // 1. تحديث المحرر فوراً
+                cmEditor.refresh();
+                
+                // 2. وضع المؤشر في البداية
+                cmEditor.setCursor(0, 0);
+                
+                // 3. إجبار التمرير للأعلى فوراً
+                cmEditor.scrollTo(0, 0);
+                
+                // 4. (حيلة إضافية) تأكيد التمرير بعد لحظة قصيرة جداً لضمان عمله في الجوال
+                setTimeout(() => {
+                    cmEditor.scrollTo(0, 0);
+                    cmEditor.refresh(); 
+                }, 10);
+                // ========================================
+
             } else {
                 showNotification(`خطأ: لم يتم العثور على الملف ${filename}`, 'error');
             }
