@@ -68,13 +68,13 @@
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 10px; /* تقليل الهوامش العلوية */
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.3s ease;
             flex-shrink: 0;
-            padding-top: calc(15px + env(safe-area-inset-top, 0px));
+            padding-top: calc(10px + env(safe-area-inset-top, 0px));
             flex-wrap: wrap; 
             justify-content: center; 
         }
@@ -87,8 +87,8 @@
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.4); 
             color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
             transition: all 0.3s ease;
@@ -106,25 +106,25 @@
         }
 
         .btn-icon {
-            width: 40px;
-            height: 40px;
-            padding: 8px;
-            font-size: 20px;
+            width: 38px;
+            height: 38px;
+            padding: 6px;
+            font-size: 18px;
             flex-shrink: 0; 
         }
 
         .filename-input {
             flex: 1;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border: 1px solid rgba(255, 255, 255, 0.4); 
-            border-radius: 10px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             text-align: center;
             backdrop-filter: blur(8px); 
             transition: all 0.3s ease;
-            min-width: 150px; 
+            min-width: 120px; 
         }
 
         .filename-input::placeholder {
@@ -143,7 +143,7 @@
         }
 
         .controls {
-            padding: 20px;
+            padding: 10px; /* تقليل الحواف في الجوال */
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef; 
             transition: all 0.3s ease;
@@ -156,10 +156,11 @@
 
         .control-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
             align-items: center;
+            justify-content: center;
         }
         .control-row:last-child {
             margin-bottom: 0;
@@ -196,22 +197,26 @@
 
         .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap; 
+            justify-content: center;
+            width: 100%;
         }
 
         .control-btn {
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap; /* منع النص من النزول لسطر ثاني */
         }
 
         .control-btn:hover {
@@ -229,16 +234,10 @@
             background: linear-gradient(135deg, #28a745, #218838);
             font-weight: bold;
             font-size: 16px;
+            width: 100%;
+            padding: 12px;
         }
         
-        .control-row .control-btn.save {
-             width: 100%;
-        }
-
-        .control-btn.save:hover {
-            background: linear-gradient(135deg, #218838, #1e7e34); 
-        }
-
         .text-editor {
             padding: 20px;
             font-size: 18px;
@@ -271,7 +270,6 @@
             color: #28a745; 
         }
 
-
         .text-editor:focus {
             outline: none;
         }
@@ -282,15 +280,15 @@
         }
 
         .stats {
-            padding: 15px 20px;
+            padding: 10px 20px;
             background: #f8f9fa;
             border-top: 1px solid #e9ecef; 
             color: #6c757d;
-            font-size: 12px;
+            font-size: 11px;
             text-align: right;
             transition: all 0.3s ease;
             flex-shrink: 0;
-            padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
         }
 
         .stats.hidden {
@@ -312,7 +310,6 @@
         .controls.dark-interface .segment:hover:not(.active) {
             background: #555;
         }
-
 
         .exit-btn {
             position: fixed;
@@ -473,14 +470,12 @@
             color: white;
             border-color: #5568d3;
         }
-        /* خطوط مخصصة للعرض في القائمة */
         .font-cairo { font-family: 'Cairo', sans-serif; }
         .font-noto-kufi { font-family: 'Noto Kufi Arabic', sans-serif; }
         .font-amiri { font-family: 'Amiri', serif; }
         .font-geeza { font-family: 'Geeza Pro', sans-serif; }
         .font-arial { font-family: 'Arial', sans-serif; }
         .font-times { font-family: 'Times New Roman', serif; }
-        /* ============================================== */
 
         .search-bar {
             width: 100%;
@@ -724,7 +719,6 @@
             border-color: #555;
         }
 
-
         .input-group {
             margin-bottom: 15px;
         }
@@ -764,43 +758,6 @@
         .theme-blue-dark {
             background: #001F3F;
             color: white;
-        }
-
-        @media (max-width: 768px) {
-            .control-row {
-                flex-direction: column;
-            }
-
-            .btn-group {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .control-btn {
-                flex: 0 1 auto; 
-            }
-            
-            .control-row .control-btn.save {
-                 width: auto; 
-            }
-            
-            .header .btn-icon {
-                 width: 36px;
-                 height: 36px;
-                 padding: 6px;
-                 font-size: 18px;
-            }
-            .header .filename-input {
-                 padding: 8px 10px;
-                 font-size: 14px;
-                 min-width: 100px;
-            }
-
-            .editor-container {
-                 height: 100%; 
-                 padding: 0;
-                 border-radius: 0;
-            }
         }
 
         .notification {
@@ -891,6 +848,50 @@
             background: #004080;
             border-color: #667eea;
          }
+
+        /* ==== 💡 تخصيص الشاشات الصغيرة (الجوال) ==== */
+        @media (max-width: 768px) {
+            .header .btn-icon {
+                width: 34px;
+                height: 34px;
+                padding: 6px;
+                font-size: 16px;
+            }
+            
+            .header .filename-input {
+                padding: 6px 10px;
+                font-size: 13px;
+                min-width: 80px;
+                flex-basis: 100px; /* جعل الحقل يتقلص بذكاء */
+            }
+
+            /* التحكم في تخطيط الأزرار الزرقاء */
+            .btn-group {
+                display: grid; /* استخدام الشبكة لترتيب صارم */
+                grid-template-columns: repeat(5, 1fr); /* 5 أعمدة متساوية */
+                gap: 5px; /* تقليل المسافة بين الأزرار */
+                width: 100%;
+            }
+
+            .control-btn {
+                padding: 8px 2px; /* تقليل الحواف الداخلية */
+                font-size: 11px; /* تصغير الخط */
+                height: auto; /* ترك الارتفاع تلقائي */
+            }
+            
+            /* زر الحفظ منفصل في الأسفل */
+            .control-row .control-btn.save {
+                margin-top: 5px;
+            }
+
+            .editor-container {
+                 height: 100%; 
+                 padding: 0;
+                 border-radius: 0;
+            }
+        }
+        /* =========================================== */
+
     </style>
 </head>
 <body>
@@ -903,8 +904,10 @@
             <button class="btn btn-icon" id="importFileBtn" title="استيراد ملف">📥</button>
             <button class="btn btn-icon" id="exportZipBtn" title="تصدير ZIP">📦</button>
             
+            <button class="btn btn-icon" id="copyAllBtn" title="نسخ الكل">📋</button>
             <button class="btn btn-icon" id="nextChapterBtn" title="الفصل التالي">⬅️</button>
             <button class="btn btn-icon" id="prevChapterBtn" title="الفصل السابق">➡️</button>
+
             <input type="text" class="filename-input" id="filenameInput" placeholder="لم يتم فتح ملف" disabled>
             <button class="btn btn-icon" id="bgColorBtn" title="لون الواجهة">🎨</button>
             <button class="btn btn-icon" id="readBtn" title="وضع القراءة">👁️</button>
@@ -1100,6 +1103,10 @@
             
             prevChapterBtn: document.getElementById('prevChapterBtn'),
             nextChapterBtn: document.getElementById('nextChapterBtn'),
+            
+            // === 💡 إضافة زر النسخ ====
+            copyAllBtn: document.getElementById('copyAllBtn'),
+            // =========================
 
             fileModal: document.getElementById('fileModal'),
             colorModal: document.getElementById('colorModal'),
@@ -1209,6 +1216,10 @@
             
             elements.prevChapterBtn.addEventListener('click', () => navigateChapter('prev'));
             elements.nextChapterBtn.addEventListener('click', () => navigateChapter('next'));
+            
+            // ==== 💡 تفعيل زر النسخ ====
+            elements.copyAllBtn.addEventListener('click', copyAllContent);
+            // =========================
 
             document.getElementById('importFileBtn').addEventListener('click', onImportClick); 
             document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); 
@@ -1284,7 +1295,7 @@
             elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
             elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
 
-            // ==== 💡 (إضافة) تفعيل اختصارات لوحة المفاتيح (للحاسبة) ====
+            // تفعيل اختصارات لوحة المفاتيح
             document.addEventListener('keydown', function(event) {
                 const key = event.key; 
                 if (key === 'ArrowLeft') {
@@ -1301,7 +1312,7 @@
                 }
             });
 
-            // ==== 💡 (تعديل) تفعيل السحب (للايباد والجوال) في جميع الأوضاع ====
+            // تفعيل السحب
             let touchStartX = 0;
             let touchStartY = 0;
 
@@ -1311,8 +1322,6 @@
             }, { passive: false }); 
 
             document.addEventListener('touchend', e => {
-                // تمت إزالة الشرط (!state.readMode) ليعمل في كل الحالات
-                
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
                 
@@ -1323,16 +1332,35 @@
 
                 if (Math.abs(diff) > threshold) {
                     if (diff > 0) {
-                        // سحب لليمين (->) : السابق
                         navigateChapter('prev');
                     } else {
-                        // سحب لليسار (<-) : التالي
                         navigateChapter('next');
                     }
                 }
             }, { passive: false });
-            // ========================================================
         }
+
+        // ==== 💡 دالة نسخ المحتوى بالكامل ====
+        function copyAllContent() {
+            if (!cmEditor) return;
+            
+            // 1. جلب كل النص من "ذاكرة" المحرر وليس من العرض فقط
+            const text = cmEditor.getValue();
+            
+            if (!text) {
+                showNotification('⚠️ الملف فارغ!', 'warning');
+                return;
+            }
+
+            // 2. استخدام API الحافظة الحديث
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('✅ تم نسخ الفصل بالكامل!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showNotification('❌ فشل النسخ', 'error');
+            });
+        }
+        // ====================================
 
         function navigateChapter(direction) {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
@@ -1711,18 +1739,11 @@
                 } else {
                     showNotification(`📖 تم فتح ${filename}`);
                 }
-
+                
                 // ==== 💡 التعديل هنا: إصلاح التمرير ====
-                // 1. تحديث المحرر فوراً
                 cmEditor.refresh();
-                
-                // 2. وضع المؤشر في البداية
                 cmEditor.setCursor(0, 0);
-                
-                // 3. إجبار التمرير للأعلى فوراً
                 cmEditor.scrollTo(0, 0);
-                
-                // 4. (حيلة إضافية) تأكيد التمرير بعد لحظة قصيرة جداً لضمان عمله في الجوال
                 setTimeout(() => {
                     cmEditor.scrollTo(0, 0);
                     cmEditor.refresh(); 
