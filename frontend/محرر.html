@@ -1104,28 +1104,20 @@
             exitBtn: document.getElementById('exitBtn'),
             filenameInput: document.getElementById('filenameInput'),
             newChapterBtn: document.getElementById('newChapterBtn'),
-            
             prevChapterBtn: document.getElementById('prevChapterBtn'),
             nextChapterBtn: document.getElementById('nextChapterBtn'),
-            
-            // === 💡 إضافة زر النسخ ====
             copyAllBtn: document.getElementById('copyAllBtn'),
-            // =========================
-
             fileModal: document.getElementById('fileModal'),
             colorModal: document.getElementById('colorModal'),
             findReplaceModal: document.getElementById('findReplaceModal'), 
-            
             importTypeModal: document.getElementById('importTypeModal'),
             closeImportTypeModalBtn: document.getElementById('closeImportTypeModalBtn'),
             importEnglishBtn: document.getElementById('importEnglishBtn'),
             importTranslatedBtn: document.getElementById('importTranslatedBtn'),
-            
             exportZipModal: document.getElementById('exportZipModal'),
             closeExportZipModalBtn: document.getElementById('closeExportZipModalBtn'),
             exportEnglishZipBtn: document.getElementById('exportEnglishZipBtn'),
             exportTranslatedZipBtn: document.getElementById('exportTranslatedZipBtn'),
-
             dbTypeControl: document.getElementById('dbTypeControl'), 
             fileSearchInput: document.getElementById('fileSearchInput'),
             selectFilesBtn: document.getElementById('selectFilesBtn'),
@@ -1133,11 +1125,9 @@
             reverseSortBtn: document.getElementById('reverseSortBtn'),
             sortControl: document.getElementById('sortControl'),
             fileList: document.getElementById('fileList'),
-            
             selectAllFilesBtn: document.getElementById('selectAllFilesBtn'),
             deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn'),
             toggleDialogueBtn: document.getElementById('toggleDialogueBtn'),
-
             fontSelectBtn: document.getElementById('fontSelectBtn'),
             themeSelectBtn: document.getElementById('themeSelectBtn'),
             fontModal: document.getElementById('fontModal'),
@@ -1150,13 +1140,10 @@
         
         let cmEditor;
         let autoSaveTimer = null;
-
-        // --- حالة نافذة الملفات (للتحديد) ---
         let fileModalSelectMode = false;
         let fileModalSelectedFiles = new Set();
-        let pendingImportFiles = null;
 
-        function loadConfig() {
+        async function loadConfig() {
             const config = localStorage.getItem('zeusEditorConfig');
             if (config) {
                 const parsed = JSON.parse(config);
@@ -1175,16 +1162,8 @@
             }
             
             if (state.selectedFile && state.selectedFileDB !== 'none') {
-                if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
-                    if (cmEditor) {
-                        loadFile(state.selectedFile, state.selectedFileDB);
-                    } else {
-                        document.addEventListener('DOMContentLoaded', () => {
-                            loadFile(state.selectedFile, state.selectedFileDB);
-                        });
-                    }
-                } else {
-                    console.error("لم يتم تحميل دوال قراءة الفصول (translator_core.js)!");
+                if (cmEditor) {
+                    await loadFile(state.selectedFile, state.selectedFileDB);
                 }
             }
         }
@@ -1217,14 +1196,9 @@
         function setupEventListeners() {
             document.getElementById('openChapterBtn').addEventListener('click', openFileModal);
             document.getElementById('newChapterBtn').addEventListener('click', createNewChapter);
-            
             elements.prevChapterBtn.addEventListener('click', () => navigateChapter('prev'));
             elements.nextChapterBtn.addEventListener('click', () => navigateChapter('next'));
-            
-            // ==== 💡 تفعيل زر النسخ ====
             elements.copyAllBtn.addEventListener('click', copyAllContent);
-            // =========================
-
             document.getElementById('importFileBtn').addEventListener('click', onImportClick); 
             document.getElementById('exportZipBtn').addEventListener('click', openExportZipModal); 
             document.getElementById('bgColorBtn').addEventListener('click', openColorModal);
@@ -1237,17 +1211,11 @@
             document.getElementById('spacingBtn').addEventListener('click', toggleSpacing);
             document.getElementById('undoBtn').addEventListener('click', undo);
             document.getElementById('redoBtn').addEventListener('click', redo);
-            
             document.getElementById('cmFindBtn').addEventListener('click', () => {
                 const editorWrapper = cmEditor.getWrapperElement();
                 const dialogOpen = editorWrapper.querySelector('.CodeMirror-dialog');
-                if (dialogOpen) {
-                    cmEditor.execCommand("clearSearch");
-                } else {
-                    cmEditor.execCommand("find"); 
-                }
+                if (dialogOpen) { cmEditor.execCommand("clearSearch"); } else { cmEditor.execCommand("find"); }
             });
-            
             document.getElementById('cmReplaceBtn').addEventListener('click', openFindReplaceModal); 
             document.getElementById('toggleDialogueBtn').addEventListener('click', toggleDialogueHighlighting);
             document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
@@ -1299,7 +1267,6 @@
             elements.selectAllFilesBtn.addEventListener('click', selectAllFiles);
             elements.deselectAllFilesBtn.addEventListener('click', deselectAllFiles);
 
-            // تفعيل اختصارات لوحة المفاتيح
             document.addEventListener('keydown', function(event) {
                 const key = event.key; 
                 if (key === 'ArrowLeft') {
@@ -1316,64 +1283,45 @@
                 }
             });
 
-            // تفعيل السحب
             let touchStartX = 0;
             let touchStartY = 0;
-
             document.addEventListener('touchstart', e => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
             }, { passive: false }); 
-
             document.addEventListener('touchend', e => {
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
-                
                 if (Math.abs(touchEndY - touchStartY) > 70) return; 
-
                 const diff = touchEndX - touchStartX;
-                const threshold = 60; 
-
-                if (Math.abs(diff) > threshold) {
-                    if (diff > 0) {
-                        navigateChapter('prev');
-                    } else {
-                        navigateChapter('next');
-                    }
+                if (Math.abs(diff) > 60) {
+                    if (diff > 0) { navigateChapter('prev'); } else { navigateChapter('next'); }
                 }
             }, { passive: false });
         }
 
-        // ==== 💡 دالة نسخ المحتوى بالكامل ====
         function copyAllContent() {
             if (!cmEditor) return;
-            
-            // 1. جلب كل النص من "ذاكرة" المحرر وليس من العرض فقط
             const text = cmEditor.getValue();
-            
             if (!text) {
                 showNotification('⚠️ الملف فارغ!', 'warning');
                 return;
             }
-
-            // 2. استخدام API الحافظة الحديث
             navigator.clipboard.writeText(text).then(() => {
                 showNotification('✅ تم نسخ الفصل بالكامل!');
             }).catch(err => {
-                console.error('Failed to copy: ', err);
                 showNotification('❌ فشل النسخ', 'error');
             });
         }
-        // ====================================
 
-        function navigateChapter(direction) {
+        async function navigateChapter(direction) {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ يجب فتح فصل أولاً للتنقل.', 'warning');
                 return;
             }
 
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             const fileNames = Object.keys(files);
 
             if (fileNames.length <= 1) {
@@ -1404,8 +1352,8 @@
             }
 
             if (targetFile) {
-                saveChanges(true); 
-                loadFile(targetFile, state.selectedFileDB);
+                await saveChanges(true); 
+                await loadFile(targetFile, state.selectedFileDB);
             }
         }
 
@@ -1420,60 +1368,26 @@
             state.theme = theme;
             saveConfig();
         }
-
         function applyFont(fontName) {
-            if (cmEditor) {
-                cmEditor.getWrapperElement().style.fontFamily = fontName;
-                cmEditor.refresh(); 
-            }
-            state.fontName = fontName;
-            saveConfig();
+            if (cmEditor) { cmEditor.getWrapperElement().style.fontFamily = fontName; cmEditor.refresh(); }
+            state.fontName = fontName; saveConfig();
         }
-
         function applyFontSize(size) {
-            if (cmEditor) {
-                cmEditor.getWrapperElement().style.fontSize = `${size}px`;
-                cmEditor.refresh();
-            }
-            state.fontSize = size;
-            saveConfig();
+            if (cmEditor) { cmEditor.getWrapperElement().style.fontSize = `${size}px`; cmEditor.refresh(); }
+            state.fontSize = size; saveConfig();
         }
-
         function applyLineSpacing(spacing) {
-            if (cmEditor) {
-                cmEditor.getWrapperElement().style.lineHeight = spacing;
-                cmEditor.refresh();
-            }
-            state.lineSpacing = spacing;
-            saveConfig();
+            if (cmEditor) { cmEditor.getWrapperElement().style.lineHeight = spacing; cmEditor.refresh(); }
+            state.lineSpacing = spacing; saveConfig();
         }
-
-        function increaseFont() {
-            applyFontSize(state.fontSize + 1);
-        }
-
-        function decreaseFont() {
-            if (state.fontSize > 8) {
-                applyFontSize(state.fontSize - 1);
-            }
-        }
-
+        function increaseFont() { applyFontSize(state.fontSize + 1); }
+        function decreaseFont() { if (state.fontSize > 8) applyFontSize(state.fontSize - 1); }
         function toggleSpacing() {
-            let newSpacing = state.lineSpacing;
-            if (state.lineSpacing === 1.5) newSpacing = 2.0;
-            else if (state.lineSpacing === 2.0) newSpacing = 1.0;
-            else newSpacing = 1.5;
-            applyLineSpacing(newSpacing);
-            showNotification(`تم ضبط التباعد إلى ${newSpacing}`, 'warning');
+            let newSpacing = state.lineSpacing === 1.5 ? 2.0 : (state.lineSpacing === 2.0 ? 1.0 : 1.5);
+            applyLineSpacing(newSpacing); showNotification(`تم ضبط التباعد إلى ${newSpacing}`, 'warning');
         }
-
-        function undo() {
-            if (cmEditor) cmEditor.undo();
-        }
-
-        function redo() {
-            if (cmEditor) cmEditor.redo();
-        }
+        function undo() { if (cmEditor) cmEditor.undo(); }
+        function redo() { if (cmEditor) cmEditor.redo(); }
 
         function updateStats() {
             if (!cmEditor) return; 
@@ -1483,74 +1397,26 @@
             elements.stats.textContent = `📝 ${wordCount} كلمة | 📏 ${lineCount} سطر`;
         }
         
-        const systemTextOverlay = {
-            token: function(stream) {
-                if (stream.match(/\[.*?\]/)) { return "system-text"; }
-                while (stream.next() != null && !stream.match(/\[.*?\]/, false)) {}
-                return null;
-            }
-        };
-
-        const dialogueOverlay = {
-            token: function(stream) {
-                let ch;
-                if (stream.peek() === '"') {
-                    stream.next();
-                    while ((ch = stream.next()) != null) { if (ch === '"') break; }
-                    return "dialogue-text";
-                }
-                if (stream.peek() === "'") {
-                    stream.next();
-                    while ((ch = stream.next()) != null) { if (ch === "'") break; }
-                    return "dialogue-text";
-                }
-                stream.next();
-                return null;
-            }
-        };
+        const systemTextOverlay = { token: function(stream) { if (stream.match(/\[.*?\]/)) { return "system-text"; } while (stream.next() != null && !stream.match(/\[.*?\]/, false)) {} return null; } };
+        const dialogueOverlay = { token: function(stream) { let ch; if (stream.peek() === '"') { stream.next(); while ((ch = stream.next()) != null) { if (ch === '"') break; } return "dialogue-text"; } if (stream.peek() === "'") { stream.next(); while ((ch = stream.next()) != null) { if (ch === "'") break; } return "dialogue-text"; } stream.next(); return null; } };
 
         function toggleDialogueHighlighting() {
             if (!cmEditor) return;
             state.dialogueHighlighting = !state.dialogueHighlighting; 
-            if (state.dialogueHighlighting) {
-                cmEditor.addOverlay(dialogueOverlay);
-                elements.toggleDialogueBtn.classList.add('active'); 
-                showNotification('✅ تم تفعيل تلوين الحوارات', 'success');
-            } else {
-                cmEditor.removeOverlay(dialogueOverlay);
-                elements.toggleDialogueBtn.classList.remove('active'); 
-                showNotification('⚪️ تم إيقاف تلوين الحوارات', 'warning');
-            }
+            if (state.dialogueHighlighting) { cmEditor.addOverlay(dialogueOverlay); elements.toggleDialogueBtn.classList.add('active'); showNotification('✅ تم تفعيل تلوين الحوارات', 'success'); } else { cmEditor.removeOverlay(dialogueOverlay); elements.toggleDialogueBtn.classList.remove('active'); showNotification('⚪️ تم إيقاف تلوين الحوارات', 'warning'); }
         }
         
-        function onImportClick() {
-            if (typeof saveEnglishChapter === 'undefined' || typeof saveTranslatedChapter === 'undefined') {
-                showNotification('خطأ: ملف translator_core.js غير محمل بشكل صحيح.', 'error');
-                return;
-            }
-            elements.importTypeModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
-            elements.importTypeModal.classList.add('show');
-        }
+        function onImportClick() { elements.importTypeModal.classList.toggle('dark-interface', state.interfaceColor === 'black'); elements.importTypeModal.classList.add('show'); }
         
         function startImportProcess(importType) {
             elements.importTypeModal.classList.remove('show');
             const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.txt,.zip'; 
-            input.multiple = true; 
-            input.click(); 
-            input.onchange = (e) => {
-                const files = e.target.files;
-                if (files.length === 0) return;
-                processImportedFiles(files, importType);
-            };
+            input.type = 'file'; input.accept = '.txt,.zip'; input.multiple = true; input.click(); 
+            input.onchange = (e) => { const files = e.target.files; if (files.length === 0) return; processImportedFiles(files, importType); };
         }
 
         async function processImportedFiles(files, dbType) {
-            if (typeof JSZip === 'undefined') {
-                showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
-                return;
-            }
+            if (typeof JSZip === 'undefined') { showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error'); return; }
             const dbName = dbType === 'english' ? 'الإنجليزية' : 'المترجمة';
             let importedFileNames = [];
             showNotification(`جاري استيراد ${files.length} ملفات إلى "${dbName}"...`, 'warning');
@@ -1561,172 +1427,100 @@
                     try {
                         const zip = await JSZip.loadAsync(file); 
                         const txtFilesEntries = [];
-                        zip.forEach((relativePath, zipEntry) => {
-                            if (zipEntry.name.toLowerCase().endsWith('.txt') && !zipEntry.dir) {
-                                txtFilesEntries.push(zipEntry);
-                            }
-                        });
-                        if (txtFilesEntries.length === 0) {
-                            showNotification(`ملف ZIP ${file.name} لا يحتوي على ملفات .txt`, 'warning');
-                            continue;
-                        }
+                        zip.forEach((relativePath, zipEntry) => { if (zipEntry.name.toLowerCase().endsWith('.txt') && !zipEntry.dir) txtFilesEntries.push(zipEntry); });
                         for (const zipEntry of txtFilesEntries) {
                             const content = await zipEntry.async('string');
                             const filename = zipEntry.name.split('/').pop(); 
-                            saveFunction(filename, content);
+                            await saveFunction(filename, content);
                             importedFileNames.push(filename);
                         }
-                    } catch (err) {
-                        showNotification(`فشل في فك ضغط ${file.name}`, 'error');
-                        console.error(err);
-                    }
+                    } catch (err) { console.error(err); }
                 } else if (fileNameLower.endsWith('.txt')) {
                     try {
                         const content = await file.text(); 
-                        const filename = file.name;
-                        saveFunction(filename, content);
-                        importedFileNames.push(filename);
-                    } catch (err) {
-                         showNotification(`فشل في قراءة ${file.name}`, 'error');
-                         console.error(err);
-                    }
-                } else {
-                    showNotification(`تم تخطي ${file.name} (نوع غير مدعوم)`, 'warning');
+                        await saveFunction(file.name, content);
+                        importedFileNames.push(file.name);
+                    } catch (err) { console.error(err); }
                 }
             }
             if (importedFileNames.length > 0) {
-                loadFile(importedFileNames[importedFileNames.length - 1], dbType); 
-                showNotification(`✅ تم استيراد ${importedFileNames.length} فصول إلى "${dbName}"!`);
-            } else {
-                 showNotification('لم يتم استيراد أي ملفات .txt جديدة', 'warning');
+                await loadFile(importedFileNames[importedFileNames.length - 1], dbType); 
+                showNotification(`✅ تم استيراد ${importedFileNames.length} فصول`);
             }
         }
 
-        function renameFile() {
-            if (!state.selectedFile || state.selectedFileDB === 'none') {
-                showNotification('⚠️ لا يوجد ملف مفتوح لتغيير اسمه', 'error');
-                elements.filenameInput.disabled = true;
-                elements.filenameInput.value = '';
-                return;
-            }
+        async function renameFile() {
+            if (!state.selectedFile || state.selectedFileDB === 'none') return;
             const oldName = state.selectedFile;
             let newName = elements.filenameInput.value.trim();
-            if (!newName) {
-                showNotification('❌ اسم الملف لا يمكن أن يكون فارغاً', 'error');
-                elements.filenameInput.value = oldName;
-                return;
-            }
-            if (!newName.toLowerCase().endsWith('.txt')) {
-                newName += '.txt';
-                elements.filenameInput.value = newName;
-            }
+            if (!newName) { elements.filenameInput.value = oldName; return; }
+            if (!newName.toLowerCase().endsWith('.txt')) newName += '.txt';
             if (newName === oldName) return;
+            
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
-            if (files[newName]) {
-                showNotification(`❌ ملف بالاسم '${newName}' موجود بالفعل في هذه القاعدة`, 'error');
-                elements.filenameInput.value = oldName;
-                return;
-            }
+            const files = await Storage.get(dbKey, {});
+            if (files[newName]) { showNotification(`❌ اسم موجود`, 'error'); elements.filenameInput.value = oldName; return; }
+            
             files[newName] = files[oldName]; 
             files[newName].modified = Date.now();
             delete files[oldName]; 
             state.selectedFile = newName;
-            Storage.set(dbKey, files); 
+            await Storage.set(dbKey, files); 
             saveConfig();
-            showNotification(`✅ تم تغيير الاسم إلى\n${newName}`);
+            showNotification(`✅ تم تغيير الاسم`);
         }
 
-        function saveChanges(isAutoSave = false) {
+        async function saveChanges(isAutoSave = false) {
             let filename = state.selectedFile;
             let dbType = state.selectedFileDB;
+            
             if (!filename || dbType === 'none') {
-                if (isAutoSave) return; 
-                showNotification('لا يوجد ملف مفتوح. قم بإنشاء ملف جديد عبر الحفظ.', 'warning');
-                filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
-                if (!filename) {
-                    showNotification('تم إلغاء الحفظ', 'warning');
-                    return;
-                }
-                const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
-                if (saveLocation && (saveLocation.toLowerCase().includes('انجليزي') || saveLocation.toLowerCase().includes('english'))) {
-                    dbType = 'english';
-                } else if (saveLocation && (saveLocation.toLowerCase().includes('مترجم') || saveLocation.toLowerCase().includes('translated'))) {
-                    dbType = 'translated';
-                } else {
-                    showNotification('تم إلغاء الحفظ. يجب تحديد الموقع.', 'warning');
-                    return;
-                }
-                if (!filename.toLowerCase().endsWith('.txt')) {
-                    filename += '.txt';
-                }
+                if (isAutoSave) return;
+                filename = prompt("أدخل اسم الملف الجديد:");
+                if (!filename) return;
+                const saveLocation = prompt("اكتب 'انجليزي' أو 'مترجم':");
+                if (saveLocation && saveLocation.includes('انجليزي')) dbType = 'english';
+                else if (saveLocation && saveLocation.includes('مترجم')) dbType = 'translated';
+                else return;
+                if (!filename.toLowerCase().endsWith('.txt')) filename += '.txt';
             }
-            if (typeof saveEnglishChapter === 'undefined' || typeof readEnglishChapter === 'undefined') {
-                showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
-                return;
-            }
+
             const contentToSave = cmEditor.getValue();
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
+            await saveFunction(filename, contentToSave);
             
-            const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
-            const currentContentInDB = (files[filename]) ? files[filename].content : null;
-
-            if (currentContentInDB !== null && currentContentInDB === contentToSave) {
-                 if (!isAutoSave) {
-                     showNotification('لا توجد تغييرات لحفظها', 'warning');
-                 }
-                 return;
-            }
-            saveFunction(filename, contentToSave);
             state.selectedFile = filename;
-            state.selectedFileDB = dbType; 
+            state.selectedFileDB = dbType;
             elements.filenameInput.value = filename;
             elements.filenameInput.disabled = false;
             saveConfig();
-            if (!isAutoSave) {
-                showNotification(`✅ تم حفظ ${filename} بنجاح`);
-            }
+            if (!isAutoSave) showNotification(`✅ تم حفظ ${filename}`);
         }
 
-        function createNewChapter() {
-            let filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
-            if (!filename) {
-                showNotification('تم إلغاء الإنشاء', 'warning');
-                return;
-            }
-            const saveLocation = prompt("أين تريد حفظ الملف الجديد؟ اكتب 'انجليزي' أو 'مترجم':");
+        async function createNewChapter() {
+            let filename = prompt("أدخل اسم الملف الجديد:");
+            if (!filename) return;
+            const saveLocation = prompt("اكتب 'انجليزي' أو 'مترجم':");
             let dbType;
-            if (saveLocation && (saveLocation.toLowerCase().includes('انجليزي') || saveLocation.toLowerCase().includes('english'))) {
-                dbType = 'english';
-            } else if (saveLocation && (saveLocation.toLowerCase().includes('مترجم') || saveLocation.toLowerCase().includes('translated'))) {
-                dbType = 'translated';
-            } else {
-                showNotification('تم إلغاء الإنشاء. يجب تحديد الموقع.', 'warning');
-                return;
-            }
-            if (!filename.toLowerCase().endsWith('.txt')) {
-                filename += '.txt';
-            }
+            if (saveLocation && saveLocation.includes('انجليزي')) dbType = 'english';
+            else if (saveLocation && saveLocation.includes('مترجم')) dbType = 'translated';
+            else return;
+            if (!filename.toLowerCase().endsWith('.txt')) filename += '.txt';
+            
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
-            if (files[filename]) {
-                showNotification(`❌ ملف بالاسم '${filename}' موجود بالفعل.`, 'error');
-                return;
-            }
+            const files = await Storage.get(dbKey, {});
+            if (files[filename]) { showNotification(`❌ موجود مسبقاً`, 'error'); return; }
+            
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
-            saveFunction(filename, ""); 
-            loadFile(filename, dbType);
-            showNotification(`✅ تم إنشاء ${filename} بنجاح`, 'success');
+            await saveFunction(filename, ""); 
+            await loadFile(filename, dbType);
+            showNotification(`✅ تم إنشاء ${filename}`);
         }
 
-        function loadFile(filename, dbType) {
-            if (!cmEditor) {
-                showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
-                return;
-            }
+        async function loadFile(filename, dbType) {
+            if (!cmEditor) return;
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             
             if (files[filename] !== undefined) {
                 const fileContent = files[filename].content || ""; 
@@ -1738,134 +1532,67 @@
                 cmEditor.clearHistory();
                 updateStats();
                 saveConfig();
-                if (fileContent === "") {
-                    showNotification(`📄 تم فتح ${filename} (ملف جديد)`);
-                } else {
-                    showNotification(`📖 تم فتح ${filename}`);
-                }
+                showNotification(`📖 تم فتح ${filename}`);
                 
-                // ==== 💡 التعديل هنا: إصلاح التمرير ====
                 cmEditor.refresh();
                 cmEditor.setCursor(0, 0);
-                cmEditor.scrollTo(0, 0);
-                setTimeout(() => {
-                    cmEditor.scrollTo(0, 0);
-                    cmEditor.refresh(); 
-                }, 10);
-                // ========================================
-
-            } else {
-                showNotification(`خطأ: لم يتم العثور على الملف ${filename}`, 'error');
+                setTimeout(() => { cmEditor.scrollTo(0, 0); cmEditor.refresh(); }, 10);
             }
         }
         
         function openFileModal() {
-            if (typeof listEnglishChapters === 'undefined' || typeof listTranslatedChapters === 'undefined') {
-                showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
-                return;
-            }
             fileModalSelectMode = false;
             fileModalSelectedFiles.clear();
             elements.fileSearchInput.value = '';
             elements.selectFilesBtn.textContent = 'تحديد';
             elements.deleteFilesBtn.style.display = 'none';
             elements.fileList.classList.remove('selection-active');
-            document.querySelectorAll('#dbTypeControl .segment').forEach(s => {
-                s.classList.toggle('active', s.dataset.db === state.fileDBType);
-            });
-            elements.sortControl.querySelectorAll('.segment').forEach(s => {
-                s.classList.toggle('active', s.dataset.sort === state.fileSortType);
-            });
-            elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
             updateFileListView(); 
             elements.fileModal.classList.add('show');
         }
 
-        function closeFileModal() {
-            elements.fileModal.classList.remove('show');
-        }
+        function closeFileModal() { elements.fileModal.classList.remove('show'); }
         
-        function updateFileListView() {
+        async function updateFileListView() {
             const searchTerm = elements.fileSearchInput.value.toLowerCase();
-            const sortType = state.fileSortType; 
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
-            const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
-            const files = Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-            const fileArray = Object.entries(files).map(([name, data]) => ({
-                name,
-                ...data,
-                content: data.content || "" 
-            }));
-            const dbName = (activeDBType === 'english') ? "الإنجليزية" : "المترجمة";
-            if (fileArray.length === 0) {
-                 elements.fileList.innerHTML = `<li style="padding: 20px; text-align: center; color: #999;">❌ لا توجد فصول في "${dbName}".</li>`;
-                 return;
-            }
+            const dbKey = (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const files = await Storage.get(dbKey, {});
+            const fileArray = Object.entries(files).map(([name, data]) => ({ name, ...data, content: data.content || "" }));
+            
             const filteredArray = fileArray.filter(f => f.name.toLowerCase().includes(searchTerm));
-            sortFiles(filteredArray, sortType);
-            renderFileList(filteredArray, activeDBType); 
-        }
+            
+            // Sort logic
+            const sortType = state.fileSortType;
+            filteredArray.sort((a, b) => {
+                if (sortType === 'modified') return b.modified - a.modified;
+                if (sortType === 'alphabetical') return a.name.localeCompare(b.name, 'ar');
+                if (sortType === 'numerical') {
+                    const nA = (a.name.match(/(\d+)/) || [0])[0];
+                    const nB = (b.name.match(/(\d+)/) || [0])[0];
+                    return parseInt(nA) - parseInt(nB);
+                }
+            });
+            if (state.fileSortReversed) filteredArray.reverse();
 
-        function sortFiles(fileArray, sortType) {
-            const getFileNumber = (name) => {
-                const match = name.match(/(\d+)/); 
-                return match ? parseInt(match[0], 10) : 0; 
-            };
-            if (sortType === 'modified') {
-                fileArray.sort((a, b) => b.modified - a.modified);
-            } else if (sortType === 'alphabetical') {
-                fileArray.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
-            } else if (sortType === 'numerical') {
-                fileArray.sort((a, b) => getFileNumber(a.name) - getFileNumber(b.name));
-            }
-            if (state.fileSortReversed) {
-                fileArray.reverse();
-            }
-        }
-
-        function renderFileList(fileArray, dbType) { 
             elements.fileList.innerHTML = ''; 
-            if (fileArray.length === 0) {
-                 elements.fileList.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">❌ لا توجد فصول تطابق البحث.</li>';
-                 return;
-            }
-            fileArray.forEach(file => {
+            if (filteredArray.length === 0) { elements.fileList.innerHTML = '<li style="padding: 20px; text-align: center; color: #999;">❌ لا توجد فصول.</li>'; return; }
+            
+            filteredArray.forEach(file => {
                 const li = document.createElement('li');
                 li.className = 'file-item';
                 li.dataset.filename = file.name; 
                 const sizeKB = (file.content.length / 1024).toFixed(2);
-                const modifiedDate = formatFileDate(file.modified); 
                 const isChecked = fileModalSelectedFiles.has(file.name);
-                if (isChecked) {
-                    li.classList.add('selected');
-                }
-                li.innerHTML = `
-                    <div class="file-checkbox-container">
-                        <input type="checkbox" class="file-checkbox" ${isChecked ? 'checked' : ''}>
-                    </div>
-                    <div class="file-details">
-                        <div>${file.name}</div>
-                        <div class="file-info">${sizeKB} KB | ${modifiedDate}</div>
-                    </div>
-                `;
-                li.addEventListener('click', (e) => {
-                    const filename = li.dataset.filename;
+                if (isChecked) li.classList.add('selected');
+                li.innerHTML = `<div class="file-checkbox-container"><input type="checkbox" class="file-checkbox" ${isChecked ? 'checked' : ''}></div><div class="file-details"><div>${file.name}</div><div class="file-info">${sizeKB} KB</div></div>`;
+                li.addEventListener('click', () => {
                     if (fileModalSelectMode) {
                         const checkbox = li.querySelector('.file-checkbox');
-                        if (fileModalSelectedFiles.has(filename)) {
-                            fileModalSelectedFiles.delete(filename);
-                            li.classList.remove('selected');
-                            checkbox.checked = false;
-                        } else {
-                            fileModalSelectedFiles.add(filename);
-                            li.classList.add('selected');
-                            checkbox.checked = true;
-                        }
+                        if (fileModalSelectedFiles.has(file.name)) { fileModalSelectedFiles.delete(file.name); li.classList.remove('selected'); checkbox.checked = false; }
+                        else { fileModalSelectedFiles.add(file.name); li.classList.add('selected'); checkbox.checked = true; }
                         elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
-                    } else {
-                        loadFile(filename, dbType);
-                        closeFileModal();
-                    }
+                    } else { loadFile(file.name, activeDBType); closeFileModal(); }
                 });
                 elements.fileList.appendChild(li);
             });
@@ -1877,7 +1604,6 @@
             if (fileModalSelectMode) {
                 elements.selectFilesBtn.textContent = 'إلغاء التحديد';
                 elements.deleteFilesBtn.style.display = 'block';
-                elements.deleteFilesBtn.textContent = 'حذف';
                 elements.selectAllFilesBtn.style.display = 'block';
                 elements.deselectAllFilesBtn.style.display = 'block';
             } else {
@@ -1885,358 +1611,71 @@
                 elements.deleteFilesBtn.style.display = 'none';
                 elements.selectAllFilesBtn.style.display = 'none';
                 elements.deselectAllFilesBtn.style.display = 'none';
-                fileModalSelectedFiles.clear(); 
-                updateFileListView(); 
+                fileModalSelectedFiles.clear(); updateFileListView();
             }
         }
         
-        function deleteSelectedFiles() {
-            if (fileModalSelectedFiles.size === 0) {
-                showNotification('لم يتم تحديد أي ملفات للحذف', 'warning');
-                return;
-            }
-            if (!confirm(`هل أنت متأكد من حذف ${fileModalSelectedFiles.size} ملفات؟ لا يمكن التراجع عن هذا الإجراء.`)) {
-                return;
-            }
+        async function deleteSelectedFiles() {
+            if (fileModalSelectedFiles.size === 0) return;
+            if (!confirm(`حذف ${fileModalSelectedFiles.size} ملفات؟`)) return;
+            
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
             const dbKey = (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
-            let fileWasReset = false;
-            for (const filename of fileModalSelectedFiles) {
-                delete files[filename]; 
-                if (state.selectedFile === filename && state.selectedFileDB === activeDBType) {
-                    fileWasReset = true;
-                }
-            }
-            if (fileWasReset) {
-                state.selectedFile = null;
-                state.selectedFileDB = 'none'; 
-                elements.filenameInput.value = 'لم يتم فتح ملف';
-                elements.filenameInput.placeholder = 'لم يتم فتح ملف';
-                elements.filenameInput.disabled = true;
-                cmEditor.setValue('');
-                updateStats();
-                saveConfig();
-            }
-            Storage.set(dbKey, files); 
-            showNotification(`✅ تم حذف ${fileModalSelectedFiles.size} ملفات بنجاح`);
-            toggleSelectMode(); 
+            const files = await Storage.get(dbKey, {});
+            
+            for (const filename of fileModalSelectedFiles) { delete files[filename]; }
+            await Storage.set(dbKey, files);
+            
+            fileModalSelectedFiles.clear();
+            updateFileListView();
+            showNotification(`✅ تم الحذف`);
         }
 
         function selectAllFiles() {
-            if (!fileModalSelectMode) return;
-            const fileItems = elements.fileList.querySelectorAll('.file-item');
-            if (fileItems.length === 0) {
-                showNotification('لا توجد فصول لتحديدها', 'warning');
-                return;
-            }
-            fileItems.forEach(li => {
-                const filename = li.dataset.filename;
-                if (filename && !li.classList.contains('selected')) { 
-                    fileModalSelectedFiles.add(filename); 
-                    li.classList.add('selected');
-                    const checkbox = li.querySelector('.file-checkbox');
-                    if (checkbox) checkbox.checked = true;
-                }
-            });
+            const items = elements.fileList.querySelectorAll('.file-item');
+            items.forEach(li => { fileModalSelectedFiles.add(li.dataset.filename); li.classList.add('selected'); li.querySelector('.file-checkbox').checked = true; });
             elements.deleteFilesBtn.textContent = `حذف (${fileModalSelectedFiles.size})`;
         }
 
         function deselectAllFiles() {
-            if (!fileModalSelectMode) return;
-            fileModalSelectedFiles.clear(); 
-            const fileItems = elements.fileList.querySelectorAll('.file-item');
-            fileItems.forEach(li => {
-                li.classList.remove('selected');
-                const checkbox = li.querySelector('.file-checkbox');
-                if (checkbox) checkbox.checked = false;
-            });
-            elements.deleteFilesBtn.textContent = 'حذف (0)';
+            fileModalSelectedFiles.clear();
+            elements.fileList.querySelectorAll('.file-item').forEach(li => { li.classList.remove('selected'); li.querySelector('.file-checkbox').checked = false; });
+            elements.deleteFilesBtn.textContent = `حذف (0)`;
         }
 
-        function formatFileDate(timestamp) {
-            const now = new Date();
-            const fileDate = new Date(timestamp);
-            const diffMs = now - fileDate;
-            const diffHours = diffMs / (1000 * 60 * 60);
-
-            const timeFormat = fileDate.toLocaleString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit', 
-                hour12: true 
-            }); 
-
-            if (diffHours < 24) {
-                return timeFormat;
-            } else {
-                const yesterday = new Date(now);
-                yesterday.setDate(now.getDate() - 1);
-                
-                if (yesterday.toDateString() === fileDate.toDateString()) {
-                     return `Yesterday at ${timeFormat}`;
-                } else {
-                    return fileDate.toLocaleDateString('en-US');
-                }
-            }
-        }
-        
-        function applyInterfaceColor(value) {
-            state.interfaceColor = value;
-            const gradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            const allModals = document.querySelectorAll('.modal-content');
-            
-            if (value === 'white') {
-                document.body.style.background = gradient;
-                elements.header.style.background = gradient;
-                elements.controls.classList.remove('dark-interface');
-                elements.stats.classList.remove('dark-interface');
-                allModals.forEach(modal => modal.classList.remove('dark-interface'));
-            } else if (value === 'black') {
-                document.body.style.background = value;
-                elements.header.style.background = value;
-                elements.controls.classList.add('dark-interface');
-                elements.stats.classList.add('dark-interface');
-                allModals.forEach(modal => modal.classList.add('dark-interface'));
-            } else { 
-                document.body.style.background = value;
-                elements.header.style.background = value;
-                elements.controls.classList.remove('dark-interface');
-                elements.stats.classList.remove('dark-interface');
-                allModals.forEach(modal => modal.classList.remove('dark-interface'));
-            }
-            saveConfig();
-        }
-
-        function openColorModal() {
-            const colors = {
-                'افتراضي': 'white',
-                'رمادي': '#DDDDDD',
-                'بيج': '#F5F5DC',
-                'كريمي': '#FFF8DC',
-                'اسود': 'black'
-            };
-            const colorList = document.getElementById('colorList');
-            colorList.innerHTML = '';
-            Object.entries(colors).forEach(([name, value]) => {
-                const div = document.createElement('div');
-                div.className = 'color-item';
-                div.style.background = value;
-                div.style.color = (value === 'black' || value === 'blue') ? 'white' : 'black';
-                div.textContent = name;
-                div.addEventListener('click', () => {
-                    applyInterfaceColor(value); 
-                    showNotification(`✅ تم تغيير لون الواجهة إلى ${name}`);
-                    closeColorModal();
-                });
-                colorList.appendChild(div);
-            });
-            elements.colorModal.classList.add('show');
-        }
-
-        function closeColorModal() {
-            elements.colorModal.classList.remove('show');
-        }
-
-        function openFindReplaceModal() {
-            elements.findReplaceModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
-            elements.findReplaceModal.classList.add('show');
-            document.getElementById('findText').focus();
-        }
-
-        function closeFindReplaceModal() {
-            elements.findReplaceModal.classList.remove('show');
-        }
-
-        function performFindReplace() {
-            const findText = document.getElementById('findText').value;
-            const replaceText = document.getElementById('replaceText').value;
-            if (!findText) {
-                showNotification('الرجاء إدخال نص للبحث عنه', 'error');
-                return;
-            }
-            const currentText = cmEditor.getValue();
-            const newText = currentText.replace(new RegExp(findText, 'g'), replaceText);
-            if (currentText === newText) {
-                 showNotification('لم يتم العثور على النص', 'warning');
-            } else {
-                 cmEditor.setValue(newText);
-                 updateStats();
-                 showNotification('✅ تم الاستبدال بنجاح');
-                 closeFindReplaceModal();
-            }
-        }
-
-        function openExportZipModal() {
-            elements.exportZipModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
-            elements.exportZipModal.classList.add('show');
-        }
-
+        function openColorModal() { elements.colorModal.classList.add('show'); const colors = {'افتراضي':'white','رمادي':'#DDDDDD','بيج':'#F5F5DC','كريمي':'#FFF8DC','اسود':'black'}; const list = document.getElementById('colorList'); list.innerHTML=''; Object.entries(colors).forEach(([n,v])=>{const d=document.createElement('div');d.className='color-item';d.style.background=v;d.textContent=n;d.onclick=()=>{applyInterfaceColor(v);closeColorModal();};list.appendChild(d);}); }
+        function closeColorModal() { elements.colorModal.classList.remove('show'); }
+        function openFindReplaceModal() { elements.findReplaceModal.classList.toggle('dark-interface', state.interfaceColor==='black'); elements.findReplaceModal.classList.add('show'); }
+        function closeFindReplaceModal() { elements.findReplaceModal.classList.remove('show'); }
+        function performFindReplace() { const f=document.getElementById('findText').value, r=document.getElementById('replaceText').value; if(!f)return; cmEditor.setValue(cmEditor.getValue().replace(new RegExp(f,'g'), r)); closeFindReplaceModal(); }
+        function openExportZipModal() { elements.exportZipModal.classList.toggle('dark-interface', state.interfaceColor==='black'); elements.exportZipModal.classList.add('show'); }
         async function startZipExport(dbType) {
-            elements.exportZipModal.classList.remove('show'); 
-            if (typeof JSZip === 'undefined') {
-                showNotification('خطأ: مكتبة (JSZip) غير موجودة.', 'error');
-                return;
-            }
-            const isEnglish = (dbType === 'english');
-            const dbKey = isEnglish ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const folderName = isEnglish ? 'English_Chapters' : 'Arabic_Chapters';
-            const zipFileName = isEnglish ? 'English_Chapters.zip' : 'Arabic_Chapters.zip';
-            const dbFriendlyName = isEnglish ? 'الإنجليزية' : 'المترجمة';
-            showNotification(`جاري تحضير ملفات ${dbFriendlyName} للضغط...`, 'warning');
-            try {
-                const files = Storage.get(dbKey, {});
-                const fileNames = Object.keys(files);
-                if (fileNames.length === 0) {
-                    showNotification(`لا توجد فصول في "${dbFriendlyName}" لتصديرها.`, 'error');
-                    return;
-                }
-                const zip = new JSZip();
-                const folder = zip.folder(folderName); 
-                for (const filename of fileNames) {
-                    const fileData = files[filename];
-                    const content = fileData.content || ""; 
-                    folder.file(filename, content); 
-                }
-                showNotification('جاري ضغط الملفات...', 'warning');
-                const zipContent = await zip.generateAsync({ 
-                    type: "blob",
-                    compression: "DEFLATE", 
-                    compressionOptions: { level: 9 }
-                });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(zipContent);
-                link.download = zipFileName;
-                document.body.appendChild(link); 
-                link.click(); 
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(link.href); 
-                }, 100); 
-                showNotification(`✅ تم تصدير ${fileNames.length} فصول بنجاح!`, 'success');
-            } catch (err) {
-                console.error("خطأ أثناء إنشاء ملف ZIP:", err);
-                showNotification('❌ حدث خطأ أثناء إنشاء ملف ZIP.', 'error');
-            }
+            elements.exportZipModal.classList.remove('show');
+            if (typeof JSZip === 'undefined') { showNotification('JSZip missing', 'error'); return; }
+            const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
+            const files = await Storage.get(dbKey, {});
+            const zip = new JSZip();
+            const folder = zip.folder(dbType);
+            Object.entries(files).forEach(([name, data]) => folder.file(name, data.content || ""));
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(content); a.download = `${dbType}_chapters.zip`; a.click();
         }
-        
-        function toggleReadMode() {
-            state.readMode = !state.readMode;
-            elements.controls.classList.toggle('hidden', state.readMode);
-            elements.header.classList.toggle('hidden', state.readMode);
-            elements.stats.classList.toggle('hidden', state.readMode);
-            elements.exitBtn.classList.toggle('show', state.readMode && !state.fullscreen); 
-            if (cmEditor) {
-                cmEditor.setOption("readOnly", state.readMode);
-                cmEditor.getWrapperElement().classList.toggle('read-only', state.readMode);
-            }
-        }
+        function openFontModal() { elements.fontModal.classList.add('show'); const fonts=[{n:'Geeza',f:'Geeza Pro'},{n:'Cairo',f:'Cairo'},{n:'Arial',f:'Arial'}]; elements.fontList.innerHTML=''; fonts.forEach(f=>{const li=document.createElement('li');li.className='selection-item';li.textContent=f.n;li.onclick=()=>{applyFont(f.f);closeFontModal();};elements.fontList.appendChild(li);}); }
+        function closeFontModal() { elements.fontModal.classList.remove('show'); }
+        function openThemeModal() { elements.themeModal.classList.add('show'); const themes=[{n:'ابيض',v:'white'},{n:'داكن',v:'dark'},{n:'ازرق',v:'blue-dark'}]; elements.themeList.innerHTML=''; themes.forEach(t=>{const li=document.createElement('li');li.className='selection-item';li.textContent=t.n;li.onclick=()=>{applyTheme(t.v);closeThemeModal();};elements.themeList.appendChild(li);}); }
+        function closeThemeModal() { elements.themeModal.classList.remove('show'); }
+        function applyInterfaceColor(c) { state.interfaceColor=c; document.body.style.background = c==='black'?'black':(c==='white'?'linear-gradient(135deg, #667eea 0%, #764ba2 100%)':c); elements.header.style.background = c==='black'?'black':(c==='white'?'linear-gradient(135deg, #667eea 0%, #764ba2 100%)':c); if(c==='black'){ elements.controls.classList.add('dark-interface'); } else { elements.controls.classList.remove('dark-interface'); } saveConfig(); }
 
-        function toggleFullscreen() {
-            state.fullscreen = !state.fullscreen;
-            elements.header.classList.toggle('hidden', state.fullscreen);
-            elements.controls.classList.toggle('hidden', state.fullscreen);
-            elements.stats.classList.toggle('hidden', state.fullscreen);
-            elements.exitBtn.classList.toggle('show', state.fullscreen); 
-            if(state.readMode) {
-                 elements.exitBtn.classList.toggle('show', state.fullscreen);
-            }
-        }
-
-        function exitSpecialMode() {
-            if (state.fullscreen) toggleFullscreen(); 
-            if (state.readMode) toggleReadMode();
-            elements.exitBtn.classList.remove('show');
-        }
-
-        function openFontModal() {
-            const fonts = [
-                { name: 'Geeza Pro (افتراضي)', family: 'Geeza Pro', cssClass: 'font-geeza' },
-                { name: 'Cairo (جديد)', family: "'Cairo', sans-serif", cssClass: 'font-cairo' },
-                { name: 'Noto Kufi (جديد)', family: "'Noto Kufi Arabic', sans-serif", cssClass: 'font-noto-kufi' },
-                { name: 'Amiri (جديد)', family: "'Amiri', serif", cssClass: 'font-amiri' },
-                { name: 'Arial', family: 'Arial', cssClass: 'font-arial' },
-                { name: 'Times New Roman', family: "'Times New Roman', serif", cssClass: 'font-times' }
-            ];
-            elements.fontList.innerHTML = ''; 
-            fonts.forEach(font => {
-                const li = document.createElement('li');
-                li.className = `selection-item ${font.cssClass}`;
-                li.textContent = font.name;
-                if (state.fontName === font.family) {
-                    li.classList.add('active');
-                }
-                li.addEventListener('click', () => {
-                    applyFont(font.family);
-                    closeFontModal();
-                });
-                elements.fontList.appendChild(li);
-            });
-            elements.fontModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
-            elements.fontModal.classList.add('show');
-        }
-        function closeFontModal() {
-            elements.fontModal.classList.remove('show');
-        }
-
-        function openThemeModal() {
-            const themes = [
-                { name: 'ابيض', value: 'white' },
-                { name: 'داكن', value: 'dark' },
-                { name: 'ازرق داكن', value: 'blue-dark' }
-            ];
-            elements.themeList.innerHTML = ''; 
-            themes.forEach(theme => {
-                const li = document.createElement('li');
-                li.className = 'selection-item';
-                li.textContent = theme.name;
-                if (state.theme === theme.value) {
-                    li.classList.add('active');
-                }
-                li.addEventListener('click', () => {
-                    applyTheme(theme.value);
-                    closeThemeModal();
-                });
-                elements.themeList.appendChild(li);
-            });
-            elements.themeModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
-            elements.themeModal.classList.add('show');
-        }
-        function closeThemeModal() {
-            elements.themeModal.classList.remove('show');
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             setupEventListeners();
-            
-            cmEditor = CodeMirror.fromTextArea(elements.textEditor, {
-                lineNumbers: false,
-                direction: "rtl",  
-                lineWrapping: true, 
-                readOnly: state.readMode,
-            });
-
+            cmEditor = CodeMirror.fromTextArea(elements.textEditor, { lineNumbers: false, direction: "rtl", lineWrapping: true, readOnly: state.readMode });
             cmEditor.addOverlay(systemTextOverlay);
-
-            cmEditor.on("change", () => {
-                updateStats(); 
-                if (autoSaveTimer) clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    saveChanges(true); 
-                }, 2000); 
-            });
+            cmEditor.on("change", () => { updateStats(); if (autoSaveTimer) clearTimeout(autoSaveTimer); autoSaveTimer = setTimeout(() => saveChanges(true), 2000); });
             
-            loadConfig(); 
-
-            applyTheme(state.theme);
-            applyFont(state.fontName);
-            applyFontSize(state.fontSize);
-            applyLineSpacing(state.lineSpacing);
-
-            if(cmEditor) {
-                updateStats();
-            }
+            await loadConfig(); 
+            applyTheme(state.theme); applyFont(state.fontName); applyFontSize(state.fontSize); applyLineSpacing(state.lineSpacing);
+            if(cmEditor) updateStats();
         });
-
     </script>
 </body>
 </html>
