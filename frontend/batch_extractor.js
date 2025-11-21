@@ -1,9 +1,7 @@
-// batch_extractor.js - منطق استخراج المصطلحات الجماعي
+// batch_extractor.js - منطق استخراج المصطلحات الجماعي (Async)
 
 class BatchExtractor {
   constructor() {
-    // جلب مفاتيح المسرد من نفس المكان الذي تستخدمه أداة الترجمة الجماعية
-    this.glossaryKeys = this.loadGlossaryKeys();
     this.isExtracting = false;
     this.stopRequested = false;
     this.currentGlossaryKeyIndex = 0;
@@ -12,55 +10,41 @@ class BatchExtractor {
     this.initializeElements();
     this.attachEventListeners();
     
-    // --- إصلاح المشكلة: عرض المفاتيح المحفوظة عند التحميل ---
-    this.updateGlossaryKeysField(); 
-    // -------------------------------------------------------
-    
-    this.updateInfo();
+    // تهيئة غير متزامنة
+    this.initData();
   }
 
-  // ====== تهيئة العناصر ======
+  async initData() {
+      this.glossaryKeys = await this.loadGlossaryKeys();
+      this.updateGlossaryKeysField(); 
+      this.updateInfo();
+  }
 
   initializeElements() {
-    // حقول الإدخال
     this.waitTimeField = document.getElementById('waitTimeField');
     this.glossaryKeysField = document.getElementById('glossaryKeysField');
-
-    // الأزرار
     this.startBtn = document.getElementById('startBtn');
     this.stopBtn = document.getElementById('stopBtn');
     this.saveGlossaryKeysBtn = document.getElementById('saveGlossaryKeysBtn');
-
-    // عناصر العرض
     this.infoLabel = document.getElementById('infoLabel');
     this.glossaryKeysCount = document.getElementById('glossaryKeysCount');
     this.loadingIndicator = document.getElementById('loadingIndicator');
     this.progressLabel = document.getElementById('progressLabel');
     this.logOutput = document.getElementById('logOutput');
-
-    // الإشعارات
     this.toast = document.getElementById('toast');
   }
 
-  // ====== ربط الأحداث ======
-
   attachEventListeners() {
-    // حفظ مفاتيح المسرد
     this.saveGlossaryKeysBtn.addEventListener('click', () => this.saveGlossaryKeysAction());
-
-    // أزرار التحكم
     this.startBtn.addEventListener('click', () => this.startBatchExtraction());
     this.stopBtn.addEventListener('click', () => this.stopExtraction());
   }
 
-  // ====== إدارة مفاتيح المسرد ======
-  // (هذه الدوال مطابقة للموجودة في batch_translator.js لضمان التوافق)
-
-  loadGlossaryKeys() {
-    const stored = Storage.get('zeus_translator_glossary_keys');
+  async loadGlossaryKeys() {
+    const stored = await Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY_KEYS);
     if (!stored) {
       const defaultKeys = { Gemini: [] };
-      Storage.set('zeus_translator_glossary_keys', defaultKeys);
+      await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY_KEYS, defaultKeys);
       return defaultKeys;
     }
     if (!stored.Gemini) {
@@ -71,41 +55,41 @@ class BatchExtractor {
     return stored;
   }
 
-  saveGlossaryKeysToStorage(keys) {
-    Storage.set('zeus_translator_glossary_keys', keys);
+  async saveGlossaryKeysToStorage(keys) {
+    await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY_KEYS, keys);
   }
 
   updateGlossaryKeysField() {
+    if (!this.glossaryKeys) return;
     const keys = this.glossaryKeys.Gemini || [];
     this.glossaryKeysField.value = keys.join('\n');
     this.glossaryKeysCount.textContent = `🔑 ${keys.length} مفتاح للمسرد`;
   }
 
-  saveGlossaryKeysAction() {
+  async saveGlossaryKeysAction() {
     const keysText = this.glossaryKeysField.value.trim();
     const keysList = keysText ? keysText.split('\n').map(k => k.trim()).filter(k => k) : [];
 
+    if (!this.glossaryKeys) this.glossaryKeys = { Gemini: [] };
     this.glossaryKeys.Gemini = keysList;
-    this.saveGlossaryKeysToStorage(this.glossaryKeys);
+    await this.saveGlossaryKeysToStorage(this.glossaryKeys);
 
     this.glossaryKeysCount.textContent = `🔑 ${keysList.length} مفتاح للمسرد`;
     this.showToast(`✅ تم حفظ ${keysList.length} مفتاح للمسرد`, 'success');
     this.updateInfo();
   }
 
-  // ====== تحديث المعلومات ======
-
-  updateInfo() {
+  async updateInfo() {
     try {
+        if (!this.glossaryKeys) this.glossaryKeys = await this.loadGlossaryKeys();
         const glossaryKeysCount = (this.glossaryKeys.Gemini || []).length;
         
-        const englishChapters = listEnglishChapters();
-        const translatedChapters = listTranslatedChapters();
+        const englishChapters = await listEnglishChapters();
+        const translatedChapters = await listTranslatedChapters();
         
-        // إيجاد الفصول المتطابقة (التي ستتم معالجتها)
         const matchingChapters = englishChapters.filter(ch => translatedChapters.includes(ch));
         
-        const currentGlossary = loadGlossary();
+        const currentGlossary = await loadGlossary();
         const totalTerms = Object.keys(currentGlossary.extracted_terms || {}).length;
 
         this.infoLabel.innerHTML = `
@@ -121,17 +105,12 @@ class BatchExtractor {
     }
   }
 
-  // ====== السجل ======
-
   addLog(message) {
     const timestamp = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const currentText = this.logOutput.value;
     this.logOutput.value = `[${timestamp}] ${message}\n${currentText}`;
-    // تمرير تلقائي للأسفل
     this.logOutput.scrollTop = 0; 
   }
-
-  // ====== بدء الاستخراج ======
 
   async startBatchExtraction() {
     if (this.isExtracting) {
@@ -139,8 +118,7 @@ class BatchExtractor {
       return;
     }
 
-    // (تحديث) تحديث المفاتيح من الحقل قبل البدء
-    this.saveGlossaryKeysAction();
+    await this.saveGlossaryKeysAction();
     const geminiKeys = this.glossaryKeys.Gemini || [];
 
     if (geminiKeys.length === 0) {
@@ -154,9 +132,8 @@ class BatchExtractor {
       return;
     }
 
-    // إيجاد الفصول المتطابقة (الهدف)
-    const englishChapters = listEnglishChapters();
-    const translatedChapters = listTranslatedChapters();
+    const englishChapters = await listEnglishChapters();
+    const translatedChapters = await listTranslatedChapters();
     const matchingChapters = englishChapters.filter(ch => translatedChapters.includes(ch));
 
     if (matchingChapters.length === 0) {
@@ -172,24 +149,18 @@ class BatchExtractor {
     this.logOutput.value = '';
     this.progressLabel.textContent = '...جاري التهيئة';
 
-    // بدء الاستخراج
     this.runBatchExtraction(geminiKeys, matchingChapters, waitTime);
   }
-
-  // ====== إيقاف الاستخراج ======
 
   stopExtraction() {
     this.stopRequested = true;
     this.addLog('🛑 تم طلب إيقاف الاستخراج...');
-    this.stopBtn.disabled = true; // منع الضغط المتكرر
+    this.stopBtn.disabled = true;
   }
-
-  // ====== تشغيل الاستخراج الجماعي ======
-  // (محاكاة دقيقة لمنطق _run_batch_extraction في بايثون)
 
   async runBatchExtraction(geminiKeys, chapters, waitTime) {
     try {
-      let currentGlossary = loadGlossary(); // تحميل المسرد مرة واحدة في البداية
+      let currentGlossary = await loadGlossary();
       const total = chapters.length;
       let extracted = 0;
       let failed = 0;
@@ -211,25 +182,22 @@ class BatchExtractor {
 
         this.progressLabel.innerHTML = `📊 التقدم: ${i + 1}/${total}<br>📖 الفصل الحالي: ${chapterName}`;
 
-        // 1. قراءة الفصل الإنجليزي
         this.addLog(`📥 قراءة ${chapterName} (إنجليزي)...`);
-        const englishText = readEnglishChapter(chapterFile);
+        const englishText = await readEnglishChapter(chapterFile);
         if (!englishText) {
           this.addLog(`❌ فشل قراءة الفصل الإنجليزي ${chapterName}`);
           failed++;
           continue;
         }
 
-        // 2. قراءة الفصل المترجم
         this.addLog(`📥 قراءة ${chapterName} (عربي)...`);
-        const arabicText = readTranslatedChapter(chapterFile); // استخدام الدالة الصحيحة
+        const arabicText = await readTranslatedChapter(chapterFile);
         if (!arabicText) {
           this.addLog(`❌ فشل قراءة الفصل المترجم ${chapterName}`);
           failed++;
           continue;
         }
 
-        // 3. استخراج المصطلحات (مع محاولات ودوران المفاتيح)
         this.addLog(`📚 استخراج مصطلحات ${chapterName}...`);
         
         let termExtracted = false;
@@ -255,13 +223,12 @@ class BatchExtractor {
               englishText,
               arabicText,
               geminiKey,
-              currentGlossary // إرسال أحدث نسخة من المسرد
+              currentGlossary
             );
 
             if (extractionResult && extractionResult.glossary) {
-              // نجح الاستخراج
-              saveGlossary(extractionResult.glossary);
-              currentGlossary = extractionResult.glossary; // تحديث المسرد المحلي
+              await saveGlossary(extractionResult.glossary);
+              currentGlossary = extractionResult.glossary;
               
               const newTermsCount = Object.keys(extractionResult.glossary.extracted_terms).length;
               const added = newTermsCount - oldTermsCount;
@@ -271,32 +238,28 @@ class BatchExtractor {
               totalNewTerms += added;
               termExtracted = true;
             } else {
-              // فشل غير متوقع من API
               throw new Error("فشل الاستخراج، نتيجة فارغة");
             }
           } catch (error) {
-            // فشل بسبب خطأ (مثل مفتاح غير صالح)
             console.error('خطأ في استخراج المصطلحات:', error);
             this.addLog(`⚠️ خطأ: ${error.message.substring(0, 50)}`);
-            this.failedGlossaryKeys.add(geminiKey); // وضع علامة على المفتاح كفاشل
+            this.failedGlossaryKeys.add(geminiKey);
             this.currentGlossaryKeyIndex++;
             termAttempts++;
           }
-        } // نهاية حلقة المحاولات
+        }
 
         if (!termExtracted && !this.stopRequested) {
           this.addLog(`❌ فشل استخراج مصطلحات ${chapterName} (نفدت المفاتيح)`);
           failed++;
         }
 
-        // 4. الانتظار بين الفصول
         if (i < chapters.length - 1 && !this.stopRequested) {
           this.addLog(`⏳ انتظار ${waitTime} ثانية...`);
           await this.sleep(waitTime * 1000);
         }
-      } // نهاية حلقة الفصول
+      }
 
-      // الملخص
       let summary = '\n' + '='.repeat(40) + '\n';
       summary += '📊 ملخص الاستخراج الجماعي:\n';
       summary += `✅ نجح: ${extracted}\n`;
@@ -315,8 +278,6 @@ class BatchExtractor {
     }
   }
 
-  // ====== إنهاء الاستخراج ======
-
   finishExtraction() {
     this.isExtracting = false;
     this.startBtn.disabled = false;
@@ -324,10 +285,8 @@ class BatchExtractor {
     this.loadingIndicator.style.display = 'none';
     this.progressLabel.textContent = '✅ اكتمل الاستخراج!';
     this.showToast('🎉 انتهى الاستخراج الجماعي!', 'success');
-    this.updateInfo(); // تحديث الإحصائيات بعد الانتهاء
+    this.updateInfo();
   }
-
-  // ====== مساعدات ======
 
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -354,7 +313,6 @@ class BatchExtractor {
   }
 }
 
-// تشغيل التطبيق
 document.addEventListener('DOMContentLoaded', () => {
   new BatchExtractor();
 });
