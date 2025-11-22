@@ -2,8 +2,9 @@
 
 class BatchExtractor {
   constructor() {
-    // جلب مفاتيح المسرد من نفس المكان الذي تستخدمه أداة الترجمة الجماعية
-    this.glossaryKeys = this.loadGlossaryKeys();
+    // تهيئة مبدئية فارغة
+    this.glossaryKeys = { Gemini: [] };
+    
     this.isExtracting = false;
     this.stopRequested = false;
     this.currentGlossaryKeyIndex = 0;
@@ -12,11 +13,18 @@ class BatchExtractor {
     this.initializeElements();
     this.attachEventListeners();
     
-    // --- إصلاح المشكلة: عرض المفاتيح المحفوظة عند التحميل ---
-    this.updateGlossaryKeysField(); 
-    // -------------------------------------------------------
+    // بدء تحميل البيانات من قاعدة البيانات (بشكل غير متزامن)
+    this.initData();
+  }
+
+  // ====== دالة جديدة لتهيئة البيانات (IndexedDB) ======
+  async initData() {
+    // تحميل مفاتيح المسرد
+    this.glossaryKeys = await this.loadGlossaryKeys();
     
-    this.updateInfo();
+    // تحديث الواجهة
+    this.updateGlossaryKeysField();
+    await this.updateInfo();
   }
 
   // ====== تهيئة العناصر ======
@@ -56,11 +64,11 @@ class BatchExtractor {
   // ====== إدارة مفاتيح المسرد ======
   // (هذه الدوال مطابقة للموجودة في batch_translator.js لضمان التوافق)
 
-  loadGlossaryKeys() {
-    const stored = Storage.get('zeus_translator_glossary_keys');
+  async loadGlossaryKeys() {
+    const stored = await Storage.get('zeus_translator_glossary_keys');
     if (!stored) {
       const defaultKeys = { Gemini: [] };
-      Storage.set('zeus_translator_glossary_keys', defaultKeys);
+      await Storage.set('zeus_translator_glossary_keys', defaultKeys);
       return defaultKeys;
     }
     if (!stored.Gemini) {
@@ -71,8 +79,8 @@ class BatchExtractor {
     return stored;
   }
 
-  saveGlossaryKeysToStorage(keys) {
-    Storage.set('zeus_translator_glossary_keys', keys);
+  async saveGlossaryKeysToStorage(keys) {
+    await Storage.set('zeus_translator_glossary_keys', keys);
   }
 
   updateGlossaryKeysField() {
@@ -81,31 +89,32 @@ class BatchExtractor {
     this.glossaryKeysCount.textContent = `🔑 ${keys.length} مفتاح للمسرد`;
   }
 
-  saveGlossaryKeysAction() {
+  async saveGlossaryKeysAction() {
     const keysText = this.glossaryKeysField.value.trim();
     const keysList = keysText ? keysText.split('\n').map(k => k.trim()).filter(k => k) : [];
 
     this.glossaryKeys.Gemini = keysList;
-    this.saveGlossaryKeysToStorage(this.glossaryKeys);
+    await this.saveGlossaryKeysToStorage(this.glossaryKeys);
 
     this.glossaryKeysCount.textContent = `🔑 ${keysList.length} مفتاح للمسرد`;
     this.showToast(`✅ تم حفظ ${keysList.length} مفتاح للمسرد`, 'success');
-    this.updateInfo();
+    await this.updateInfo();
   }
 
   // ====== تحديث المعلومات ======
 
-  updateInfo() {
+  async updateInfo() {
     try {
         const glossaryKeysCount = (this.glossaryKeys.Gemini || []).length;
         
-        const englishChapters = listEnglishChapters();
-        const translatedChapters = listTranslatedChapters();
+        // استخدام الدوال من translator_core.js (التي أصبحت async الآن)
+        const englishChapters = await listEnglishChapters();
+        const translatedChapters = await listTranslatedChapters();
         
         // إيجاد الفصول المتطابقة (التي ستتم معالجتها)
         const matchingChapters = englishChapters.filter(ch => translatedChapters.includes(ch));
         
-        const currentGlossary = loadGlossary();
+        const currentGlossary = await loadGlossary();
         const totalTerms = Object.keys(currentGlossary.extracted_terms || {}).length;
 
         this.infoLabel.innerHTML = `
@@ -140,7 +149,7 @@ class BatchExtractor {
     }
 
     // (تحديث) تحديث المفاتيح من الحقل قبل البدء
-    this.saveGlossaryKeysAction();
+    await this.saveGlossaryKeysAction();
     const geminiKeys = this.glossaryKeys.Gemini || [];
 
     if (geminiKeys.length === 0) {
@@ -155,8 +164,8 @@ class BatchExtractor {
     }
 
     // إيجاد الفصول المتطابقة (الهدف)
-    const englishChapters = listEnglishChapters();
-    const translatedChapters = listTranslatedChapters();
+    const englishChapters = await listEnglishChapters();
+    const translatedChapters = await listTranslatedChapters();
     const matchingChapters = englishChapters.filter(ch => translatedChapters.includes(ch));
 
     if (matchingChapters.length === 0) {
@@ -189,7 +198,7 @@ class BatchExtractor {
 
   async runBatchExtraction(geminiKeys, chapters, waitTime) {
     try {
-      let currentGlossary = loadGlossary(); // تحميل المسرد مرة واحدة في البداية
+      let currentGlossary = await loadGlossary(); // تحميل المسرد مرة واحدة في البداية
       const total = chapters.length;
       let extracted = 0;
       let failed = 0;
@@ -213,7 +222,7 @@ class BatchExtractor {
 
         // 1. قراءة الفصل الإنجليزي
         this.addLog(`📥 قراءة ${chapterName} (إنجليزي)...`);
-        const englishText = readEnglishChapter(chapterFile);
+        const englishText = await readEnglishChapter(chapterFile);
         if (!englishText) {
           this.addLog(`❌ فشل قراءة الفصل الإنجليزي ${chapterName}`);
           failed++;
@@ -222,7 +231,7 @@ class BatchExtractor {
 
         // 2. قراءة الفصل المترجم
         this.addLog(`📥 قراءة ${chapterName} (عربي)...`);
-        const arabicText = readTranslatedChapter(chapterFile); // استخدام الدالة الصحيحة
+        const arabicText = await readTranslatedChapter(chapterFile); // استخدام الدالة الصحيحة
         if (!arabicText) {
           this.addLog(`❌ فشل قراءة الفصل المترجم ${chapterName}`);
           failed++;
@@ -260,7 +269,7 @@ class BatchExtractor {
 
             if (extractionResult && extractionResult.glossary) {
               // نجح الاستخراج
-              saveGlossary(extractionResult.glossary);
+              await saveGlossary(extractionResult.glossary); // حفظ غير متزامن
               currentGlossary = extractionResult.glossary; // تحديث المسرد المحلي
               
               const newTermsCount = Object.keys(extractionResult.glossary.extracted_terms).length;
