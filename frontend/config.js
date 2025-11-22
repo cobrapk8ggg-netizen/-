@@ -27,8 +27,8 @@ const CONFIG = {
   MODELS: {
     OpenAI: 'gpt-3.5-turbo',
     Together: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
-    Gemini: 'gemini-1.5-pro', // تم تعديلها للنسخة المستقرة المتاحة حالياً، يمكنك إعادتها لـ 2.5 إذا كان لديك وصول
-    GeminiFlash: 'gemini-1.5-flash'
+    Gemini: 'gemini-2.5-pro', // تم تعديلها للنسخة المستقرة المتاحة حالياً، يمكنك إعادتها لـ 2.5 إذا كان لديك وصول
+    GeminiFlash: 'gemini-2.5-flash'
   }
 };
 
