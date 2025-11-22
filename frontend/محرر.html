@@ -1177,6 +1177,7 @@
             if (state.selectedFile && state.selectedFileDB !== 'none') {
                 if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
                     if (cmEditor) {
+                        // loadFile is now async
                         loadFile(state.selectedFile, state.selectedFileDB);
                     } else {
                         document.addEventListener('DOMContentLoaded', () => {
@@ -1366,14 +1367,14 @@
         }
         // ====================================
 
-        function navigateChapter(direction) {
+        async function navigateChapter(direction) {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ يجب فتح فصل أولاً للتنقل.', 'warning');
                 return;
             }
 
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             const fileNames = Object.keys(files);
 
             if (fileNames.length <= 1) {
@@ -1404,8 +1405,8 @@
             }
 
             if (targetFile) {
-                saveChanges(true); 
-                loadFile(targetFile, state.selectedFileDB);
+                await saveChanges(true); 
+                await loadFile(targetFile, state.selectedFileDB);
             }
         }
 
@@ -1486,7 +1487,7 @@
         const systemTextOverlay = {
             token: function(stream) {
                 if (stream.match(/\[.*?\]/)) { return "system-text"; }
-                while (stream.next() != null && !stream.match(/\[.*?\]/, false)) {}
+                while (stream.next() != null && !stream.match(/\[.*?\]/)) { stream.next(); }
                 return null;
             }
         };
@@ -1573,7 +1574,7 @@
                         for (const zipEntry of txtFilesEntries) {
                             const content = await zipEntry.async('string');
                             const filename = zipEntry.name.split('/').pop(); 
-                            saveFunction(filename, content);
+                            await saveFunction(filename, content); // Added await
                             importedFileNames.push(filename);
                         }
                     } catch (err) {
@@ -1584,7 +1585,7 @@
                     try {
                         const content = await file.text(); 
                         const filename = file.name;
-                        saveFunction(filename, content);
+                        await saveFunction(filename, content); // Added await
                         importedFileNames.push(filename);
                     } catch (err) {
                          showNotification(`فشل في قراءة ${file.name}`, 'error');
@@ -1595,14 +1596,14 @@
                 }
             }
             if (importedFileNames.length > 0) {
-                loadFile(importedFileNames[importedFileNames.length - 1], dbType); 
+                await loadFile(importedFileNames[importedFileNames.length - 1], dbType); // Added await
                 showNotification(`✅ تم استيراد ${importedFileNames.length} فصول إلى "${dbName}"!`);
             } else {
                  showNotification('لم يتم استيراد أي ملفات .txt جديدة', 'warning');
             }
         }
 
-        function renameFile() {
+        async function renameFile() {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ لا يوجد ملف مفتوح لتغيير اسمه', 'error');
                 elements.filenameInput.disabled = true;
@@ -1622,7 +1623,7 @@
             }
             if (newName === oldName) return;
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             if (files[newName]) {
                 showNotification(`❌ ملف بالاسم '${newName}' موجود بالفعل في هذه القاعدة`, 'error');
                 elements.filenameInput.value = oldName;
@@ -1632,12 +1633,12 @@
             files[newName].modified = Date.now();
             delete files[oldName]; 
             state.selectedFile = newName;
-            Storage.set(dbKey, files); 
+            await Storage.set(dbKey, files); 
             saveConfig();
             showNotification(`✅ تم تغيير الاسم إلى\n${newName}`);
         }
 
-        function saveChanges(isAutoSave = false) {
+        async function saveChanges(isAutoSave = false) {
             let filename = state.selectedFile;
             let dbType = state.selectedFileDB;
             if (!filename || dbType === 'none') {
@@ -1669,7 +1670,7 @@
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
             
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             const currentContentInDB = (files[filename]) ? files[filename].content : null;
 
             if (currentContentInDB !== null && currentContentInDB === contentToSave) {
@@ -1678,7 +1679,7 @@
                  }
                  return;
             }
-            saveFunction(filename, contentToSave);
+            await saveFunction(filename, contentToSave); // Added await
             state.selectedFile = filename;
             state.selectedFileDB = dbType; 
             elements.filenameInput.value = filename;
@@ -1689,7 +1690,7 @@
             }
         }
 
-        function createNewChapter() {
+        async function createNewChapter() {
             let filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
             if (!filename) {
                 showNotification('تم إلغاء الإنشاء', 'warning');
@@ -1709,24 +1710,24 @@
                 filename += '.txt';
             }
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             if (files[filename]) {
                 showNotification(`❌ ملف بالاسم '${filename}' موجود بالفعل.`, 'error');
                 return;
             }
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
-            saveFunction(filename, ""); 
-            loadFile(filename, dbType);
+            await saveFunction(filename, ""); // Added await
+            await loadFile(filename, dbType); // Added await
             showNotification(`✅ تم إنشاء ${filename} بنجاح`, 'success');
         }
 
-        function loadFile(filename, dbType) {
+        async function loadFile(filename, dbType) {
             if (!cmEditor) {
                 showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
                 return;
             }
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             
             if (files[filename] !== undefined) {
                 const fileContent = files[filename].content || ""; 
@@ -1759,7 +1760,7 @@
             }
         }
         
-        function openFileModal() {
+        async function openFileModal() {
             if (typeof listEnglishChapters === 'undefined' || typeof listTranslatedChapters === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
                 return;
@@ -1777,7 +1778,7 @@
                 s.classList.toggle('active', s.dataset.sort === state.fileSortType);
             });
             elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
-            updateFileListView(); 
+            await updateFileListView(); // Added await
             elements.fileModal.classList.add('show');
         }
 
@@ -1785,12 +1786,12 @@
             elements.fileModal.classList.remove('show');
         }
         
-        function updateFileListView() {
+        async function updateFileListView() {
             const searchTerm = elements.fileSearchInput.value.toLowerCase();
             const sortType = state.fileSortType; 
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
-            const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
-            const files = Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+            // const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
+            const files = await Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
             const fileArray = Object.entries(files).map(([name, data]) => ({
                 name,
                 ...data,
@@ -1871,7 +1872,7 @@
             });
         }
         
-        function toggleSelectMode() {
+        async function toggleSelectMode() {
             fileModalSelectMode = !fileModalSelectMode;
             elements.fileList.classList.toggle('selection-active', fileModalSelectMode);
             if (fileModalSelectMode) {
@@ -1886,11 +1887,11 @@
                 elements.selectAllFilesBtn.style.display = 'none';
                 elements.deselectAllFilesBtn.style.display = 'none';
                 fileModalSelectedFiles.clear(); 
-                updateFileListView(); 
+                await updateFileListView(); // Added await
             }
         }
         
-        function deleteSelectedFiles() {
+        async function deleteSelectedFiles() {
             if (fileModalSelectedFiles.size === 0) {
                 showNotification('لم يتم تحديد أي ملفات للحذف', 'warning');
                 return;
@@ -1900,7 +1901,7 @@
             }
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
             const dbKey = (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = Storage.get(dbKey, {});
+            const files = await Storage.get(dbKey, {});
             let fileWasReset = false;
             for (const filename of fileModalSelectedFiles) {
                 delete files[filename]; 
@@ -1918,7 +1919,7 @@
                 updateStats();
                 saveConfig();
             }
-            Storage.set(dbKey, files); 
+            await Storage.set(dbKey, files); // Added await
             showNotification(`✅ تم حذف ${fileModalSelectedFiles.size} ملفات بنجاح`);
             toggleSelectMode(); 
         }
@@ -2084,7 +2085,7 @@
             const dbFriendlyName = isEnglish ? 'الإنجليزية' : 'المترجمة';
             showNotification(`جاري تحضير ملفات ${dbFriendlyName} للضغط...`, 'warning');
             try {
-                const files = Storage.get(dbKey, {});
+                const files = await Storage.get(dbKey, {}); // Added await
                 const fileNames = Object.keys(files);
                 if (fileNames.length === 0) {
                     showNotification(`لا توجد فصول في "${dbFriendlyName}" لتصديرها.`, 'error');
