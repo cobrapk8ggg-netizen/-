@@ -128,16 +128,18 @@ const DEFAULT_EXTRACTION_PROMPT = `
 
 // ====== إدارة المسرد ======
 
-function loadGlossary() {
-  const glossary = Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY);
+async function loadGlossary() {
+  // نستخدم await لانتظار البيانات من قاعدة البيانات
+  const glossary = await Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY);
   if (!glossary || !glossary.manual_terms || !glossary.extracted_terms) {
     return { manual_terms: {}, extracted_terms: {} };
   }
   return glossary;
 }
 
-function saveGlossary(glossary) {
-  return Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
+async function saveGlossary(glossary) {
+  // نستخدم await لضمان انتهاء الحفظ
+  return await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
 }
 
 // ==========================================================
@@ -146,15 +148,15 @@ function saveGlossary(glossary) {
 
 // ====== إدارة الفصول الإنجليزية ======
 
-function listEnglishChapters() {
-  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {}); 
+async function listEnglishChapters() {
+  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة بشكل غير متزامن
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
-function readEnglishChapter(filename) {
-  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+async function readEnglishChapter(filename) {
+  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة بشكل غير متزامن
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
   // نتأكد من أن الملف موجود وأن له محتوى
   if (chapters[filename] && chapters[filename].content) {
     return chapters[filename].content;
@@ -162,14 +164,15 @@ function readEnglishChapter(filename) {
   return '';
 }
 
-function saveEnglishChapter(filename, content) {
+async function saveEnglishChapter(filename, content) {
   // نحفظ في قاعدة البيانات الإنجليزية المخصصة
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+  // يجب جلب الفصول أولاً (await) ثم التعديل ثم الحفظ (await)
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
   chapters[filename] = {
     content: content,
     modified: Date.now()
   };
-  return Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, chapters);
+  return await Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, chapters);
 }
 
 // ====== إدارة الفصول المترجمة ======
@@ -178,9 +181,9 @@ function saveEnglishChapter(filename, content) {
  * (إضافة جديدة)
  * هذه هي الدالة التي كانت مفقودة وتسببت بالخطأ في الصورة
  */
-function listTranslatedChapters() {
-  // نقرأ من قاعدة بيانات الفصول المترجمة
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {}); 
+async function listTranslatedChapters() {
+  // نقرأ من قاعدة بيانات الفصول المترجمة بشكل غير متزامن
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
@@ -188,25 +191,26 @@ function listTranslatedChapters() {
  * (إضافة جديدة)
  * دالة مساعدة لقراءة فصل مترجم (سيحتاجها المحرر)
  */
-function readTranslatedChapter(filename) {
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+async function readTranslatedChapter(filename) {
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
   if (chapters[filename] && chapters[filename].content) {
     return chapters[filename].content;
   }
   return '';
 }
 
-function saveTranslatedChapter(filename, content) {
+async function saveTranslatedChapter(filename, content) {
   // (تم التعديل)
   // نحفظ الآن في قاعدة بيانات الفصول المترجمة المخصصة
-  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+  // يجب جلب الفصول أولاً (await) ثم التعديل ثم الحفظ (await)
+  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
  
   chapters[filename] = {
     content: content,
     modified: Date.now()
   };
  
-  return Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
+  return await Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
 }
 
 // ==========================================================
@@ -236,10 +240,11 @@ function buildGlossaryPrompt(glossary) {
 
 // (تعديل جذري)
 // هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
-function buildTranslationPrompt(text, glossary) {
+// تم تحويلها لـ async لأن Storage.get أصبح async
+async function buildTranslationPrompt(text, glossary) {
   
   // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي
-  const promptTemplate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE) || DEFAULT_TRANSLATION_PROMPT;
+  const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE) || DEFAULT_TRANSLATION_PROMPT;
 
   // 2. بناء قسم المسرد
   const glossaryPrompt = buildGlossaryPrompt(glossary);
@@ -282,8 +287,8 @@ async function translateWithGoogle(text) {
 }
 
 async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS.OpenAI) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً
-  const prompt = buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
+  const prompt = await buildTranslationPrompt(text, glossary);
   const url = 'https://api.openai.com/v1/chat/completions';
 
   try {
@@ -315,8 +320,8 @@ async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS
 }
 
 async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODELS.Together) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً
-  const prompt = buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
+  const prompt = await buildTranslationPrompt(text, glossary);
   const url = 'https://api.together.xyz/v1/chat/completions';
 
   try {
@@ -348,8 +353,8 @@ async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODE
 }
 
 async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS.Gemini) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً
-  const prompt = buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
+  const prompt = await buildTranslationPrompt(text, glossary);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   try {
@@ -385,8 +390,8 @@ async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS
 // هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
 async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGlossary) {
   
-  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي
-  const promptTemplate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT) || DEFAULT_EXTRACTION_PROMPT;
+  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي (مع await)
+  const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT) || DEFAULT_EXTRACTION_PROMPT;
 
   // 2. استبدال المتغيرات في البرومبت
   const prompt = promptTemplate
