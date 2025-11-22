@@ -1,9 +1,11 @@
-// translator_core.js - الوظائف الأساسية للترجمة (Async)
+// translator_core.js - الوظائف الأساسية للترجمة
 
 // ============================================
 // === (بداية) تعريف البرومبت الافتراضي ===
 // ============================================
 
+// (تعديل) تم تعريف البرومبت الافتراضي كثابت
+// تمت إضافة المتغيرات {{GLOSSARY}} و {{TEXT}}
 const DEFAULT_TRANSLATION_PROMPT = `
 أريدك أن تترجم هذا الفصل بأسلوب عربي فصيح وأدبي متقن، ويجب أن يكون السرد متصلًا ومتدفقًا دون أي انقطاع أو تقطيع في المشاهد. إليك التعليمات:
 
@@ -85,6 +87,9 @@ const DEFAULT_TRANSLATION_PROMPT = `
 """{{TEXT}}"""
 `;
 
+
+// (تعديل) تم تعريف البرومبت الافتراضي لاستخراج المصطلحات
+// تمت إضافة المتغيرات {{ENGLISH_TEXT}} و {{ARABIC_TEXT}}
 const DEFAULT_EXTRACTION_PROMPT = `
 أنت مساعد خبير في استخراج المصطلحات والأسماء من النصوص المترجمة.
 مهمتك هي قراءة النص الإنجليزي وترجمته العربية، ثم استخراج المصطلحات التقنية، أسماء الأعلام (مثل أسماء الأشخاص، الأماكن، المنظمات)، والمفاهيم الرئيسية.
@@ -121,69 +126,95 @@ const DEFAULT_EXTRACTION_PROMPT = `
 // ============================================
 
 
-// ====== إدارة المسرد (Async) ======
+// ====== إدارة المسرد ======
 
-async function loadGlossary() {
-  const glossary = await Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY);
+function loadGlossary() {
+  const glossary = Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY);
   if (!glossary || !glossary.manual_terms || !glossary.extracted_terms) {
     return { manual_terms: {}, extracted_terms: {} };
   }
   return glossary;
 }
 
-async function saveGlossary(glossary) {
-  return await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
+function saveGlossary(glossary) {
+  return Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
 }
 
-// ====== إدارة الفصول الإنجليزية (Async) ======
+// ==========================================================
+// === (بداية التعديلات الجذرية لقواعد بيانات الفصول) ===
+// ==========================================================
 
-async function listEnglishChapters() {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {}); 
+// ====== إدارة الفصول الإنجليزية ======
+
+function listEnglishChapters() {
+  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
-async function readEnglishChapter(filename) {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+function readEnglishChapter(filename) {
+  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+  // نتأكد من أن الملف موجود وأن له محتوى
   if (chapters[filename] && chapters[filename].content) {
     return chapters[filename].content;
   }
   return '';
 }
 
-async function saveEnglishChapter(filename, content) {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
+function saveEnglishChapter(filename, content) {
+  // نحفظ في قاعدة البيانات الإنجليزية المخصصة
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
   chapters[filename] = {
     content: content,
     modified: Date.now()
   };
-  return await Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, chapters);
+  return Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, chapters);
 }
 
-// ====== إدارة الفصول المترجمة (Async) ======
+// ====== إدارة الفصول المترجمة ======
 
-async function listTranslatedChapters() {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {}); 
+/**
+ * (إضافة جديدة)
+ * هذه هي الدالة التي كانت مفقودة وتسببت بالخطأ في الصورة
+ */
+function listTranslatedChapters() {
+  // نقرأ من قاعدة بيانات الفصول المترجمة
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
-async function readTranslatedChapter(filename) {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+/**
+ * (إضافة جديدة)
+ * دالة مساعدة لقراءة فصل مترجم (سيحتاجها المحرر)
+ */
+function readTranslatedChapter(filename) {
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
   if (chapters[filename] && chapters[filename].content) {
     return chapters[filename].content;
   }
   return '';
 }
 
-async function saveTranslatedChapter(filename, content) {
-  const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+function saveTranslatedChapter(filename, content) {
+  // (تم التعديل)
+  // نحفظ الآن في قاعدة بيانات الفصول المترجمة المخصصة
+  const chapters = Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+ 
   chapters[filename] = {
     content: content,
     modified: Date.now()
   };
-  return await Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
+ 
+  return Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
 }
 
-// ====== بناء البرومبت (Async) ======
+// ==========================================================
+// === (نهاية تعديلات قواعد بيانات الفصول) ===
+// ==========================================================
+
+
+// ====== بناء البرومبت ======
 
 function buildGlossaryPrompt(glossary) {
   const allTerms = {
@@ -203,19 +234,24 @@ function buildGlossaryPrompt(glossary) {
   return lines.join('\n');
 }
 
-async function buildTranslationPrompt(text, glossary) {
-  // جلب البرومبت المحفوظ من الإعدادات (Async)
-  const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE) || DEFAULT_TRANSLATION_PROMPT;
+// (تعديل جذري)
+// هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
+function buildTranslationPrompt(text, glossary) {
+  
+  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي
+  const promptTemplate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE) || DEFAULT_TRANSLATION_PROMPT;
 
+  // 2. بناء قسم المسرد
   const glossaryPrompt = buildGlossaryPrompt(glossary);
   
+  // 3. استبدال المتغيرات في البرومبت
   let finalPrompt = promptTemplate.replace('{{GLOSSARY}}', glossaryPrompt);
   finalPrompt = finalPrompt.replace('{{TEXT}}', text);
   
   return finalPrompt;
 }
 
-// ====== دوال الترجمة (Async) ======
+// ====== دوال الترجمة ======
 
 async function translateWithGoogle(text) {
   const url = 'https://translate.googleapis.com/translate_a/single';
@@ -246,7 +282,8 @@ async function translateWithGoogle(text) {
 }
 
 async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS.OpenAI) {
-  const prompt = await buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً
+  const prompt = buildTranslationPrompt(text, glossary);
   const url = 'https://api.openai.com/v1/chat/completions';
 
   try {
@@ -278,7 +315,8 @@ async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS
 }
 
 async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODELS.Together) {
-  const prompt = await buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً
+  const prompt = buildTranslationPrompt(text, glossary);
   const url = 'https://api.together.xyz/v1/chat/completions';
 
   try {
@@ -310,7 +348,8 @@ async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODE
 }
 
 async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS.Gemini) {
-  const prompt = await buildTranslationPrompt(text, glossary);
+  // (تعديل) بناء البرومبت أصبح ديناميكياً
+  const prompt = buildTranslationPrompt(text, glossary);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   try {
@@ -340,17 +379,21 @@ async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS
   }
 }
 
-// ====== استخراج المصطلحات (Async) ======
+// ====== استخراج المصطلحات ======
 
+// (تعديل جذري)
+// هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
 async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGlossary) {
   
-  // جلب البرومبت المحفوظ (Async)
-  const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT) || DEFAULT_EXTRACTION_PROMPT;
+  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي
+  const promptTemplate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT) || DEFAULT_EXTRACTION_PROMPT;
 
+  // 2. استبدال المتغيرات في البرومبت
   const prompt = promptTemplate
     .replace('{{ENGLISH_TEXT}}', englishText)
     .replace('{{ARABIC_TEXT}}', arabicText);
 
+  // (باقي الدالة كما هي)
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.MODELS.GeminiFlash}:generateContent?key=${apiKey}`;
 
   try {
@@ -375,6 +418,7 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
     const data = await response.json();
     let responseContent = data.candidates[0].content.parts[0].text;
 
+    // إزالة تنسيق markdown إذا وجد
     if (responseContent.startsWith('```json') && responseContent.endsWith('```')) {
       responseContent = responseContent.slice(7, -3).trim();
     } else if (responseContent.startsWith('```') && responseContent.endsWith('```')) {
@@ -383,6 +427,7 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
 
     const extractedTerms = JSON.parse(responseContent);
 
+    // تصفية المصطلحات المكررة
     const allExistingTerms = {
       ...currentGlossary.manual_terms,
       ...currentGlossary.extracted_terms
@@ -400,9 +445,11 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
 
       let isDuplicate = false;
 
+      // فحص التطابق الإنجليزي
       if (normalizedExisting[normalizedEn]) {
         isDuplicate = true;
       } else {
+        // فحص التشابه
         for (const existingEn of Object.keys(normalizedExisting)) {
           if (normalizedEn.includes(existingEn) || existingEn.includes(normalizedEn)) {
             isDuplicate = true;
@@ -411,6 +458,7 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
         }
       }
 
+      // فحص التطابق العربي
       if (!isDuplicate) {
         for (const existingAr of Object.values(normalizedExisting)) {
           if (normalizedAr === existingAr ||
@@ -427,6 +475,7 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
       }
     }
 
+    // تحديث المسرد
     const updatedGlossary = {
       ...currentGlossary,
       extracted_terms: {
