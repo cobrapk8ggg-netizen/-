@@ -2,13 +2,26 @@
 
 class ZeusTranslator {
   constructor() {
-    this.currentProvider = 'Gemini'; // تم تصحيح '
-    this.apiKeys = Storage.get(CONFIG.STORAGE_KEYS.API_KEYS);
-    this.currentKeyIndices = Storage.get(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES);
-    this.failedKeys = Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS);
+    this.currentProvider = 'Gemini';
+    
+    // تهيئة مبدئية فارغة لتجنب الأخطاء قبل تحميل البيانات
+    this.apiKeys = { Gemini: [], Together: [], OpenAI: [], Google: [] };
+    this.currentKeyIndices = { Gemini: 0, Together: 0, OpenAI: 0, Google: 0 };
+    this.failedKeys = { Gemini: [], Together: [], OpenAI: [], Google: [] };
 
     this.initializeElements();
     this.attachEventListeners();
+    
+    // بدء تحميل البيانات من قاعدة البيانات (بشكل غير متزامن)
+    this.initData();
+  }
+
+  // ====== دالة جديدة لتهيئة البيانات (IndexedDB) ======
+  async initData() {
+    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
+    this.currentKeyIndices = await Storage.get(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES) || this.currentKeyIndices;
+    this.failedKeys = await Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS) || this.failedKeys;
+    
     this.updateAPIKeyField();
   }
 
@@ -104,50 +117,60 @@ class ZeusTranslator {
     this.keysCount.textContent = `🔑 ${keys.length} مفتاح`;
   }
 
-  saveAPIKeys() {
+  async saveAPIKeys() {
     const keysText = this.apiKeysField.value.trim();
     const keysList = keysText ? keysText.split('\n').map(k => k.trim()).filter(k => k) : [];
 
     this.apiKeys[this.currentProvider] = keysList;
-    Storage.set(CONFIG.STORAGE_KEYS.API_KEYS, this.apiKeys);
+    await Storage.set(CONFIG.STORAGE_KEYS.API_KEYS, this.apiKeys);
 
     this.keysCount.textContent = `🔑 ${keysList.length} مفتاح`;
     this.showToast(`✅ تم حفظ ${keysList.length} مفتاح لـ ${this.currentProvider}`, 'success');
   }
 
-  getNextAPIKey(provider) {
+  async getNextAPIKey(provider) {
+    // تحديث المفاتيح من التخزين للتأكد
+    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
+    
     const keys = this.apiKeys[provider] || [];
     if (keys.length === 0) return null;
 
+    // تحديث المفاتيح الفاشلة
+    this.failedKeys = await Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS) || this.failedKeys;
     const failed = this.failedKeys[provider] || [];
     const availableKeys = keys.filter(k => !failed.includes(k));
 
     if (availableKeys.length === 0) {
       this.failedKeys[provider] = [];
-      Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
+      await Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
       return keys[0];
     }
 
+    this.currentKeyIndices = await Storage.get(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES) || this.currentKeyIndices;
     const index = this.currentKeyIndices[provider] || 0;
     const key = keys[index % keys.length];
 
     this.currentKeyIndices[provider] = (index + 1) % keys.length;
-    Storage.set(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES, this.currentKeyIndices);
+    await Storage.set(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES, this.currentKeyIndices);
 
     return key;
   }
 
-  markKeyAsFailed(provider, key) {
+  async markKeyAsFailed(provider, key) {
+    this.failedKeys = await Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS) || this.failedKeys;
+    
     if (!this.failedKeys[provider]) {
       this.failedKeys[provider] = [];
     }
     if (!this.failedKeys[provider].includes(key)) {
       this.failedKeys[provider].push(key);
-      Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
+      await Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
     }
   }
 
   async testAPIKey() {
+    // تحديث المفاتيح
+    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
     const keys = this.apiKeys[this.currentProvider] || [];
 
     if (keys.length === 0) {
@@ -190,8 +213,9 @@ class ZeusTranslator {
 
   // ====== إدارة الفصول ======
 
-  showChapterModal() {
-    const chapters = listEnglishChapters();
+  async showChapterModal() {
+    // استخدام async/await لجلب الفصول
+    const chapters = await listEnglishChapters();
 
     if (chapters.length === 0) {
       this.showToast('⚠️ لا توجد فصول انجليزية محفوظة', 'warning');
@@ -213,21 +237,23 @@ class ZeusTranslator {
     chapters.forEach(chapter => {
       const li = document.createElement('li');
       li.textContent = chapter;
+      // loadChapter is async, but event listener handles promise return implicitly
       li.addEventListener('click', () => this.loadChapter(chapter));
       this.chapterList.appendChild(li);
     });
   }
 
-  filterChapters(searchText) {
-    const allChapters = listEnglishChapters();
+  async filterChapters(searchText) {
+    const allChapters = await listEnglishChapters();
     const filtered = allChapters.filter(ch =>
       ch.toLowerCase().includes(searchText.toLowerCase())
     );
     this.populateChapterList(filtered);
   }
 
-  loadChapter(chapterName) {
-    const content = readEnglishChapter(chapterName);
+  async loadChapter(chapterName) {
+    // استخدام async/await لقراءة الفصل
+    const content = await readEnglishChapter(chapterName);
 
     if (!content) {
       this.showToast(`❌ فشل تحميل الفصل ${chapterName}`, 'error');
@@ -248,14 +274,19 @@ class ZeusTranslator {
   async startTranslation() {
     const chapterName = this.chapterNameField.value.trim();
     const englishText = this.englishInput.value.trim();
-    const glossary = loadGlossary();
+    
+    // تحميل المسرد بشكل غير متزامن
+    const glossary = await loadGlossary();
 
     if (!chapterName || !englishText) {
       this.showToast('❌ يرجى إدخال اسم الفصل والنص الإنجليزي', 'error');
       return;
     }
 
+    // تأكد من تحميل المفاتيح
+    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
     const keys = this.apiKeys[this.currentProvider] || [];
+    
     if (keys.length === 0 && this.currentProvider !== 'Google') {
       this.showToast(`❌ يرجى إضافة مفتاح API واحد على الأقل لـ ${this.currentProvider}`, 'error');
       return;
@@ -266,7 +297,7 @@ class ZeusTranslator {
 
     // إعادة تعيين المفاتيح الفاشلة
     this.failedKeys[this.currentProvider] = [];
-    Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
+    await Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
 
     try {
       let result = null;
@@ -276,7 +307,8 @@ class ZeusTranslator {
         result = await translateWithGoogle(englishText);
       } else {
         while (!result && attempts < CONFIG.MAX_KEY_ATTEMPTS) {
-          const apiKey = this.getNextAPIKey(this.currentProvider);
+          // جلب المفتاح بشكل غير متزامن
+          const apiKey = await this.getNextAPIKey(this.currentProvider);
 
           if (!apiKey) break;
 
@@ -293,17 +325,18 @@ class ZeusTranslator {
             }
 
             if (!result || result.toLowerCase().includes('error')) {
-              this.markKeyAsFailed(this.currentProvider, apiKey);
+              await this.markKeyAsFailed(this.currentProvider, apiKey);
               result = null;
             }
           } catch (error) {
-            this.markKeyAsFailed(this.currentProvider, apiKey);
+            await this.markKeyAsFailed(this.currentProvider, apiKey);
             result = null;
           }
 
           attempts++;
 
-          const failedCount = this.failedKeys[this.currentProvider]?.length || 0;
+          const failed = await Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS) || {};
+          const failedCount = failed[this.currentProvider]?.length || 0;
           if (failedCount >= keys.length) {
             this.showLoading('جميع المفاتيح فشلت');
             break;
@@ -314,7 +347,8 @@ class ZeusTranslator {
       if (result) {
         this.arabicOutput.value = result;
         const filename = chapterName.endsWith('.txt') ? chapterName : `${chapterName}.txt`;
-        saveTranslatedChapter(filename, result);
+        // حفظ الترجمة بشكل غير متزامن
+        await saveTranslatedChapter(filename, result);
         this.showToast(`✅ تم حفظ ${filename}`, 'success');
       } else {
         this.showToast('❌ فشل الترجمة - لم يتم الحصول على نتيجة من المزود', 'error');
@@ -338,10 +372,9 @@ class ZeusTranslator {
     }
 
     try {
-      // استخدام الطريقة القديمة للنسخ (أكثر توافقاً مع iFrames)
       const textArea = document.createElement("textarea");
       textArea.value = text;
-      textArea.style.position = "fixed"; // لمنع التمرير
+      textArea.style.position = "fixed";
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
@@ -349,7 +382,6 @@ class ZeusTranslator {
       document.body.removeChild(textArea);
       this.showToast('✅ تم نسخ الترجمة!', 'success');
     } catch (error) {
-        // Fallback (قد لا تعمل navigator.clipboard.writeText دائماً)
         try {
             await navigator.clipboard.writeText(text);
             this.showToast('✅ تم نسخ الترجمة!', 'success');
@@ -364,6 +396,9 @@ class ZeusTranslator {
   async startTermExtraction() {
     const englishText = this.englishInput.value.trim();
     const arabicText = this.arabicOutput.value.trim();
+    
+    // تأكد من تحميل المفاتيح
+    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
     const geminiKeys = this.apiKeys['Gemini'] || [];
 
     if (!englishText || !arabicText) {
@@ -381,17 +416,17 @@ class ZeusTranslator {
 
     // إعادة تعيين المفاتيح الفاشلة
     this.failedKeys['Gemini'] = [];
-    Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
+    await Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, this.failedKeys);
 
     try {
-      const currentGlossary = loadGlossary();
-      const oldExtractedCount = Object.keys(currentGlossary.extracted_terms || {}).length;
-
+      // تحميل المسرد بشكل غير متزامن
+      const currentGlossary = await loadGlossary();
+      
       let extractionResult = null;
       let attempts = 0;
 
       while (!extractionResult && attempts < CONFIG.MAX_KEY_ATTEMPTS) {
-        const apiKey = this.getNextAPIKey('Gemini');
+        const apiKey = await this.getNextAPIKey('Gemini');
 
         if (!apiKey) break;
 
@@ -406,13 +441,14 @@ class ZeusTranslator {
             currentGlossary
           );
         } catch (error) {
-          this.markKeyAsFailed('Gemini', apiKey);
+          await this.markKeyAsFailed('Gemini', apiKey);
           extractionResult = null;
         }
 
         attempts++;
 
-        const failedCount = this.failedKeys['Gemini']?.length || 0;
+        const failed = await Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS) || {};
+        const failedCount = failed['Gemini']?.length || 0;
         if (failedCount >= geminiKeys.length) {
           this.showLoading('جميع مفاتيح Gemini فشلت');
           break;
@@ -420,7 +456,8 @@ class ZeusTranslator {
       }
 
       if (extractionResult) {
-        saveGlossary(extractionResult.glossary);
+        // حفظ المسرد بشكل غير متزامن
+        await saveGlossary(extractionResult.glossary);
 
         const newTermsCount = Object.keys(extractionResult.newTerms).length;
         const totalExtractedCount = Object.keys(extractionResult.glossary.extracted_terms).length;
@@ -492,6 +529,6 @@ class ZeusTranslator {
 }
 
 // تشغيل التطبيق
-document.addEventListener('DOMContentLoaded', () => { // تم تصحيح '
+document.addEventListener('DOMContentLoaded', () => {
   new ZeusTranslator();
 });
