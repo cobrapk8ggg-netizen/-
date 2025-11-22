@@ -79,9 +79,8 @@
         });
       }
 
-      // ==== 💡 (إضافة) كود النسخ الاحتياطي والاستعادة ====
+      // ==== 💡 (إضافة) كود النسخ الاحتياطي والاستعادة المحدث ليدعم IndexedDB ====
 
-      // (منسوخة من app.js)
       function showToast(message, type = 'success') {
           const toast = document.getElementById('toast');
           toast.textContent = message;
@@ -96,7 +95,7 @@
       }
 
       /**
-       * دالة تصدير نسخة احتياطية كاملة
+       * دالة تصدير نسخة احتياطية كاملة (محدثة لتكون async)
        */
       async function exportFullBackup() {
           if (typeof JSZip === 'undefined') {
@@ -104,26 +103,37 @@
               return;
           }
           
-          showToast('جاري تحضير النسخة الاحتياطية...', 'warning');
+          showToast('جاري تحضير النسخة الاحتياطية... (قد يستغرق وقتاً)', 'warning');
 
           try {
               const zip = new JSZip();
               
-              // 1. جلب كل المفاتيح من CONFIG
+              // 1. جلب كل أسماء المفاتيح من CONFIG
               const keysToBackup = Object.values(CONFIG.STORAGE_KEYS);
               
-              // 2. إضافة المفاتيح الأخرى يدوياً (التي ليست في CONFIG)
+              // 2. إضافة المفاتيح الأخرى يدوياً
               keysToBackup.push('zeusEditorConfig'); // إعدادات المحرر
               keysToBackup.push('zeus_translator_glossary_keys'); // مفاتيح مسرد الترجمة الجماعية
 
               let filesAdded = 0;
               
               // 3. المرور على كل المفاتيح وحفظها في الـ ZIP
+              // ملاحظة: نستخدم await Storage.get بدلاً من localStorage.getItem
               for (const key of keysToBackup) {
-                  const data = localStorage.getItem(key);
+                  // نحاول جلب البيانات من قاعدة البيانات الجديدة
+                  let data = await Storage.get(key);
+                  
+                  // إذا لم نجدها في القاعدة الجديدة، نحاول في القديمة (احتياطياً للإعدادات)
+                  if (!data) {
+                      const localData = localStorage.getItem(key);
+                      if (localData) {
+                          try { data = JSON.parse(localData); } catch(e) { data = localData; }
+                      }
+                  }
+
                   if (data) {
-                      // نحفظ الملف بنفس اسم المفتاح
-                      zip.file(key + ".json", data);
+                      // نحفظ الملف بنفس اسم المفتاح كنص JSON
+                      zip.file(key + ".json", JSON.stringify(data));
                       filesAdded++;
                   }
               }
@@ -162,26 +172,18 @@
       }
 
       /**
-       * === 💡 (هنا التعديل) ===
-       * دالة استعادة النسخة الاحتياطية (تم تعديلها)
+       * دالة استعادة النسخة الاحتياطية (محدثة لتكون async وتدعم IndexedDB)
        */
       function importFullBackup(event) {
           const file = event.target.files[0];
-          if (!file) {
-              // هذا يحدث إذا فتح المستخدم نافذة الملفات ثم أغلقها
-              // أو بسبب إعادة تعيين الحقل في الأسفل، لا داعي لإظهار إشعار هنا
-              return;
-          }
+          if (!file) return;
 
-          // --- 💡 الخطوة 1: طلب التأكيد أولاً ---
-          // هذا الآن إجراء مباشر ناتج عن "onchange"، لذا لن يتم حظره
           if (!confirm("تحذير: سيتم حذف جميع البيانات الحالية (الفصول، الإعدادات، المفاتيح) واستبدالها بالبيانات من هذا الملف. هل أنت متأكد من المتابعة؟")) {
               showToast('تم إلغاء عملية الاستعادة.', 'warning');
-              event.target.value = null; // إعادة تعيين الحقل للسماح بالرفع مرة أخرى
-              return; // الخروج من الدالة إذا ضغط المستخدم "إلغاء"
+              event.target.value = null; 
+              return; 
           }
 
-          // --- الخطوة 2: الآن نبدأ قراءة الملف (بعد الحصول على الموافقة) ---
           showToast('جاري قراءة ملف النسخة الاحتياطية...', 'warning');
           
           const reader = new FileReader();
@@ -190,8 +192,8 @@
                   const content = e.target.result;
                   const zip = await JSZip.loadAsync(content);
                   
-                  // تم أخذ الموافقة مسبقاً، نبدأ المسح والاستعادة
-                  localStorage.clear(); // مسح كل شيء
+                  // مسح كل شيء من القاعدتين (القديمة والجديدة) لضمان نظافة الاستعادة
+                  await Storage.clear(); 
                   
                   let filesRestored = 0;
 
@@ -199,26 +201,37 @@
                   for (const filename in zip.files) {
                       if (!zip.files[filename].dir) {
                           const key = filename.replace(".json", "");
-                          const fileData = await zip.files[filename].async("string");
+                          const fileDataString = await zip.files[filename].async("string");
                           
-                          // إعادة البيانات إلى localStorage
-                          localStorage.setItem(key, fileData);
-                          filesRestored++;
+                          try {
+                              const parsedData = JSON.parse(fileDataString);
+                              
+                              // حفظ في قاعدة البيانات الجديدة
+                              await Storage.set(key, parsedData);
+                              
+                              // نقوم أيضًا بالحفظ في localStorage للإعدادات البسيطة فقط لضمان توافق المحرر
+                              if(key === 'zeusEditorConfig') {
+                                  localStorage.setItem(key, fileDataString);
+                              }
+
+                              filesRestored++;
+                          } catch (parseErr) {
+                              console.error(`فشل استعادة ${key}`, parseErr);
+                          }
                       }
                   }
                   
-                  showToast(`✅ تم استعادة ${filesRestored} ملف بيانات. يرجى إعادة تحميل الصفحة الآن.`, 'success');
+                  showToast(`✅ تم استعادة ${filesRestored} ملف بيانات. يرجى الانتظار لإعادة التحميل...`, 'success');
                   
                   // إعادة تحميل الصفحة لتطبيق الإعدادات
                   setTimeout(() => {
                       window.location.reload();
-                  }, 4000);
+                  }, 3000);
 
               } catch (err) {
                   console.error("خطأ أثناء استعادة النسخة:", err);
                   showToast('❌ ملف ZIP تالف أو غير صالح.', 'error');
               } finally {
-                  // إعادة تعيين حقل الإدخال للسماح بالرفع مرة أخرى
                   event.target.value = null;
               }
           };
@@ -230,8 +243,6 @@
           
           reader.readAsArrayBuffer(file);
       }
-      // === (نهاية التعديل) ===
-
 
       // --- ربط الأحداث للأزرار الجديدة ---
       document.addEventListener('DOMContentLoaded', () => {
@@ -240,19 +251,18 @@
           const restoreInput = document.getElementById('restoreInput');
 
           backupBtn.addEventListener('click', (e) => {
-              e.preventDefault(); // منع الرابط من القفز
+              e.preventDefault(); 
               exportFullBackup();
           });
 
           restoreBtn.addEventListener('click', (e) => {
-              e.preventDefault(); // منع الرابط من القفز
-              restoreInput.click(); // فتح نافذة اختيار الملف
+              e.preventDefault(); 
+              restoreInput.click(); 
           });
 
           restoreInput.addEventListener('change', importFullBackup);
       });
-      // ===============================================
 
     </script>
-    </body>
+</body>
 </html>
