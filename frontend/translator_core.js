@@ -1,11 +1,33 @@
 // translator_core.js - الوظائف الأساسية للترجمة
 
 // ============================================
+// === إعدادات الخادم والمصادقة (جديد) ===
+// ============================================
+
+// رابط الخادم الخلفي الخاص بك
+const API_BASE_URL = 'https://chatzeusb.vercel.app'; 
+
+// دالة لجلب التوكن والتحقق من تسجيل الدخول
+function getAuthToken() {
+    // 1. البحث عن التوكن في رابط الصفحة (عند العودة من جوجل)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    
+    if (urlToken) {
+        // حفظ التوكن وتنظيف الرابط
+        localStorage.setItem('authToken', urlToken);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return urlToken;
+    }
+    
+    // 2. البحث في التخزين المحلي
+    return localStorage.getItem('authToken');
+}
+
+// ============================================
 // === (بداية) تعريف البرومبت الافتراضي ===
 // ============================================
 
-// (تعديل) تم تعريف البرومبت الافتراضي كثابت
-// تمت إضافة المتغيرات {{GLOSSARY}} و {{TEXT}}
 const DEFAULT_TRANSLATION_PROMPT = `
 أريدك أن تترجم هذا الفصل بأسلوب عربي فصيح وأدبي متقن، ويجب أن يكون السرد متصلًا ومتدفقًا دون أي انقطاع أو تقطيع في المشاهد. إليك التعليمات:
 
@@ -89,7 +111,6 @@ const DEFAULT_TRANSLATION_PROMPT = `
 
 
 // (تعديل) تم تعريف البرومبت الافتراضي لاستخراج المصطلحات
-// تمت إضافة المتغيرات {{ENGLISH_TEXT}} و {{ARABIC_TEXT}}
 const DEFAULT_EXTRACTION_PROMPT = `
 أنت مساعد خبير في استخراج المصطلحات والأسماء من النصوص المترجمة.
 مهمتك هي قراءة النص الإنجليزي وترجمته العربية، ثم استخراج المصطلحات التقنية، أسماء الأعلام (مثل أسماء الأشخاص، الأماكن، المنظمات)، والمفاهيم الرئيسية.
@@ -126,10 +147,32 @@ const DEFAULT_EXTRACTION_PROMPT = `
 // ============================================
 
 
-// ====== إدارة المسرد ======
+// ====== إدارة المسرد (متصل بالسيرفر) ======
 
 async function loadGlossary() {
-  // نستخدم await لانتظار البيانات من قاعدة البيانات
+  // 1. محاولة جلب التوكن
+  const token = getAuthToken();
+  
+  // 2. إذا وجد التوكن، حاول الجلب من السيرفر
+  if (token) {
+      try {
+          const response = await fetch(`${API_BASE_URL}/api/glossary`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (response.ok) {
+              const serverData = await response.json();
+              // حفظ نسخة احتياطية محلياً
+              await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, serverData);
+              return serverData;
+          }
+      } catch (e) {
+          console.error("Server load failed, using local cache", e);
+      }
+  } else {
+      console.log('وضع الضيف: استخدام التخزين المحلي فقط');
+  }
+
+  // 3. العودة للمحلي في حال عدم وجود توكن أو فشل السيرفر
   const glossary = await Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY);
   if (!glossary || !glossary.manual_terms || !glossary.extracted_terms) {
     return { manual_terms: {}, extracted_terms: {} };
@@ -138,26 +181,41 @@ async function loadGlossary() {
 }
 
 async function saveGlossary(glossary) {
-  // نستخدم await لضمان انتهاء الحفظ
-  return await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
+  // 1. الحفظ محلياً دائماً (للسرعة والأمان)
+  await Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, glossary);
+
+  // 2. إذا كان المستخدم مسجلاً، احفظ في السيرفر
+  const token = getAuthToken();
+  if (token) {
+      try {
+          const response = await fetch(`${API_BASE_URL}/api/glossary`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify(glossary)
+          });
+          
+          if (!response.ok) throw new Error('Server save failed');
+          console.log('Glossary synced with server');
+      } catch (e) {
+          console.error("Failed to sync with server", e);
+      }
+  }
 }
 
 // ==========================================================
-// === (بداية التعديلات الجذرية لقواعد بيانات الفصول) ===
+// === إدارة الفصول الإنجليزية ===
 // ==========================================================
 
-// ====== إدارة الفصول الإنجليزية ======
-
 async function listEnglishChapters() {
-  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة بشكل غير متزامن
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
 async function readEnglishChapter(filename) {
-  // نقرأ الآن من قاعدة البيانات الإنجليزية المخصصة بشكل غير متزامن
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
-  // نتأكد من أن الملف موجود وأن له محتوى
   if (chapters[filename] && chapters[filename].content) {
     return chapters[filename].content;
   }
@@ -165,8 +223,6 @@ async function readEnglishChapter(filename) {
 }
 
 async function saveEnglishChapter(filename, content) {
-  // نحفظ في قاعدة البيانات الإنجليزية المخصصة
-  // يجب جلب الفصول أولاً (await) ثم التعديل ثم الحفظ (await)
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
   chapters[filename] = {
     content: content,
@@ -177,20 +233,11 @@ async function saveEnglishChapter(filename, content) {
 
 // ====== إدارة الفصول المترجمة ======
 
-/**
- * (إضافة جديدة)
- * هذه هي الدالة التي كانت مفقودة وتسببت بالخطأ في الصورة
- */
 async function listTranslatedChapters() {
-  // نقرأ من قاعدة بيانات الفصول المترجمة بشكل غير متزامن
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {}); 
   return Object.keys(chapters).sort();
 }
 
-/**
- * (إضافة جديدة)
- * دالة مساعدة لقراءة فصل مترجم (سيحتاجها المحرر)
- */
 async function readTranslatedChapter(filename) {
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
   if (chapters[filename] && chapters[filename].content) {
@@ -200,25 +247,17 @@ async function readTranslatedChapter(filename) {
 }
 
 async function saveTranslatedChapter(filename, content) {
-  // (تم التعديل)
-  // نحفظ الآن في قاعدة بيانات الفصول المترجمة المخصصة
-  // يجب جلب الفصول أولاً (await) ثم التعديل ثم الحفظ (await)
   const chapters = await Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
- 
   chapters[filename] = {
     content: content,
     modified: Date.now()
   };
- 
   return await Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, chapters);
 }
 
 // ==========================================================
-// === (نهاية تعديلات قواعد بيانات الفصول) ===
+// === وظائف الترجمة والاستخراج ===
 // ==========================================================
-
-
-// ====== بناء البرومبت ======
 
 function buildGlossaryPrompt(glossary) {
   const allTerms = {
@@ -238,21 +277,11 @@ function buildGlossaryPrompt(glossary) {
   return lines.join('\n');
 }
 
-// (تعديل جذري)
-// هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
-// تم تحويلها لـ async لأن Storage.get أصبح async
 async function buildTranslationPrompt(text, glossary) {
-  
-  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي
   const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE) || DEFAULT_TRANSLATION_PROMPT;
-
-  // 2. بناء قسم المسرد
   const glossaryPrompt = buildGlossaryPrompt(glossary);
-  
-  // 3. استبدال المتغيرات في البرومبت
   let finalPrompt = promptTemplate.replace('{{GLOSSARY}}', glossaryPrompt);
   finalPrompt = finalPrompt.replace('{{TEXT}}', text);
-  
   return finalPrompt;
 }
 
@@ -287,7 +316,6 @@ async function translateWithGoogle(text) {
 }
 
 async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS.OpenAI) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
   const prompt = await buildTranslationPrompt(text, glossary);
   const url = 'https://api.openai.com/v1/chat/completions';
 
@@ -320,7 +348,6 @@ async function translateWithOpenAI(text, glossary, apiKey, model = CONFIG.MODELS
 }
 
 async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODELS.Together) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
   const prompt = await buildTranslationPrompt(text, glossary);
   const url = 'https://api.together.xyz/v1/chat/completions';
 
@@ -353,7 +380,6 @@ async function translateWithTogether(text, glossary, apiKey, model = CONFIG.MODE
 }
 
 async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS.Gemini) {
-  // (تعديل) بناء البرومبت أصبح ديناميكياً ويحتاج await
   const prompt = await buildTranslationPrompt(text, glossary);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -386,19 +412,14 @@ async function translateWithGemini(text, glossary, apiKey, model = CONFIG.MODELS
 
 // ====== استخراج المصطلحات ======
 
-// (تعديل جذري)
-// هذه الدالة الآن تقرأ البرومبت من الإعدادات أو تستخدم الافتراضي
 async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGlossary) {
   
-  // 1. جلب البرومبت المحفوظ من الإعدادات، أو استخدام الافتراضي (مع await)
   const promptTemplate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT) || DEFAULT_EXTRACTION_PROMPT;
 
-  // 2. استبدال المتغيرات في البرومبت
   const prompt = promptTemplate
     .replace('{{ENGLISH_TEXT}}', englishText)
     .replace('{{ARABIC_TEXT}}', arabicText);
 
-  // (باقي الدالة كما هي)
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.MODELS.GeminiFlash}:generateContent?key=${apiKey}`;
 
   try {
@@ -423,7 +444,6 @@ async function extractTermsWithGemini(englishText, arabicText, apiKey, currentGl
     const data = await response.json();
     let responseContent = data.candidates[0].content.parts[0].text;
 
-    // إزالة تنسيق markdown إذا وجد
     if (responseContent.startsWith('```json') && responseContent.endsWith('```')) {
       responseContent = responseContent.slice(7, -3).trim();
     } else if (responseContent.startsWith('```') && responseContent.endsWith('```')) {
