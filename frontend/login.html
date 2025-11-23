@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - مترجم زيوس</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           🎨 تصميم الصفحة (CSS) - Modern Glassmorphism
+           ========================================= */
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --text-color: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* خلفية متحركة (Orb Animations) */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary-color);
+            top: -50px;
+            left: -50px;
+            opacity: 0.4;
+        }
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-color);
+            bottom: -100px;
+            right: -100px;
+            opacity: 0.3;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* الحاوية الرئيسية */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            width: 90%;
+            max-width: 1100px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* القسم الأيمن (المعلومات) */
+        .info-section {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.2);
+            min-width: 350px;
+        }
+
+        .info-section h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .info-section p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .features-list {
+            list-style: none;
+        }
+
+        .features-list li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .features-list li i {
+            margin-left: 10px;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        /* القسم الأيسر (تسجيل الدخول) */
+        .login-section {
+            flex: 1;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-width: 350px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(67, 97, 238, 0.5));
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .login-subtitle {
+            color: #aaa;
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+        }
+
+        /* زر تسجيل الدخول */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: #333;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: none;
+            cursor: pointer;
+            gap: 15px;
+        }
+
+        .google-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+            background: #f8f9fa;
+        }
+
+        .google-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .back-link {
+            margin-top: 30px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        /* التجاوب مع الشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column-reverse; /* عكس الترتيب في الجوال */
+                width: 95%;
+                margin: 20px 0;
+            }
+            
+            .info-section {
+                border-left: none;
+                border-top: 1px solid var(--glass-border);
+                padding: 30px;
+                text-align: center;
+            }
+
+            .info-section h1 {
+                font-size: 2.2rem;
+            }
+
+            .features-list li {
+                justify-content: center;
+            }
+
+            .login-section {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="main-container">
+        
+        <div class="info-section">
+            <h1>مترجم زيوس الذكي</h1>
+            <p>
+                اكتشف الجيل الجديد من ترجمة الروايات والمحتوى الإبداعي. 
+                نظام متكامل يجمع بين قوة الذكاء الاصطناعي وسهولة الاستخدام 
+                ليمنحك تجربة ترجمة وتدقيق لا مثيل لها.
+            </p>
+            
+            <ul class="features-list">
+                <li><i>⚡</i> ترجمة فورية دقيقة مع الحفاظ على السياق الأدبي.</li>
+                <li><i>📚</i> إدارة ذكية للمصطلحات والمسارد الشخصية.</li>
+                <li><i>☁️</i> حفظ سحابي آمن لبياناتك للوصول إليها من أي مكان.</li>
+                <li><i>🛠️</i> أدوات تحرير متقدمة مخصصة للمترجمين.</li>
+            </ul>
+        </div>
+
+        <div class="login-section">
+            <div class="login-card">
+                <img src="icons/icon-152x152.png" alt="Zeus Logo" class="logo-icon">
+                <h2 class="login-title">مرحباً بك مجدداً</h2>
+                <p class="login-subtitle">سجل الدخول للوصول إلى مساردك السحابية ومزامنة إعداداتك.</p>
+
+                <a href="https://chatzeusb.vercel.app/auth/google" class="google-btn">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google G" class="google-icon">
+                    تسجيل الدخول باستخدام Google
+                </a>
+
+                <a href="index.html" class="back-link">العودة للصفحة الرئيسية</a>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
