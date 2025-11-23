@@ -10,17 +10,16 @@
     
     <style>
         /* =========================================
-           🎨 تصميم الصفحة (CSS) - Modern Glassmorphism
+           🎨 تصميم متناسق مع ثيم زيوس (Dark Blue/Grey)
            ========================================= */
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --accent-color: #f72585;
+            --bg-gradient: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            --card-bg: rgba(44, 44, 46, 0.95);
+            --primary-blue: #002145;
+            --accent-blue: #5AC8FA;
             --text-color: #ffffff;
-            --bg-gradient: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --border-color: rgba(68, 68, 68, 0.5);
+            --shadow-color: rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -41,35 +40,35 @@
             position: relative;
         }
 
-        /* خلفية متحركة (Orb Animations) */
+        /* خلفية متحركة هادئة */
         .orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
+            filter: blur(100px);
             z-index: -1;
-            animation: float 10s infinite ease-in-out alternate;
+            animation: float 15s infinite ease-in-out alternate;
         }
         .orb-1 {
-            width: 300px;
-            height: 300px;
-            background: var(--primary-color);
-            top: -50px;
-            left: -50px;
-            opacity: 0.4;
-        }
-        .orb-2 {
             width: 400px;
             height: 400px;
-            background: var(--accent-color);
-            bottom: -100px;
-            right: -100px;
+            background: #004080; /* أزرق داكن */
+            top: -100px;
+            left: -100px;
             opacity: 0.3;
+        }
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: #001a36; /* كحلي */
+            bottom: -50px;
+            right: -50px;
+            opacity: 0.4;
             animation-delay: -5s;
         }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, 50px) scale(1.1); }
+            100% { transform: translate(20px, 40px) scale(1.05); }
         }
 
         /* الحاوية الرئيسية */
@@ -77,67 +76,80 @@
             display: flex;
             flex-wrap: wrap;
             width: 90%;
-            max-width: 1100px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: var(--glass-shadow);
+            max-width: 1000px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--shadow-color);
             overflow: hidden;
-            animation: slideUp 0.8s ease-out;
+            animation: slideUp 0.6s ease-out;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(50px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* القسم الأيمن (المعلومات) */
         .info-section {
-            flex: 1;
-            padding: 50px;
+            flex: 1.2;
+            padding: 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            border-left: 1px solid var(--glass-border);
-            background: rgba(0, 0, 0, 0.2);
-            min-width: 350px;
+            background: linear-gradient(135deg, #002145 0%, #00152e 100%);
+            border-left: 1px solid var(--border-color);
+            min-width: 320px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* زخرفة خفيفة */
+        .info-section::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 100%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
         .info-section h1 {
-            font-size: 3rem;
+            font-size: 2.8rem;
             font-weight: 700;
             margin-bottom: 20px;
-            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: relative;
         }
 
         .info-section p {
             font-size: 1.1rem;
             line-height: 1.8;
-            color: #e0e0e0;
-            margin-bottom: 30px;
+            color: #cccccc;
+            margin-bottom: 40px;
+            position: relative;
         }
 
         .features-list {
             list-style: none;
+            position: relative;
         }
 
         .features-list li {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            font-size: 1rem;
-            color: #ccc;
+            font-size: 1.05rem;
+            color: #e0e0e0;
         }
 
         .features-list li i {
-            margin-left: 10px;
-            color: var(--accent-color);
-            font-size: 1.2rem;
+            margin-left: 12px;
+            color: var(--accent-blue);
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px rgba(90, 200, 250, 0.4);
         }
 
         /* القسم الأيسر (تسجيل الدخول) */
@@ -149,29 +161,31 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            min-width: 350px;
+            min-width: 320px;
+            background: rgba(30, 30, 30, 0.6);
         }
 
         .login-card {
             width: 100%;
-            max-width: 350px;
+            max-width: 320px;
         }
 
         .logo-icon {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 10px rgba(67, 97, 238, 0.5));
+            width: 90px;
+            height: 90px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 15px rgba(90, 200, 250, 0.3));
         }
 
         .login-title {
             font-size: 1.8rem;
             margin-bottom: 10px;
-            font-weight: 600;
+            font-weight: 700;
+            color: #fff;
         }
 
         .login-subtitle {
-            color: #aaa;
+            color: #888;
             margin-bottom: 40px;
             font-size: 0.95rem;
         }
@@ -182,15 +196,15 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            padding: 15px;
-            background: white;
+            padding: 16px;
+            background: #ffffff;
             color: #333;
-            border-radius: 12px;
+            border-radius: 10px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
             border: none;
             cursor: pointer;
             gap: 15px;
@@ -198,8 +212,8 @@
 
         .google-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
-            background: #f8f9fa;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+            background: #f0f0f0;
         }
 
         .google-icon {
@@ -209,29 +223,33 @@
 
         .back-link {
             margin-top: 30px;
-            color: #888;
+            display: inline-block;
+            color: #666;
             text-decoration: none;
             font-size: 0.9rem;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
 
         .back-link:hover {
-            color: white;
-            text-decoration: underline;
+            color: var(--accent-blue);
+            background: rgba(255,255,255,0.05);
         }
 
         /* التجاوب مع الشاشات الصغيرة */
         @media (max-width: 768px) {
             .main-container {
-                flex-direction: column-reverse; /* عكس الترتيب في الجوال */
+                flex-direction: column-reverse;
                 width: 95%;
                 margin: 20px 0;
+                border-radius: 15px;
             }
             
             .info-section {
                 border-left: none;
-                border-top: 1px solid var(--glass-border);
-                padding: 30px;
+                border-top: 1px solid var(--border-color);
+                padding: 40px 25px;
                 text-align: center;
             }
 
@@ -241,10 +259,11 @@
 
             .features-list li {
                 justify-content: center;
+                text-align: right;
             }
 
             .login-section {
-                padding: 40px 30px;
+                padding: 50px 25px;
             }
         }
     </style>
@@ -257,33 +276,33 @@
     <div class="main-container">
         
         <div class="info-section">
-            <h1>مترجم زيوس الذكي</h1>
+            <h1>مترجم زيوس</h1>
             <p>
-                اكتشف الجيل الجديد من ترجمة الروايات والمحتوى الإبداعي. 
-                نظام متكامل يجمع بين قوة الذكاء الاصطناعي وسهولة الاستخدام 
-                ليمنحك تجربة ترجمة وتدقيق لا مثيل لها.
+                المنصة المتكاملة لترجمة الفصول والروايات.
+                بيئة عمل مصممة خصيصاً للمترجمين، تجمع بين قوة الذكاء الاصطناعي 
+                وسهولة إدارة المصطلحات.
             </p>
             
             <ul class="features-list">
-                <li><i>⚡</i> ترجمة فورية دقيقة مع الحفاظ على السياق الأدبي.</li>
-                <li><i>📚</i> إدارة ذكية للمصطلحات والمسارد الشخصية.</li>
-                <li><i>☁️</i> حفظ سحابي آمن لبياناتك للوصول إليها من أي مكان.</li>
-                <li><i>🛠️</i> أدوات تحرير متقدمة مخصصة للمترجمين.</li>
+                <li><i>⚡</i> ترجمة فورية ذكية وسريعة.</li>
+                <li><i>📚</i> مزامنة سحابية للمسارد الخاصة بك.</li>
+                <li><i>🛡️</i> حفظ آمن لتقدمك وإعداداتك.</li>
+                <li><i>👥</i> أدوات مخصصة لفرق الترجمة.</li>
             </ul>
         </div>
 
         <div class="login-section">
             <div class="login-card">
                 <img src="icons/icon-152x152.png" alt="Zeus Logo" class="logo-icon">
-                <h2 class="login-title">مرحباً بك مجدداً</h2>
-                <p class="login-subtitle">سجل الدخول للوصول إلى مساردك السحابية ومزامنة إعداداتك.</p>
+                <h2 class="login-title">تسجيل الدخول</h2>
+                <p class="login-subtitle">قم بربط حسابك لحفظ المسارد والمصطلحات سحابياً</p>
 
-                <a href="https://chatzeusb.vercel.app/auth/google" class="google-btn">
+                <a href="https://chatzeusb.vercel.app/auth/google?from=tranzeus" class="google-btn">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google G" class="google-icon">
-                    تسجيل الدخول باستخدام Google
+                    استمرار باستخدام Google
                 </a>
 
-                <a href="index.html" class="back-link">العودة للصفحة الرئيسية</a>
+                <a href="index.html" class="back-link">العودة للرئيسية</a>
             </div>
         </div>
 
