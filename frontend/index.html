@@ -18,6 +18,12 @@
         <p>اختر الأداة التي تريد استخدامها:</p>
         
         <div class="nav-buttons">
+            
+            <a href="login.html" class="btn login-btn-main" id="mainLoginBtn">
+                <h2 id="loginBtnTitle">🔑 تسجيل الدخول</h2>
+                <p id="loginBtnDesc">لربط المسرد السحابي وحفظ البيانات.</p>
+            </a>
+
             <a href="translator.html" class="btn">
                 <h2>مترجم فصل</h2>
                 <p>لترجمة الفصول وإدارة مفاتيح API.</p>
@@ -261,6 +267,24 @@
           });
 
           restoreInput.addEventListener('change', importFullBackup);
+
+          // === 💡 التحقق من حالة تسجيل الدخول ===
+          const token = localStorage.getItem('authToken');
+          if (token) {
+              const loginBtn = document.getElementById('mainLoginBtn');
+              const loginTitle = document.getElementById('loginBtnTitle');
+              const loginDesc = document.getElementById('loginBtnDesc');
+              
+              // تغيير شكل الزر ليدل على أنه مسجل دخول
+              loginBtn.style.background = 'rgba(0, 255, 136, 0.15)';
+              loginBtn.style.borderColor = '#00ff88';
+              loginTitle.innerHTML = '✅ حسابك متصل';
+              loginDesc.innerHTML = 'المزامنة السحابية مفعلة.';
+              
+              // (اختياري) جعل الزر غير قابل للنقر أو يفتح صفحة الملف الشخصي
+              loginBtn.href = '#'; 
+              loginBtn.style.cursor = 'default';
+          }
       });
 
     </script>
