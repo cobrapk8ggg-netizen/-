@@ -1317,7 +1317,7 @@
                 }
             });
 
-            // تفعيل السحب
+            // ✅ تفعيل السحب (فقط في وضع القراءة)
             let touchStartX = 0;
             let touchStartY = 0;
 
@@ -1327,6 +1327,9 @@
             }, { passive: false }); 
 
             document.addEventListener('touchend', e => {
+                // 💡 التعديل هنا: الخروج فوراً إذا لم يكن وضع القراءة مفعلاً
+                if (!state.readMode) return;
+
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
                 
