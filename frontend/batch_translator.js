@@ -2,12 +2,9 @@
 
 class BatchTranslator {
   constructor() {
-    this.currentProvider = 'Gemini';
-    
-    // تهيئة مبدئية فارغة لتجنب الأخطاء قبل تحميل البيانات
-    this.apiKeys = { Gemini: [], Together: [], OpenAI: [], Google: [] };
-    this.glossaryKeys = { Gemini: [] };
-    
+    this.currentProvider = 'Gemini'; // تم تصحيح '
+    this.apiKeys = Storage.get(CONFIG.STORAGE_KEYS.API_KEYS);
+    this.glossaryKeys = this.loadGlossaryKeys();
     this.isTranslating = false;
     this.stopRequested = false;
     this.currentGlossaryKeyIndex = 0;
@@ -15,23 +12,9 @@ class BatchTranslator {
 
     this.initializeElements();
     this.attachEventListeners();
-    
-    // بدء تحميل البيانات من قاعدة البيانات (بشكل غير متزامن)
-    this.initData();
-  }
-
-  // ====== دالة جديدة لتهيئة البيانات (IndexedDB) ======
-  async initData() {
-    // تحميل مفاتيح API
-    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || { Gemini: [], Together: [], OpenAI: [], Google: [] };
-    
-    // تحميل مفاتيح المسرد
-    this.glossaryKeys = await this.loadGlossaryKeys();
-    
-    // تحديث الواجهة
+    this.updateInfo();
     this.updateGlossaryKeysField();
     this.toggleGlossaryKeysSection();
-    await this.updateInfo();
   }
 
   // ====== تهيئة العناصر ======
@@ -100,20 +83,20 @@ class BatchTranslator {
 
   // ====== إدارة المزود ======
 
-  async selectProvider(segment) {
+  selectProvider(segment) {
     this.segments.forEach(s => s.classList.remove('active'));
     segment.classList.add('active');
     this.currentProvider = segment.dataset.provider;
-    await this.updateInfo();
+    this.updateInfo();
   }
 
   // ====== إدارة مفاتيح المسرد ======
 
-  async loadGlossaryKeys() {
-    const stored = await Storage.get('zeus_translator_glossary_keys');
+  loadGlossaryKeys() {
+    const stored = Storage.get('zeus_translator_glossary_keys'); // تم تصحيح '
     if (!stored) {
       const defaultKeys = { Gemini: [] };
-      await Storage.set('zeus_translator_glossary_keys', defaultKeys);
+      Storage.set('zeus_translator_glossary_keys', defaultKeys); // تم تصحيح '
       return defaultKeys;
     }
 
@@ -127,8 +110,8 @@ class BatchTranslator {
     return stored;
   }
 
-  async saveGlossaryKeysToStorage(keys) {
-    await Storage.set('zeus_translator_glossary_keys', keys);
+  saveGlossaryKeysToStorage(keys) {
+    Storage.set('zeus_translator_glossary_keys', keys); // تم تصحيح '
   }
 
   updateGlossaryKeysField() {
@@ -137,16 +120,16 @@ class BatchTranslator {
     this.glossaryKeysCount.textContent = `🔑 ${keys.length} مفتاح للمسرد`;
   }
 
-  async saveGlossaryKeysAction() {
+  saveGlossaryKeysAction() {
     const keysText = this.glossaryKeysField.value.trim();
     const keysList = keysText ? keysText.split('\n').map(k => k.trim()).filter(k => k) : [];
 
     this.glossaryKeys.Gemini = keysList;
-    await this.saveGlossaryKeysToStorage(this.glossaryKeys);
+    this.saveGlossaryKeysToStorage(this.glossaryKeys);
 
     this.glossaryKeysCount.textContent = `🔑 ${keysList.length} مفتاح للمسرد`;
     this.showToast(`✅ تم حفظ ${keysList.length} مفتاح للمسرد`, 'success');
-    await this.updateInfo();
+    this.updateInfo();
   }
 
   toggleGlossaryKeysSection() {
@@ -160,16 +143,14 @@ class BatchTranslator {
 
   // ====== تحديث المعلومات ======
 
-  async updateInfo() {
-    // بما أن التخزين أصبح غير متزامن، نحتاج لاستخدام await
+  updateInfo() {
     const keysCount = (this.apiKeys[this.currentProvider] || []).length;
     const glossaryKeysCount = (this.glossaryKeys.Gemini || []).length;
 
-    // استخدام الدوال من translator_core.js (التي أصبحت async الآن)
-    const englishChapters = await listEnglishChapters();
+    const englishChapters = listEnglishChapters();
     const chaptersCount = englishChapters.length;
 
-    const translatedChapters = await listTranslatedChapters();
+    const translatedChapters = listTranslatedChapters();
     const translatedCount = translatedChapters.length;
 
     this.infoLabel.innerHTML = `
@@ -183,7 +164,7 @@ class BatchTranslator {
   // ====== السجل ======
 
   addLog(message) {
-    const timestamp = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const timestamp = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); // تم تصحيح '
     const currentText = this.logOutput.value;
     this.logOutput.value = `[${timestamp}] ${message}\n${currentText}`;
   }
@@ -192,16 +173,14 @@ class BatchTranslator {
 
   async startBatchTranslation() {
     if (this.isTranslating) {
-      this.showToast('⚠️ الترجمة جارية بالفعل!', 'warning');
+      this.showToast('⚠️ الترجمة جارية بالفعل!', 'warning'); // تم تصحيح '
       return;
     }
 
-    // تحديث المفاتيح للتأكد من أنها الأحدث
-    this.apiKeys = await Storage.get(CONFIG.STORAGE_KEYS.API_KEYS) || this.apiKeys;
     const keys = this.apiKeys[this.currentProvider] || [];
 
     if (keys.length === 0 && this.currentProvider !== 'Google') {
-      this.showToast(`❌ يرجى إضافة مفاتيح API لـ ${this.currentProvider} أولاً`, 'error');
+      this.showToast(`❌ يرجى إضافة مفاتيح API لـ ${this.currentProvider} أولاً`, 'error'); // تم تصحيح '
       return;
     }
 
@@ -210,8 +189,8 @@ class BatchTranslator {
 
     if (extractTerms && geminiKeys.length === 0) {
       const confirmed = await this.showConfirmModal(
-        'تحذير',
-        'لا توجد مفاتيح Gemini للمسرد.\nهل تريد المتابعة بدون استخراج المصطلحات؟'
+        'تحذير', // تم تصحيح '
+        'لا توجد مفاتيح Gemini للمسرد.\nهل تريد المتابعة بدون استخراج المصطلحات؟' // تم تصحيح '
       );
 
       if (!confirmed) return;
@@ -220,13 +199,13 @@ class BatchTranslator {
 
     const waitTime = parseInt(this.waitTimeField.value);
     if (isNaN(waitTime) || waitTime < 0) {
-      this.showToast('❌ يرجى إدخال وقت انتظار صحيح (رقم موجب)', 'error');
+      this.showToast('❌ يرجى إدخال وقت انتظار صحيح (رقم موجب)', 'error'); // تم تصحيح '
       return;
     }
 
-    const englishChapters = await listEnglishChapters();
+    const englishChapters = listEnglishChapters();
     if (englishChapters.length === 0) {
-      this.showToast('❌ لا توجد فصول إنجليزية للترجمة', 'error');
+      this.showToast('❌ لا توجد فصول إنجليزية للترجمة', 'error'); // تم تصحيح '
       return;
     }
 
@@ -260,8 +239,7 @@ class BatchTranslator {
 
   async runBatchTranslation(provider, keys, geminiKeys, chapters, waitTime, skipTranslated, extractTerms) {
     try {
-      // تحميل المسرد بشكل غير متزامن
-      const glossary = await loadGlossary();
+      const glossary = loadGlossary();
       const total = chapters.length;
       let translated = 0;
       let skipped = 0;
@@ -293,7 +271,7 @@ class BatchTranslator {
 
         // تخطي المترجم
         if (skipTranslated) {
-          const translatedChapters = await listTranslatedChapters();
+          const translatedChapters = listTranslatedChapters();
           if (translatedChapters.includes(chapterFile)) {
             this.addLog(`⏭️ تخطي ${chapterName} (مترجم مسبقًا)`);
             skipped++;
@@ -302,8 +280,7 @@ class BatchTranslator {
         }
 
         this.addLog(`📥 قراءة ${chapterName}...`);
-        // قراءة الفصل بشكل غير متزامن
-        const englishText = await readEnglishChapter(chapterFile);
+        const englishText = readEnglishChapter(chapterFile);
 
         if (!englishText) {
           this.addLog(`❌ فشل قراءة ${chapterName}`);
@@ -337,8 +314,7 @@ class BatchTranslator {
             }
 
             if (result && !result.toLowerCase().includes('error')) {
-              // حفظ الفصل المترجم بشكل غير متزامن
-              await saveTranslatedChapter(chapterFile, result);
+              saveTranslatedChapter(chapterFile, result);
               this.addLog(`✅ تم ترجمة وحفظ ${chapterName}`);
               translated++;
 
@@ -438,8 +414,7 @@ class BatchTranslator {
         if (extractionResult && extractionResult.glossary) {
           console.log('DEBUG: Extraction successful, saving glossary...');
 
-          // حفظ المسرد بشكل غير متزامن
-          await saveGlossary(extractionResult.glossary);
+          saveGlossary(extractionResult.glossary);
           currentGlossary = extractionResult.glossary;
 
           termExtracted = true;
@@ -478,7 +453,7 @@ class BatchTranslator {
     this.stopBtn.disabled = true;
     this.loadingIndicator.style.display = 'none';
     this.progressLabel.textContent = '✅ اكتملت الترجمة!';
-    this.showToast('🎉 انتهت الترجمة الجماعية!', 'success');
+    this.showToast('🎉 انتهت الترجمة الجماعية!', 'success'); // تم تصحيح '
     this.updateInfo();
   }
 
@@ -539,6 +514,6 @@ class BatchTranslator {
 }
 
 // تشغيل التطبيق
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => { // تم تصحيح '
   new BatchTranslator();
 });
