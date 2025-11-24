@@ -98,21 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // دمج المصطلحات اليدوية (Manual)
         if (currentTypeFilter === 'all' || currentTypeFilter === 'manual') {
-            // التأكد من وجود البيانات قبل التكرار
-            if (glossaryData && glossaryData.manual_terms) {
-                for (const [key, value] of Object.entries(glossaryData.manual_terms)) {
-                    allTermsWithSource.push({ key, value, source: 'manual' });
-                }
+            for (const [key, value] of Object.entries(glossaryData.manual_terms)) {
+                allTermsWithSource.push({ key, value, source: 'manual' });
             }
         }
 
         // دمج المصطلحات المستخرجة (Extracted)
         if (currentTypeFilter === 'all' || currentTypeFilter === 'extracted') {
-            // التأكد من وجود البيانات قبل التكرار
-            if (glossaryData && glossaryData.extracted_terms) {
-                for (const [key, value] of Object.entries(glossaryData.extracted_terms)) {
-                    allTermsWithSource.push({ key, value, source: 'extracted' });
-                }
+            for (const [key, value] of Object.entries(glossaryData.extracted_terms)) {
+                allTermsWithSource.push({ key, value, source: 'extracted' });
             }
         }
 
@@ -153,9 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // استخدام DocumentFragment لتحسين الأداء عند إضافة عناصر كثيرة
-        const fragment = document.createDocumentFragment();
-
         pairs.forEach((p, index) => {
             const li = document.createElement('li');
             li.dataset.index = index; // لربط العنصر بالبيانات
@@ -180,10 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // ربط حدث الضغط (مطابق لـ tableview_did_select)
             li.addEventListener('click', () => handleSelection(li, p));
             
-            fragment.appendChild(li);
+            glossaryList.appendChild(li);
         });
-        
-        glossaryList.appendChild(fragment);
     }
     // === نهاية التعديل ===
 
@@ -237,9 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * (مطابق لـ add_or_update في بايثون)
      * إضافة أو تحديث مصطلح
-     * (تم تحويلها لـ async لدعم التخزين غير المتزامن)
+     * (لا تحتاج هذه الدالة لتعديل لأنها تعتمد على الحقول النصية)
      */
-    async function addOrUpdate() {
+    function addOrUpdate() {
         // === تعديل: إذا كان هناك تحديد متعدد، لا تقم بالإضافة ===
         if (selectedItems.length > 1) {
             showToast('⚠️ لا يمكن الإضافة أثناء تحديد عناصر متعددة', 'warning');
@@ -267,8 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         glossaryData.manual_terms[key] = val;
 
         // --- الربط مع المترجم ---
-        // استخدام الدالة المستوردة من translator_core.js للحفظ (مع await)
-        await saveGlossary(glossaryData); 
+        // استخدام الدالة المستوردة من translator_core.js للحفظ
+        saveGlossary(glossaryData); 
 
         clearSelection();
         filterAndSortGlossary(); // إعادة تحميل القائمة
@@ -278,9 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * === تعديل: حذف المصطلحات المحددة (يدعم الحذف المتعدد) ===
      * (مطابق لـ delete_selected في بايثون)
-     * (تم تحويلها لـ async لدعم التخزين غير المتزامن)
      */
-    async function deleteSelected() {
+    function deleteSelected() {
         // إذا لم يتم تحديد أي عناصر
         if (selectedItems.length === 0) {
             showToast('⚠️ يرجى تحديد مصطلح واحد على الأقل للحذف', 'error');
@@ -306,8 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (itemsDeleted > 0) {
             // --- الربط مع المترجم ---
-            // حفظ التغييرات مع انتظار الانتهاء (await)
-            await saveGlossary(glossaryData); 
+            saveGlossary(glossaryData); 
             
             clearSelection(); // هذا سيقوم بإفراغ selectedItems = []
             filterAndSortGlossary(); // إعادة تحميل القائمة
@@ -362,8 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const reader = new FileReader();
 
-        // تحويل دالة الرد إلى async لاستخدام await
-        reader.onload = async (e) => {
+        reader.onload = (e) => {
             try {
                 const content = e.target.result;
                 const importedData = JSON.parse(content);
@@ -375,8 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     glossaryData = importedData;
 
                     // --- الربط مع المترجم ---
-                    // حفظ البيانات الجديدة في التخزين مع الانتظار (await)
-                    await saveGlossary(glossaryData); 
+                    saveGlossary(glossaryData); // حفظ البيانات الجديدة في التخزين
 
                     // إعادة تحميل الواجهة بالبيانات الجديدة
                     clearSelection();
@@ -408,12 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * (مطابق لـ reload في بايثون)
      * تحميل البيانات الأولية عند فتح الصفحة
-     * (تم تحويلها لـ async لدعم التخزين غير المتزامن)
      */
-    async function initialLoad() {
+    function initialLoad() {
         // --- الربط مع المترجم ---
-        // استخدام الدالة المستوردة من translator_core.js للجلب (مع await)
-        glossaryData = await loadGlossary(); 
+        // استخدام الدالة المستوردة من translator_core.js للجلب
+        glossaryData = loadGlossary(); 
         
         // التأكد من أن الهيكل سليم
         if (!glossaryData.manual_terms) glossaryData.manual_terms = {};
@@ -486,6 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 6. بدء التشغيل ---
-    initialLoad(); // سيتم تنفيذها بشكل غير متزامن
+    initialLoad();
 
 });
