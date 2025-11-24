@@ -169,18 +169,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 💡 (تعديل) تحميل البرومبت في CodeMirror ---
-    // تم تحويل الدالة إلى async لاستخدام await مع Storage
-    async function loadPrompts() {
-        const savedTranslate = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE);
-        const savedExtract = await Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT);
+    function loadPrompts() {
+        const savedTranslate = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE);
+        const savedExtract = Storage.get(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT);
 
         cmTranslateEditor.setValue(savedTranslate || DEFAULT_TRANSLATION_PROMPT);
         cmExtractEditor.setValue(savedExtract || DEFAULT_EXTRACTION_PROMPT);
     }
 
     // --- 💡 (تعديل) حفظ الإعدادات من CodeMirror ---
-    // تم تحويل الدالة إلى async لاستخدام await مع Storage
-    async function savePrompts() {
+    function savePrompts() {
         const newTranslate = cmTranslateEditor.getValue();
         const newExtract = cmExtractEditor.getValue();
 
@@ -195,23 +193,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // الحفظ مع انتظار انتهاء العملية
-        await Storage.set(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE, newTranslate);
-        await Storage.set(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT, newExtract);
+        // الحفظ
+        Storage.set(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE, newTranslate);
+        Storage.set(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT, newExtract);
 
         showToast('✅ تم حفظ الإعدادات بنجاح!', 'success');
     }
 
     // --- 💡 (تعديل) استعادة الافتراضيات لـ CodeMirror ---
-    // تم تحويل الدالة إلى async لاستخدام await مع Storage
-    async function restoreDefaults() {
+    function restoreDefaults() {
         if (confirm('هل أنت متأكد من رغبتك في استعادة الإعدادات الافتراضية؟ سيتم حذف أي تعديلات قمت بها.')) {
-            // إزالة المفاتيح المحفوظة مع الانتظار
-            await Storage.remove(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE);
-            await Storage.remove(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT);
+            // إزالة المفاتيح المحفوظة
+            Storage.remove(CONFIG.STORAGE_KEYS.PROMPT_TRANSLATE);
+            Storage.remove(CONFIG.STORAGE_KEYS.PROMPT_EXTRACT);
             
             // إعادة تحميل الافتراضيات في الحقول
-            await loadPrompts();
+            loadPrompts();
             
             showToast('♻️ تم استعادة الإعدادات الافتراضية', 'success');
         }
