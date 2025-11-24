@@ -2,7 +2,7 @@
 
 const CONFIG = {
   // رابط الخادم الخلفي
-  API_BASE_URL: 'https://chatzeus.vercel.app/api', // ⚠️ تأكد أن هذا هو الرابط الصحيح لخادمك
+  API_BASE_URL: 'https://chatzeusb.vercel.app/api', // ⚠️ تأكد أن هذا هو الرابط الصحيح لخادمك
 
   STORAGE_KEYS: {
     API_KEYS: 'zeus_translator_api_keys',
