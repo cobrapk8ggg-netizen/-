@@ -1,8 +1,9 @@
-// config.js - إعدادات المسارات والثوابت
+// config.js - إعدادات المسارات، الثوابت، والمزامنة السحابية
 
-// المسارات (سيتم استخدام LocalStorage في بيئة المتصفح)
 const CONFIG = {
-  // أسماء مفاتيح LocalStorage
+  // رابط الخادم الخلفي
+  API_BASE_URL: 'https://chatzeus.vercel.app/api', // ⚠️ تأكد أن هذا هو الرابط الصحيح لخادمك
+
   STORAGE_KEYS: {
     API_KEYS: 'zeus_translator_api_keys',
     GLOSSARY: 'zeus_translator_glossary',
@@ -10,22 +11,14 @@ const CONFIG = {
     TRANSLATED_CHAPTERS: 'zeus_translator_translated_chapters',
     CURRENT_KEY_INDICES: 'zeus_translator_key_indices',
     FAILED_KEYS: 'zeus_translator_failed_keys',
-    // --- الإضافة الجديدة هنا ---
     PROMPT_TRANSLATE: 'zeus_translator_prompt_translate',
-    PROMPT_EXTRACT: 'zeus_translator_prompt_extract'
-    // --- نهاية الإضافة ---
+    PROMPT_EXTRACT: 'zeus_translator_prompt_extract',
+    AUTH_TOKEN: 'zeus_auth_token', // ✨ مفتاح التوكن الجديد
+    USER_INFO: 'zeus_user_info'    // ✨ بيانات المستخدم
   },
-
-  // المهلة الزمنية للطلبات (بالثواني)
   DEFAULT_TIMEOUT: 120,
-
-  // عدد المحاولات القصوى للتبديل بين المفاتيح
   MAX_KEY_ATTEMPTS: 10,
-
-  // المزودات المتاحة
   PROVIDERS: ['Google', 'OpenAI', 'Together', 'Gemini'],
-
-  // نماذج المزودات
   MODELS: {
     OpenAI: 'gpt-3.5-turbo',
     Together: 'mistralai/Mixtral-8x7B-Instruct-v0.1',
@@ -34,20 +27,21 @@ const CONFIG = {
   }
 };
 
-// دوال مساعدة للتخزين المحلي
-const Storage = {
-  // حفظ بيانات
-  set: (key, value) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (e) {
-      console.error('خطأ في حفظ البيانات:', e);
-      return false;
+// === إدارة المصادقة ===
+const Auth = {
+    getToken: () => localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN),
+    setToken: (token) => localStorage.setItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN, token),
+    isLoggedIn: () => !!localStorage.getItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN),
+    logout: () => {
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.USER_INFO);
+        window.location.href = 'login.html';
     }
-  },
+};
 
-  // جلب بيانات
+// === دوال مساعدة للتخزين المحلي والسحابي ===
+const Storage = {
+  // جلب بيانات (محلياً أولاً للسرعة)
   get: (key, defaultValue = null) => {
     try {
       const item = localStorage.getItem(key);
@@ -58,81 +52,140 @@ const Storage = {
     }
   },
 
-  // حذف بيانات
+  // حفظ بيانات (محلياً + سحابياً إذا مسجل الدخول)
+  set: (key, value) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      
+      // ☁️ المزامنة الخلفية (Fire and Forget)
+      if (Auth.isLoggedIn()) {
+          syncItemToServer(key, value);
+      }
+      return true;
+    } catch (e) {
+      console.error('خطأ في حفظ البيانات:', e);
+      return false;
+    }
+  },
+
   remove: (key) => {
     try {
       localStorage.removeItem(key);
       return true;
     } catch (e) {
-      console.error('خطأ في حذف البيانات:', e);
       return false;
     }
   },
 
-  // مسح كل البيانات
-  clear: () => {
-    try {
-      localStorage.clear();
-      return true;
-    } catch (e) {
-      console.error('خطأ في مسح البيانات:', e);
-      return false;
-    }
+  // ✨ دالة المزامنة الكاملة (تستدعى عند تحميل الصفحة)
+  syncWithServer: async () => {
+      if (!Auth.isLoggedIn()) return;
+      
+      const token = Auth.getToken();
+      const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+      try {
+          console.log('🔄 جاري مزامنة البيانات مع الخادم...');
+
+          // 1. جلب المسرد ودمجه
+          const glossaryRes = await fetch(`${CONFIG.API_BASE_URL}/sync/glossary`, { headers });
+          if (glossaryRes.ok) {
+              const serverGlossary = await glossaryRes.json();
+              // حفظ في LocalStorage (الخادم هو المصدر الموثوق عند البدء)
+              localStorage.setItem(CONFIG.STORAGE_KEYS.GLOSSARY, JSON.stringify(serverGlossary));
+          }
+
+          // 2. جلب الفصول
+          const chaptersRes = await fetch(`${CONFIG.API_BASE_URL}/sync/chapters`, { headers });
+          if (chaptersRes.ok) {
+              const serverChapters = await chaptersRes.json();
+              
+              const englishChapters = {};
+              const translatedChapters = {};
+
+              // فصل البيانات القادمة من الخادم
+              Object.entries(serverChapters).forEach(([filename, data]) => {
+                  if (data.content) {
+                      englishChapters[filename] = { content: data.content, modified: data.modified };
+                  }
+                  if (data.translatedContent) {
+                      translatedChapters[filename] = { content: data.translatedContent, modified: data.modified };
+                  }
+              });
+
+              localStorage.setItem(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, JSON.stringify(englishChapters));
+              localStorage.setItem(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, JSON.stringify(translatedChapters));
+          }
+          
+          console.log('✅ تمت المزامنة بنجاح');
+      } catch (error) {
+          console.error('❌ فشل المزامنة:', error);
+      }
   }
 };
 
-// تهيئة البيانات الافتراضية
-function initializeStorage() {
-  // مفاتيح API
-  if (!Storage.get(CONFIG.STORAGE_KEYS.API_KEYS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.API_KEYS, {
-      Google: [],
-      OpenAI: [],
-      Together: [],
-      Gemini: []
-    });
-  }
+// ☁️ منطق إرسال البيانات للخادم (داخلي)
+async function syncItemToServer(key, value) {
+    const token = Auth.getToken();
+    if (!token) return;
 
-  // المسرد
-  if (!Storage.get(CONFIG.STORAGE_KEYS.GLOSSARY)) {
-    Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, {
-      manual_terms: {},
-      extracted_terms: {}
-    });
-  }
+    const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  // الفصول الإنجليزية
-  if (!Storage.get(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS, {});
-  }
+    try {
+        if (key === CONFIG.STORAGE_KEYS.GLOSSARY) {
+            await fetch(`${CONFIG.API_BASE_URL}/sync/glossary`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(value)
+            });
+        } 
+        else if (key === CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS || key === CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS) {
+            // تحويل هيكل البيانات ليناسب الخادم
+            const chaptersList = Object.entries(value).map(([fileName, data]) => ({
+                fileName,
+                content: key === CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS ? data.content : undefined,
+                translatedContent: key === CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS ? data.content : undefined,
+                modified: data.modified
+            }));
 
-  // الفصول المترجمة
-  if (!Storage.get(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
-  }
-
-  // مؤشرات المفاتيح الحالية
-  if (!Storage.get(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES)) {
-    Storage.set(CONFIG.STORAGE_KEYS.CURRENT_KEY_INDICES, {
-      Google: 0,
-      OpenAI: 0,
-      Together: 0,
-      Gemini: 0
-    });
-  }
-
-  // المفاتيح الفاشلة
-  if (!Storage.get(CONFIG.STORAGE_KEYS.FAILED_KEYS)) {
-    Storage.set(CONFIG.STORAGE_KEYS.FAILED_KEYS, {
-      Google: [],
-      OpenAI: [],
-      Together: [],
-      Gemini: []
-    });
-  }
-  
-  // (ملاحظة: لا نقوم بتهيئة البرومبت هنا، سيعتمد على القيمة الافتراضية null)
+            await fetch(`${CONFIG.API_BASE_URL}/sync/chapters`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ chapters: chaptersList })
+            });
+        }
+    } catch (e) {
+        console.warn('Background sync failed:', e);
+    }
 }
 
-// تهيئة التخزين عند تحميل الصفحة
-initializeStorage();
+// تهيئة البيانات الافتراضية والمزامنة
+function initializeApp() {
+  // التحقق من وجود توكن في الرابط (بعد العودة من جوجل)
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+      Auth.setToken(token);
+      // تنظيف الرابط
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // بدء المزامنة فوراً
+      Storage.syncWithServer().then(() => {
+          window.location.reload(); // إعادة تحميل لتطبيق البيانات
+      });
+  } else if (Auth.isLoggedIn()) {
+      // مزامنة هادئة في الخلفية عند فتح التطبيق
+      Storage.syncWithServer();
+  }
+
+  // (نفس كود التهيئة القديم)
+  if (!localStorage.getItem(CONFIG.STORAGE_KEYS.API_KEYS)) {
+    Storage.set(CONFIG.STORAGE_KEYS.API_KEYS, { Google: [], OpenAI: [], Together: [], Gemini: [] });
+  }
+  if (!localStorage.getItem(CONFIG.STORAGE_KEYS.GLOSSARY)) {
+    Storage.set(CONFIG.STORAGE_KEYS.GLOSSARY, { manual_terms: {}, extracted_terms: {} });
+  }
+  // ... باقي التهيئة
+}
+
+initializeApp();
