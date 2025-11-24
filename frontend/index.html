@@ -18,12 +18,6 @@
         <p>اختر الأداة التي تريد استخدامها:</p>
         
         <div class="nav-buttons">
-            
-            <a href="login.html" class="btn login-btn-main" id="mainLoginBtn">
-                <h2 id="loginBtnTitle">🔑 تسجيل الدخول</h2>
-                <p id="loginBtnDesc">لربط المسرد السحابي وحفظ البيانات.</p>
-            </a>
-
             <a href="translator.html" class="btn">
                 <h2>مترجم فصل</h2>
                 <p>لترجمة الفصول وإدارة مفاتيح API.</p>
@@ -85,8 +79,9 @@
         });
       }
 
-      // ==== 💡 (إضافة) كود النسخ الاحتياطي والاستعادة المحدث ليدعم IndexedDB ====
+      // ==== 💡 (إضافة) كود النسخ الاحتياطي والاستعادة ====
 
+      // (منسوخة من app.js)
       function showToast(message, type = 'success') {
           const toast = document.getElementById('toast');
           toast.textContent = message;
@@ -101,7 +96,7 @@
       }
 
       /**
-       * دالة تصدير نسخة احتياطية كاملة (محدثة لتكون async)
+       * دالة تصدير نسخة احتياطية كاملة
        */
       async function exportFullBackup() {
           if (typeof JSZip === 'undefined') {
@@ -109,37 +104,26 @@
               return;
           }
           
-          showToast('جاري تحضير النسخة الاحتياطية... (قد يستغرق وقتاً)', 'warning');
+          showToast('جاري تحضير النسخة الاحتياطية...', 'warning');
 
           try {
               const zip = new JSZip();
               
-              // 1. جلب كل أسماء المفاتيح من CONFIG
+              // 1. جلب كل المفاتيح من CONFIG
               const keysToBackup = Object.values(CONFIG.STORAGE_KEYS);
               
-              // 2. إضافة المفاتيح الأخرى يدوياً
+              // 2. إضافة المفاتيح الأخرى يدوياً (التي ليست في CONFIG)
               keysToBackup.push('zeusEditorConfig'); // إعدادات المحرر
               keysToBackup.push('zeus_translator_glossary_keys'); // مفاتيح مسرد الترجمة الجماعية
 
               let filesAdded = 0;
               
               // 3. المرور على كل المفاتيح وحفظها في الـ ZIP
-              // ملاحظة: نستخدم await Storage.get بدلاً من localStorage.getItem
               for (const key of keysToBackup) {
-                  // نحاول جلب البيانات من قاعدة البيانات الجديدة
-                  let data = await Storage.get(key);
-                  
-                  // إذا لم نجدها في القاعدة الجديدة، نحاول في القديمة (احتياطياً للإعدادات)
-                  if (!data) {
-                      const localData = localStorage.getItem(key);
-                      if (localData) {
-                          try { data = JSON.parse(localData); } catch(e) { data = localData; }
-                      }
-                  }
-
+                  const data = localStorage.getItem(key);
                   if (data) {
-                      // نحفظ الملف بنفس اسم المفتاح كنص JSON
-                      zip.file(key + ".json", JSON.stringify(data));
+                      // نحفظ الملف بنفس اسم المفتاح
+                      zip.file(key + ".json", data);
                       filesAdded++;
                   }
               }
@@ -178,18 +162,26 @@
       }
 
       /**
-       * دالة استعادة النسخة الاحتياطية (محدثة لتكون async وتدعم IndexedDB)
+       * === 💡 (هنا التعديل) ===
+       * دالة استعادة النسخة الاحتياطية (تم تعديلها)
        */
       function importFullBackup(event) {
           const file = event.target.files[0];
-          if (!file) return;
-
-          if (!confirm("تحذير: سيتم حذف جميع البيانات الحالية (الفصول، الإعدادات، المفاتيح) واستبدالها بالبيانات من هذا الملف. هل أنت متأكد من المتابعة؟")) {
-              showToast('تم إلغاء عملية الاستعادة.', 'warning');
-              event.target.value = null; 
-              return; 
+          if (!file) {
+              // هذا يحدث إذا فتح المستخدم نافذة الملفات ثم أغلقها
+              // أو بسبب إعادة تعيين الحقل في الأسفل، لا داعي لإظهار إشعار هنا
+              return;
           }
 
+          // --- 💡 الخطوة 1: طلب التأكيد أولاً ---
+          // هذا الآن إجراء مباشر ناتج عن "onchange"، لذا لن يتم حظره
+          if (!confirm("تحذير: سيتم حذف جميع البيانات الحالية (الفصول، الإعدادات، المفاتيح) واستبدالها بالبيانات من هذا الملف. هل أنت متأكد من المتابعة؟")) {
+              showToast('تم إلغاء عملية الاستعادة.', 'warning');
+              event.target.value = null; // إعادة تعيين الحقل للسماح بالرفع مرة أخرى
+              return; // الخروج من الدالة إذا ضغط المستخدم "إلغاء"
+          }
+
+          // --- الخطوة 2: الآن نبدأ قراءة الملف (بعد الحصول على الموافقة) ---
           showToast('جاري قراءة ملف النسخة الاحتياطية...', 'warning');
           
           const reader = new FileReader();
@@ -198,8 +190,8 @@
                   const content = e.target.result;
                   const zip = await JSZip.loadAsync(content);
                   
-                  // مسح كل شيء من القاعدتين (القديمة والجديدة) لضمان نظافة الاستعادة
-                  await Storage.clear(); 
+                  // تم أخذ الموافقة مسبقاً، نبدأ المسح والاستعادة
+                  localStorage.clear(); // مسح كل شيء
                   
                   let filesRestored = 0;
 
@@ -207,37 +199,26 @@
                   for (const filename in zip.files) {
                       if (!zip.files[filename].dir) {
                           const key = filename.replace(".json", "");
-                          const fileDataString = await zip.files[filename].async("string");
+                          const fileData = await zip.files[filename].async("string");
                           
-                          try {
-                              const parsedData = JSON.parse(fileDataString);
-                              
-                              // حفظ في قاعدة البيانات الجديدة
-                              await Storage.set(key, parsedData);
-                              
-                              // نقوم أيضًا بالحفظ في localStorage للإعدادات البسيطة فقط لضمان توافق المحرر
-                              if(key === 'zeusEditorConfig') {
-                                  localStorage.setItem(key, fileDataString);
-                              }
-
-                              filesRestored++;
-                          } catch (parseErr) {
-                              console.error(`فشل استعادة ${key}`, parseErr);
-                          }
+                          // إعادة البيانات إلى localStorage
+                          localStorage.setItem(key, fileData);
+                          filesRestored++;
                       }
                   }
                   
-                  showToast(`✅ تم استعادة ${filesRestored} ملف بيانات. يرجى الانتظار لإعادة التحميل...`, 'success');
+                  showToast(`✅ تم استعادة ${filesRestored} ملف بيانات. يرجى إعادة تحميل الصفحة الآن.`, 'success');
                   
                   // إعادة تحميل الصفحة لتطبيق الإعدادات
                   setTimeout(() => {
                       window.location.reload();
-                  }, 3000);
+                  }, 4000);
 
               } catch (err) {
                   console.error("خطأ أثناء استعادة النسخة:", err);
                   showToast('❌ ملف ZIP تالف أو غير صالح.', 'error');
               } finally {
+                  // إعادة تعيين حقل الإدخال للسماح بالرفع مرة أخرى
                   event.target.value = null;
               }
           };
@@ -249,6 +230,8 @@
           
           reader.readAsArrayBuffer(file);
       }
+      // === (نهاية التعديل) ===
+
 
       // --- ربط الأحداث للأزرار الجديدة ---
       document.addEventListener('DOMContentLoaded', () => {
@@ -257,36 +240,19 @@
           const restoreInput = document.getElementById('restoreInput');
 
           backupBtn.addEventListener('click', (e) => {
-              e.preventDefault(); 
+              e.preventDefault(); // منع الرابط من القفز
               exportFullBackup();
           });
 
           restoreBtn.addEventListener('click', (e) => {
-              e.preventDefault(); 
-              restoreInput.click(); 
+              e.preventDefault(); // منع الرابط من القفز
+              restoreInput.click(); // فتح نافذة اختيار الملف
           });
 
           restoreInput.addEventListener('change', importFullBackup);
-
-          // === 💡 التحقق من حالة تسجيل الدخول ===
-          const token = localStorage.getItem('authToken');
-          if (token) {
-              const loginBtn = document.getElementById('mainLoginBtn');
-              const loginTitle = document.getElementById('loginBtnTitle');
-              const loginDesc = document.getElementById('loginBtnDesc');
-              
-              // تغيير شكل الزر ليدل على أنه مسجل دخول
-              loginBtn.style.background = 'rgba(0, 255, 136, 0.15)';
-              loginBtn.style.borderColor = '#00ff88';
-              loginTitle.innerHTML = '✅ حسابك متصل';
-              loginDesc.innerHTML = 'المزامنة السحابية مفعلة.';
-              
-              // (اختياري) جعل الزر غير قابل للنقر أو يفتح صفحة الملف الشخصي
-              loginBtn.href = '#'; 
-              loginBtn.style.cursor = 'default';
-          }
       });
+      // ===============================================
 
     </script>
-</body>
+    </body>
 </html>
