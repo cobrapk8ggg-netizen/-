@@ -266,8 +266,16 @@
             color: #007bff; 
             font-weight: bold;
         }
+        /* كلاس التلوين (الحوار) */
         .cm-dialogue-text {
-            color: #28a745; 
+            color: var(--dialogue-color, #28a745) !important;
+            font-weight: normal;
+            font-size: var(--dialogue-size, 100%) !important; /* ✅ جديد: حجم قابل للتعديل */
+        }
+        /* كلاس الماركدون (الغامق) */
+        .cm-markdown-bold {
+            font-weight: bold !important;
+            font-size: var(--markdown-size, 100%) !important; /* ✅ جديد: حجم قابل للتعديل */
         }
 
         .text-editor:focus {
@@ -894,6 +902,310 @@
                  border-radius: 0;
             }
         }
+		
+		/* ==== 🎨 ستايل نافذة التنسيق - تصميم هائل بصرياً ==== */
+.setting-row { 
+    margin-bottom: 25px; 
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+    border-radius: 15px;
+    border: 2px solid transparent;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.setting-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.setting-row:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+}
+
+.setting-row:hover::before {
+    left: 100%;
+}
+
+.setting-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.setting-header:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.setting-header:active {
+    transform: scale(0.98);
+}
+
+.setting-title { 
+    font-weight: 700; 
+    font-size: 18px; 
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s;
+}
+
+.setting-status { 
+    font-size: 24px;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: inline-block;
+}
+
+.setting-row:hover .setting-status {
+    transform: rotate(360deg) scale(1.2);
+}
+
+/* لوحة الخيارات */
+.options-panel { 
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    padding-left: 25px;
+    border-left: 4px solid #667eea;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.options-panel.open { 
+    display: block;
+    animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
+/* تبديل الإخفاء */
+.setting-toggle {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    margin-bottom: 15px;
+}
+
+.setting-toggle:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #667eea;
+    transform: translateX(-5px);
+    box-shadow: 5px 5px 20px rgba(102, 126, 234, 0.2);
+}
+
+.setting-toggle span:first-child {
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.setting-toggle span:last-child {
+    font-size: 20px;
+    transition: transform 0.3s;
+}
+
+.setting-toggle:hover span:last-child {
+    transform: scale(1.3) rotate(10deg);
+}
+
+.setting-label { 
+    display: block; 
+    margin: 15px 0 10px; 
+    font-size: 14px; 
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* أزرار اختيار الأقواس */
+.segmented-control {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e9ecef;
+}
+
+.segment {
+    position: relative;
+    overflow: hidden;
+}
+
+.segment::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.segment:hover::before {
+    left: 100%;
+}
+
+.segment.active {
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+/* شبكة الألوان */
+.color-grid { 
+    display: grid; 
+    grid-template-columns: repeat(6, 1fr); 
+    gap: 12px; 
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(248, 249, 250, 0.5);
+    border-radius: 12px;
+}
+
+.color-circle { 
+    width: 40px; 
+    height: 40px; 
+    border-radius: 50%; 
+    cursor: pointer; 
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+}
+
+.color-circle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 15px;
+    height: 15px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.color-circle:hover { 
+    transform: scale(1.3) rotate(360deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.color-circle.active { 
+    border-color: #333;
+    border-width: 4px;
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 0 40px rgba(102, 126, 234, 0.4);
+}
+
+.color-circle.active::after {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* كلاس التلوين (الحوار) */
+        .cm-dialogue-text {
+            color: var(--dialogue-color, #28a745) !important;
+            font-weight: normal;
+            font-size: var(--dialogue-size, 100%) !important; /* ✅ جديد: حجم قابل للتعديل */
+        }
+        /* كلاس الماركدون (الغامق) */
+        .cm-markdown-bold {
+            font-weight: bold !important;
+            font-size: var(--markdown-size, 100%) !important; /* ✅ جديد: حجم قابل للتعديل */
+        }
+
+        /* ✅ جديد: أنماط إخفاء العلامات */
+        .cm-quote-hidden {
+            font-size: 0 !important;
+            display: inline-block;
+            width: 0 !important;
+            opacity: 0 !important;
+            overflow: hidden;
+        }
+		
+/* الوضع المظلم */
+.modal-content.dark-interface .setting-row {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+.modal-content.dark-interface .setting-row:hover {
+    border-color: rgba(102, 126, 234, 0.5);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.1) 100%);
+}
+
+.modal-content.dark-interface .setting-title { 
+    color: #f1f1f1; 
+}
+
+.modal-content.dark-interface .setting-label { 
+    color: #bbb; 
+}
+
+.modal-content.dark-interface .options-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border-left-color: #667eea;
+}
+
+.modal-content.dark-interface .setting-toggle {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-color: #444;
+}
+
+.modal-content.dark-interface .setting-toggle:hover {
+    background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+    border-color: #667eea;
+}
+
+.modal-content.dark-interface .setting-toggle span:first-child {
+    color: #e0e0e0;
+}
+
+.modal-content.dark-interface .color-grid {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-content.dark-interface .color-circle {
+    border-color: #555;
+}
+
+.modal-content.dark-interface .color-circle:hover {
+    border-color: #888;
+}
+
+/* =========================================== */
+		
         /* =========================================== */
 
     </style>
@@ -931,7 +1243,7 @@
                     <button class="control-btn" id="redoBtn">↪️</button>
                     <button class="control-btn" id="cmFindBtn">🔍 بحث</button>
                     <button class="control-btn" id="cmReplaceBtn">🔄 استبدال</button>
-                    <button class="control-btn" id="toggleDialogueBtn">🎨 حوار</button>
+                    <button class="control-btn" id="formatBtn">⚙️ تنسيق</button>
                 </div>
             </div>
 
@@ -1076,7 +1388,95 @@
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/searchcursor.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/search.js"></script>
+	
+			<div class="modal" id="formatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚙️ إعدادات التنسيق</h2>
+                <button class="close-modal" id="closeFormatModalBtn">×</button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                
+                <div class="setting-row">
+                    <div class="setting-header" id="toggleMarkdownHeader">
+                        <span class="setting-title">📝 ماركدون (خط عريض)</span>
+                        <span class="setting-status" id="markdownStatus">❌</span>
+                    </div>
+                    <div class="options-panel" id="markdownPanel">
+                        <span class="setting-label">علامة التنصيص للخط العريض:</span>
+                        <div class="segmented-control">
+                            <button class="segment quote-opt-md" data-val="standard">"..."</button>
+                            <button class="segment quote-opt-md" data-val="single">'...'</button>
+                            <button class="segment quote-opt-md" data-val="smart">"..."</button>
+                            <button class="segment quote-opt-md" data-val="guillemets">«...»</button>
+                        </div>
+                        
+                        <!-- ✅ جديد: زر إخفاء علامات الماركدون -->
+                        <div class="setting-toggle" id="toggleMarkdownHide" style="margin-top: 15px;">
+                            <span>إخفاء علامات التنصيص</span>
+                            <span id="markdownHideIcon">👁️‍🗨️</span>
+                        </div>
+                        
+                        <!-- ✅ جديد: شريط تكبير النص الغامق -->
+                        <span class="setting-label">حجم النص الغامق:</span>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                            <button class="control-btn" id="decreaseMarkdownSizeBtn" style="flex: 0 0 40px; padding: 8px;">-</button>
+                            <input type="range" id="markdownSizeRange" min="100" max="200" value="100" step="10" style="flex: 1; cursor: pointer;">
+                            <button class="control-btn" id="increaseMarkdownSizeBtn" style="flex: 0 0 40px; padding: 8px;">+</button>
+                            <span id="markdownSizeLabel" style="font-weight: bold; min-width: 45px; text-align: center;">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-header" id="toggleDialogueHeader">
+                        <span class="setting-title">🎨 تلوين الحوار</span>
+                        <span class="setting-status" id="dialogueStatus">❌</span>
+                    </div>
+                    <div class="options-panel" id="dialoguePanel">
+                        <span class="setting-label">علامة التنصيص للتلوين:</span>
+                        <div class="segmented-control">
+                            <button class="segment quote-opt-dl" data-val="standard">"..."</button>
+                            <button class="segment quote-opt-dl" data-val="single">'...'</button>
+                            <button class="segment quote-opt-dl" data-val="smart">"..."</button>
+                            <button class="segment quote-opt-dl" data-val="guillemets">«...»</button>
+                        </div>
+
+                        <!-- ✅ جديد: زر إخفاء علامات الحوار -->
+                        <div class="setting-toggle" id="toggleDialogueHide" style="margin-top: 15px;">
+                            <span>إخفاء علامات التنصيص</span>
+                            <span id="dialogueHideIcon">👁️‍🗨️</span>
+                        </div>
+                        
+                        <!-- ✅ جديد: شريط تكبير الحوار -->
+                        <span class="setting-label">حجم نص الحوار:</span>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 20px;">
+                            <button class="control-btn" id="decreaseDialogueSizeBtn" style="flex: 0 0 40px; padding: 8px;">-</button>
+                            <input type="range" id="dialogueSizeRange" min="100" max="200" value="100" step="10" style="flex: 1; cursor: pointer;">
+                            <button class="control-btn" id="increaseDialogueSizeBtn" style="flex: 0 0 40px; padding: 8px;">+</button>
+                            <span id="dialogueSizeLabel" style="font-weight: bold; min-width: 45px; text-align: center;">100%</span>
+                        </div>
+
+                        <span class="setting-label">لون الحوار:</span>
+                        <div class="color-grid">
+                            <div class="color-circle" style="background:#28a745" data-col="#28a745"></div>
+                            <div class="color-circle" style="background:#007bff" data-col="#007bff"></div>
+                            <div class="color-circle" style="background:#dc3545" data-col="#dc3545"></div>
+<div class="color-circle" style="background:#ffc107" data-col="#ffc107"></div>
+<div class="color-circle" style="background:#6f42c1" data-col="#6f42c1"></div>
+<input type="color" id="customDialogueColor" class="color-circle" style="padding:0; border:none;" title="لون مخصص">
+</div>
+</div>
+</div>
+        </div>
+    </div>
+</div>
+
+
+	
     <script>
+		
+		
         // --- الحالة الابتدائية للتطبيق ---
         const state = {
             selectedFile: null,
@@ -1091,7 +1491,16 @@
             fileSortType: 'modified', 
             fileSortReversed: false,
             fileDBType: 'english',
-            dialogueHighlighting: false
+            // == الإعدادات الجديدة المفصلة ==
+            markdownEnabled: false,
+            markdownQuote: 'standard',
+            markdownHideQuotes: false,
+            markdownSize: 100, // ✅ جديد: حجم النص الغامق (بالنسبة المئوية)
+            dialogueEnabled: false,
+            dialogueQuote: 'single',
+            dialogueColor: '#28a745',
+            dialogueHideQuotes: false,
+            dialogueSize: 100 // ✅ جديد: حجم نص الحوار (بالنسبة المئوية)
         };
 
         // --- جلب العناصر الأساسية ---
@@ -1136,7 +1545,10 @@
             
             selectAllFilesBtn: document.getElementById('selectAllFilesBtn'),
             deselectAllFilesBtn: document.getElementById('deselectAllFilesBtn'),
-            toggleDialogueBtn: document.getElementById('toggleDialogueBtn'),
+            // حذفنا زر toggleDialogueBtn القديم وأضفنا عناصر النافذة الجديدة
+            formatBtn: document.getElementById('formatBtn'),
+            formatModal: document.getElementById('formatModal'),
+            closeFormatModalBtn: document.getElementById('closeFormatModalBtn'),
 
             fontSelectBtn: document.getElementById('fontSelectBtn'),
             themeSelectBtn: document.getElementById('themeSelectBtn'),
@@ -1171,13 +1583,25 @@
                 state.fileSortReversed = parsed.fileSortReversed || false;
                 state.fileDBType = parsed.fileDBType || 'english';
                 
+                // استعادة إعدادات التنسيق
+                state.markdownEnabled = parsed.markdownEnabled || false;
+                state.markdownQuote = parsed.markdownQuote || 'standard';
+                state.markdownHideQuotes = parsed.markdownHideQuotes || false;
+                state.markdownSize = parsed.markdownSize || 100; // ✅ جديد
+                state.dialogueEnabled = parsed.dialogueEnabled || false;
+                state.dialogueQuote = parsed.dialogueQuote || 'single';
+                state.dialogueColor = parsed.dialogueColor || '#28a745';
+                state.dialogueHideQuotes = parsed.dialogueHideQuotes || false;
+                state.dialogueSize = parsed.dialogueSize || 100; // ✅ جديد
+
                 applyInterfaceColor(state.interfaceColor); 
+                updateDialogueColorCSS(state.dialogueColor);
+                updateFormattingSizes(); // ✅ جديد: تطبيق الأحجام
             }
             
             if (state.selectedFile && state.selectedFileDB !== 'none') {
                 if (typeof readEnglishChapter !== 'undefined' && typeof readTranslatedChapter !== 'undefined') {
                     if (cmEditor) {
-                        // loadFile is now async
                         loadFile(state.selectedFile, state.selectedFileDB);
                     } else {
                         document.addEventListener('DOMContentLoaded', () => {
@@ -1201,7 +1625,17 @@
                 lastOpenedFileDB: state.selectedFileDB, 
                 fileSortType: state.fileSortType,
                 fileSortReversed: state.fileSortReversed,
-                fileDBType: state.fileDBType
+                fileDBType: state.fileDBType,
+                // حفظ التنسيقات
+                markdownEnabled: state.markdownEnabled,
+                markdownQuote: state.markdownQuote,
+                markdownHideQuotes: state.markdownHideQuotes,
+                markdownSize: state.markdownSize, // ✅ جديد
+                dialogueEnabled: state.dialogueEnabled,
+                dialogueQuote: state.dialogueQuote,
+                dialogueColor: state.dialogueColor,
+                dialogueHideQuotes: state.dialogueHideQuotes,
+                dialogueSize: state.dialogueSize // ✅ جديد
             };
             localStorage.setItem('zeusEditorConfig', JSON.stringify(config));
         }
@@ -1250,7 +1684,89 @@
             });
             
             document.getElementById('cmReplaceBtn').addEventListener('click', openFindReplaceModal); 
-            document.getElementById('toggleDialogueBtn').addEventListener('click', toggleDialogueHighlighting);
+            
+            // === أحداث التنسيق الجديدة ===
+            elements.formatBtn.addEventListener('click', openFormatModal);
+            elements.closeFormatModalBtn.addEventListener('click', () => elements.formatModal.classList.remove('show'));
+            
+            // تبديل الماركدون
+            document.getElementById('toggleMarkdownHeader').addEventListener('click', () => {
+                state.markdownEnabled = !state.markdownEnabled;
+                saveConfig(); updateFormatUI(); updateEditorOverlays();
+            });
+            // تبديل الحوار
+            document.getElementById('toggleDialogueHeader').addEventListener('click', () => {
+                state.dialogueEnabled = !state.dialogueEnabled;
+                saveConfig(); updateFormatUI(); updateEditorOverlays();
+            });
+
+            // اختيار نوع القوس للماركدون
+            document.querySelectorAll('.quote-opt-md').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    state.markdownQuote = e.target.dataset.val;
+                    saveConfig(); updateFormatUI(); updateEditorOverlays();
+                });
+            });
+
+            // اختيار نوع القوس للحوار
+            document.querySelectorAll('.quote-opt-dl').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    state.dialogueQuote = e.target.dataset.val;
+                    saveConfig(); updateFormatUI(); updateEditorOverlays();
+                });
+            });
+
+            // ✅ جديد: تبديل إخفاء علامات الماركدون
+            document.getElementById('toggleMarkdownHide').addEventListener('click', () => {
+                state.markdownHideQuotes = !state.markdownHideQuotes;
+                saveConfig(); updateFormatUI(); updateEditorOverlays();
+            });
+
+            // ✅ جديد: تبديل إخفاء علامات الحوار
+            document.getElementById('toggleDialogueHide').addEventListener('click', () => {
+                state.dialogueHideQuotes = !state.dialogueHideQuotes;
+                saveConfig(); updateFormatUI(); updateEditorOverlays();
+            });
+            
+            // ✅ جديد: تكبير/تصغير النص الغامق
+            document.getElementById('increaseMarkdownSizeBtn').addEventListener('click', () => {
+                state.markdownSize = Math.min(200, state.markdownSize + 10);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+            document.getElementById('decreaseMarkdownSizeBtn').addEventListener('click', () => {
+                state.markdownSize = Math.max(100, state.markdownSize - 10);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+            document.getElementById('markdownSizeRange').addEventListener('input', (e) => {
+                state.markdownSize = parseInt(e.target.value);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+            
+            // ✅ جديد: تكبير/تصغير نص الحوار
+            document.getElementById('increaseDialogueSizeBtn').addEventListener('click', () => {
+                state.dialogueSize = Math.min(200, state.dialogueSize + 10);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+            document.getElementById('decreaseDialogueSizeBtn').addEventListener('click', () => {
+                state.dialogueSize = Math.max(100, state.dialogueSize - 10);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+            document.getElementById('dialogueSizeRange').addEventListener('input', (e) => {
+                state.dialogueSize = parseInt(e.target.value);
+                updateFormattingSizes(); updateFormatUI(); saveConfig();
+            });
+
+            // اختيار اللون
+            document.querySelectorAll('.color-circle').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if(e.target.id === 'customDialogueColor') return;
+                    updateDialogueColorCSS(e.target.dataset.col);
+                });
+            });
+            document.getElementById('customDialogueColor').addEventListener('input', (e) => {
+                updateDialogueColorCSS(e.target.value);
+            });
+
             document.getElementById('closeFindReplaceModalBtn').addEventListener('click', closeFindReplaceModal);
             document.getElementById('performFindReplaceBtn').addEventListener('click', performFindReplace);
             document.getElementById('closeFileModalBtn').addEventListener('click', closeFileModal);
@@ -1317,7 +1833,7 @@
                 }
             });
 
-            // ✅ تفعيل السحب (فقط في وضع القراءة)
+            // تفعيل السحب
             let touchStartX = 0;
             let touchStartY = 0;
 
@@ -1327,9 +1843,6 @@
             }, { passive: false }); 
 
             document.addEventListener('touchend', e => {
-                // 💡 التعديل هنا: الخروج فوراً إذا لم يكن وضع القراءة مفعلاً
-                if (!state.readMode) return;
-
                 let touchEndX = e.changedTouches[0].screenX;
                 let touchEndY = e.changedTouches[0].screenY;
                 
@@ -1370,14 +1883,14 @@
         }
         // ====================================
 
-        async function navigateChapter(direction) {
+        function navigateChapter(direction) {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ يجب فتح فصل أولاً للتنقل.', 'warning');
                 return;
             }
 
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             const fileNames = Object.keys(files);
 
             if (fileNames.length <= 1) {
@@ -1408,8 +1921,8 @@
             }
 
             if (targetFile) {
-                await saveChanges(true); 
-                await loadFile(targetFile, state.selectedFileDB);
+                saveChanges(true); 
+                loadFile(targetFile, state.selectedFileDB);
             }
         }
 
@@ -1490,41 +2003,183 @@
         const systemTextOverlay = {
             token: function(stream) {
                 if (stream.match(/\[.*?\]/)) { return "system-text"; }
-                while (stream.next() != null && !stream.match(/\[.*?\]/)) { stream.next(); }
+                while (stream.next() != null && !stream.match(/\[.*?\]/, false)) {}
                 return null;
             }
         };
 
-        const dialogueOverlay = {
-            token: function(stream) {
-                let ch;
-                if (stream.peek() === '"') {
-                    stream.next();
-                    while ((ch = stream.next()) != null) { if (ch === '"') break; }
-                    return "dialogue-text";
-                }
-                if (stream.peek() === "'") {
-                    stream.next();
-                    while ((ch = stream.next()) != null) { if (ch === "'") break; }
-                    return "dialogue-text";
-                }
-                stream.next();
-                return null;
-            }
+        // === قاموس العلامات ===
+        const QUOTES_MAP = {
+            'standard': ['"', '"'],
+            'single': ["'", "'"],
+            'smart': ['“', '”'],
+            'guillemets': ['«', '»']
         };
 
-        function toggleDialogueHighlighting() {
+        // دالة تحديث المتغير اللوني CSS
+        function updateDialogueColorCSS(color) {
+            state.dialogueColor = color;
+            document.documentElement.style.setProperty('--dialogue-color', color);
+            saveConfig();
+            updateFormatUI();
+        }
+
+        // ✅ دالة جديدة: تحديث أحجام النصوص المنسقة
+        function updateFormattingSizes() {
+            document.documentElement.style.setProperty('--markdown-size', `${state.markdownSize}%`);
+            document.documentElement.style.setProperty('--dialogue-size', `${state.dialogueSize}%`);
+        }
+
+
+
+        // دالة إنشاء الطبقة (Overlay) بشكل ديناميكي
+        function createCustomOverlay(type, startChar, endChar, hideQuotes) {
+            return {
+                token: function(stream) {
+                    // التحقق من علامة البداية
+                    if (stream.match(startChar, false)) {
+                        // استهلاك علامة البداية
+                        stream.match(startChar);
+                        
+                        // إذا نريد إخفاء العلامات، نرجع كلاس خاص
+                        if (hideQuotes) {
+                            // نحفظ الموضع لنتمكن من قراءة المحتوى
+                            let contentStart = stream.pos;
+                            let ch;
+                            
+                            // نبحث عن علامة النهاية
+                            while ((ch = stream.next()) != null) {
+                                if (ch === endChar) {
+                                    // وجدنا علامة النهاية - نعيد المؤشر قبلها
+                                    stream.pos--;
+                                    break;
+                                }
+                            }
+                            
+                            // نرجع كلاس الإخفاء لعلامة البداية
+                            stream.pos = contentStart - startChar.length;
+                            stream.match(startChar);
+                            return "quote-hidden";
+                        }
+                        
+                        // إذا لا نريد الإخفاء، نتابع بشكل عادي
+                        let ch;
+                        while ((ch = stream.next()) != null) {
+                            if (ch === endChar) {
+                                stream.pos--;
+                                return type === 'markdown' ? "markdown-bold" : "dialogue-text";
+                            }
+                        }
+                        return type === 'markdown' ? "markdown-bold" : "dialogue-text";
+                    }
+                    
+                    // التحقق من المحتوى بين العلامتين
+                    // نبحث للخلف لنرى إن كنا داخل نص منسق
+                    let lineStart = stream.string.lastIndexOf(startChar, stream.pos);
+                    let lineEnd = stream.string.indexOf(endChar, stream.pos);
+                    
+                    if (lineStart !== -1 && lineEnd !== -1 && lineStart < stream.pos && stream.pos < lineEnd) {
+                        // نحن داخل نص منسق
+                        let ch;
+                        while ((ch = stream.next()) != null) {
+                            if (ch === endChar) {
+                                stream.pos--;
+                                break;
+                            }
+                        }
+                        return type === 'markdown' ? "markdown-bold" : "dialogue-text";
+                    }
+                    
+                    // التحقق من علامة النهاية
+                    if (stream.match(endChar, false)) {
+                        stream.match(endChar);
+                        if (hideQuotes) {
+                            return "quote-hidden";
+                        }
+                        return null;
+                    }
+                    
+                    // حرف عادي
+                    stream.next();
+                    return null;
+                }
+            };
+        }
+
+        // متغيرات لحفظ الطبقات الحالية لإزالتها لاحقاً
+        let currentMdOverlay = null;
+        let currentDlOverlay = null;
+
+        function updateEditorOverlays() {
             if (!cmEditor) return;
-            state.dialogueHighlighting = !state.dialogueHighlighting; 
-            if (state.dialogueHighlighting) {
-                cmEditor.addOverlay(dialogueOverlay);
-                elements.toggleDialogueBtn.classList.add('active'); 
-                showNotification('✅ تم تفعيل تلوين الحوارات', 'success');
-            } else {
-                cmEditor.removeOverlay(dialogueOverlay);
-                elements.toggleDialogueBtn.classList.remove('active'); 
-                showNotification('⚪️ تم إيقاف تلوين الحوارات', 'warning');
+
+            // إزالة الطبقات القديمة
+            if (currentMdOverlay) cmEditor.removeOverlay(currentMdOverlay);
+            if (currentDlOverlay) cmEditor.removeOverlay(currentDlOverlay);
+
+            // إضافة طبقة الماركدون إذا مفعلة
+            if (state.markdownEnabled) {
+                const q = QUOTES_MAP[state.markdownQuote];
+                currentMdOverlay = createCustomOverlay('markdown', q[0], q[1], state.markdownHideQuotes); // ✅ تمرير hideQuotes
+                cmEditor.addOverlay(currentMdOverlay);
             }
+
+            // إضافة طبقة الحوار إذا مفعلة
+            if (state.dialogueEnabled) {
+                const q = QUOTES_MAP[state.dialogueQuote];
+                currentDlOverlay = createCustomOverlay('dialogue', q[0], q[1], state.dialogueHideQuotes); // ✅ تمرير hideQuotes
+                cmEditor.addOverlay(currentDlOverlay);
+            }
+        }
+
+        // واجهة المستخدم للنافذة
+        function openFormatModal() {
+            updateFormatUI();
+            elements.formatModal.classList.toggle('dark-interface', state.interfaceColor === 'black');
+            elements.formatModal.classList.add('show');
+        }
+
+        function updateFormatUI() {
+            // تحديث حالة الماركدون
+            document.getElementById('markdownStatus').textContent = state.markdownEnabled ? '✅ مفعل' : '❌ معطل';
+            document.getElementById('markdownPanel').style.display = state.markdownEnabled ? 'block' : 'none';
+            document.querySelectorAll('.quote-opt-md').forEach(b => {
+                b.classList.toggle('active', b.dataset.val === state.markdownQuote);
+            });
+            const mdHideIcon = document.getElementById('markdownHideIcon');
+            if (mdHideIcon) {
+                mdHideIcon.textContent = state.markdownHideQuotes ? '👁️' : '👁️‍🗨️';
+            }
+            // ✅ جديد: تحديث الشريط والعرض
+            const mdSizeRange = document.getElementById('markdownSizeRange');
+            const mdSizeLabel = document.getElementById('markdownSizeLabel');
+            if (mdSizeRange) mdSizeRange.value = state.markdownSize;
+            if (mdSizeLabel) mdSizeLabel.textContent = `${state.markdownSize}%`;
+
+            // تحديث حالة الحوار
+            document.getElementById('dialogueStatus').textContent = state.dialogueEnabled ? '✅ مفعل' : '❌ معطل';
+            document.getElementById('dialoguePanel').style.display = state.dialogueEnabled ? 'block' : 'none';
+            document.querySelectorAll('.quote-opt-dl').forEach(b => {
+                b.classList.toggle('active', b.dataset.val === state.dialogueQuote);
+            });
+            const dlHideIcon = document.getElementById('dialogueHideIcon');
+            if (dlHideIcon) {
+                dlHideIcon.textContent = state.dialogueHideQuotes ? '👁️' : '👁️‍🗨️';
+            }
+            // ✅ جديد: تحديث الشريط والعرض
+            const dlSizeRange = document.getElementById('dialogueSizeRange');
+            const dlSizeLabel = document.getElementById('dialogueSizeLabel');
+            if (dlSizeRange) dlSizeRange.value = state.dialogueSize;
+            if (dlSizeLabel) dlSizeLabel.textContent = `${state.dialogueSize}%`;
+
+            // تحديث تحديد اللون
+            document.querySelectorAll('.color-circle').forEach(c => {
+                if (c.id === 'customDialogueColor') {
+                    c.value = state.dialogueColor;
+                } else {
+                    c.classList.toggle('active', c.dataset.col === state.dialogueColor);
+                }
+            });
         }
         
         function onImportClick() {
@@ -1577,7 +2232,7 @@
                         for (const zipEntry of txtFilesEntries) {
                             const content = await zipEntry.async('string');
                             const filename = zipEntry.name.split('/').pop(); 
-                            await saveFunction(filename, content); // Added await
+                            saveFunction(filename, content);
                             importedFileNames.push(filename);
                         }
                     } catch (err) {
@@ -1588,7 +2243,7 @@
                     try {
                         const content = await file.text(); 
                         const filename = file.name;
-                        await saveFunction(filename, content); // Added await
+                        saveFunction(filename, content);
                         importedFileNames.push(filename);
                     } catch (err) {
                          showNotification(`فشل في قراءة ${file.name}`, 'error');
@@ -1599,14 +2254,14 @@
                 }
             }
             if (importedFileNames.length > 0) {
-                await loadFile(importedFileNames[importedFileNames.length - 1], dbType); // Added await
+                loadFile(importedFileNames[importedFileNames.length - 1], dbType); 
                 showNotification(`✅ تم استيراد ${importedFileNames.length} فصول إلى "${dbName}"!`);
             } else {
                  showNotification('لم يتم استيراد أي ملفات .txt جديدة', 'warning');
             }
         }
 
-        async function renameFile() {
+        function renameFile() {
             if (!state.selectedFile || state.selectedFileDB === 'none') {
                 showNotification('⚠️ لا يوجد ملف مفتوح لتغيير اسمه', 'error');
                 elements.filenameInput.disabled = true;
@@ -1626,7 +2281,7 @@
             }
             if (newName === oldName) return;
             const dbKey = (state.selectedFileDB === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             if (files[newName]) {
                 showNotification(`❌ ملف بالاسم '${newName}' موجود بالفعل في هذه القاعدة`, 'error');
                 elements.filenameInput.value = oldName;
@@ -1636,12 +2291,12 @@
             files[newName].modified = Date.now();
             delete files[oldName]; 
             state.selectedFile = newName;
-            await Storage.set(dbKey, files); 
+            Storage.set(dbKey, files); 
             saveConfig();
             showNotification(`✅ تم تغيير الاسم إلى\n${newName}`);
         }
 
-        async function saveChanges(isAutoSave = false) {
+        function saveChanges(isAutoSave = false) {
             let filename = state.selectedFile;
             let dbType = state.selectedFileDB;
             if (!filename || dbType === 'none') {
@@ -1673,7 +2328,7 @@
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
             
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             const currentContentInDB = (files[filename]) ? files[filename].content : null;
 
             if (currentContentInDB !== null && currentContentInDB === contentToSave) {
@@ -1682,7 +2337,7 @@
                  }
                  return;
             }
-            await saveFunction(filename, contentToSave); // Added await
+            saveFunction(filename, contentToSave);
             state.selectedFile = filename;
             state.selectedFileDB = dbType; 
             elements.filenameInput.value = filename;
@@ -1693,7 +2348,7 @@
             }
         }
 
-        async function createNewChapter() {
+        function createNewChapter() {
             let filename = prompt("أدخل اسم الملف الجديد (مثل: chapter1.txt):");
             if (!filename) {
                 showNotification('تم إلغاء الإنشاء', 'warning');
@@ -1713,24 +2368,24 @@
                 filename += '.txt';
             }
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             if (files[filename]) {
                 showNotification(`❌ ملف بالاسم '${filename}' موجود بالفعل.`, 'error');
                 return;
             }
             const saveFunction = (dbType === 'english') ? saveEnglishChapter : saveTranslatedChapter;
-            await saveFunction(filename, ""); // Added await
-            await loadFile(filename, dbType); // Added await
+            saveFunction(filename, ""); 
+            loadFile(filename, dbType);
             showNotification(`✅ تم إنشاء ${filename} بنجاح`, 'success');
         }
 
-        async function loadFile(filename, dbType) {
+        function loadFile(filename, dbType) {
             if (!cmEditor) {
                 showNotification('خطأ: المحرر غير جاهز للتحميل', 'error');
                 return;
             }
             const dbKey = (dbType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             
             if (files[filename] !== undefined) {
                 const fileContent = files[filename].content || ""; 
@@ -1763,7 +2418,7 @@
             }
         }
         
-        async function openFileModal() {
+        function openFileModal() {
             if (typeof listEnglishChapters === 'undefined' || typeof listTranslatedChapters === 'undefined') {
                 showNotification('خطأ: ملف translator_core.js غير محمل!', 'error');
                 return;
@@ -1781,7 +2436,7 @@
                 s.classList.toggle('active', s.dataset.sort === state.fileSortType);
             });
             elements.reverseSortBtn.classList.toggle('active', state.fileSortReversed);
-            await updateFileListView(); // Added await
+            updateFileListView(); 
             elements.fileModal.classList.add('show');
         }
 
@@ -1789,12 +2444,12 @@
             elements.fileModal.classList.remove('show');
         }
         
-        async function updateFileListView() {
+        function updateFileListView() {
             const searchTerm = elements.fileSearchInput.value.toLowerCase();
             const sortType = state.fileSortType; 
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
-            // const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
-            const files = await Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
+            const listFunction = (activeDBType === 'english') ? listEnglishChapters : listTranslatedChapters;
+            const files = Storage.get( (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS, {});
             const fileArray = Object.entries(files).map(([name, data]) => ({
                 name,
                 ...data,
@@ -1875,7 +2530,7 @@
             });
         }
         
-        async function toggleSelectMode() {
+        function toggleSelectMode() {
             fileModalSelectMode = !fileModalSelectMode;
             elements.fileList.classList.toggle('selection-active', fileModalSelectMode);
             if (fileModalSelectMode) {
@@ -1890,11 +2545,11 @@
                 elements.selectAllFilesBtn.style.display = 'none';
                 elements.deselectAllFilesBtn.style.display = 'none';
                 fileModalSelectedFiles.clear(); 
-                await updateFileListView(); // Added await
+                updateFileListView(); 
             }
         }
         
-        async function deleteSelectedFiles() {
+        function deleteSelectedFiles() {
             if (fileModalSelectedFiles.size === 0) {
                 showNotification('لم يتم تحديد أي ملفات للحذف', 'warning');
                 return;
@@ -1904,7 +2559,7 @@
             }
             const activeDBType = elements.dbTypeControl.querySelector('.segment.active').dataset.db;
             const dbKey = (activeDBType === 'english') ? CONFIG.STORAGE_KEYS.ENGLISH_CHAPTERS : CONFIG.STORAGE_KEYS.TRANSLATED_CHAPTERS;
-            const files = await Storage.get(dbKey, {});
+            const files = Storage.get(dbKey, {});
             let fileWasReset = false;
             for (const filename of fileModalSelectedFiles) {
                 delete files[filename]; 
@@ -1922,7 +2577,7 @@
                 updateStats();
                 saveConfig();
             }
-            await Storage.set(dbKey, files); // Added await
+            Storage.set(dbKey, files); 
             showNotification(`✅ تم حذف ${fileModalSelectedFiles.size} ملفات بنجاح`);
             toggleSelectMode(); 
         }
@@ -2088,7 +2743,7 @@
             const dbFriendlyName = isEnglish ? 'الإنجليزية' : 'المترجمة';
             showNotification(`جاري تحضير ملفات ${dbFriendlyName} للضغط...`, 'warning');
             try {
-                const files = await Storage.get(dbKey, {}); // Added await
+                const files = Storage.get(dbKey, {});
                 const fileNames = Object.keys(files);
                 if (fileNames.length === 0) {
                     showNotification(`لا توجد فصول في "${dbFriendlyName}" لتصديرها.`, 'error');
@@ -2235,11 +2890,15 @@
             applyFont(state.fontName);
             applyFontSize(state.fontSize);
             applyLineSpacing(state.lineSpacing);
+            
+            // ✅ جديد: تطبيق الـ Overlays المحفوظة
+            updateEditorOverlays();
 
             if(cmEditor) {
                 updateStats();
             }
         });
+		
 
     </script>
 </body>
