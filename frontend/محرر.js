@@ -6,7 +6,7 @@
             lineSpacing: 1.5,
             fontName: 'Geeza Pro',
             theme: 'dark',
-            interfaceColor: 'black',
+            interfaceColor: 'dark',
             readMode: false,
             fullscreen: false,
             fileSortType: 'modified', 
@@ -187,7 +187,6 @@
             document.getElementById('readBtn').addEventListener('click', toggleReadMode);
             document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
             document.getElementById('exitBtn').addEventListener('click', exitSpecialMode);
-            document.getElementById('saveBtn').addEventListener('click', () => saveChanges(false)); 
             document.getElementById('increaseFontBtn').addEventListener('click', increaseFont);
             document.getElementById('decreaseFontBtn').addEventListener('click', decreaseFont);
             document.getElementById('spacingBtn').addEventListener('click', toggleSpacing);
