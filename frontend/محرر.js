@@ -6,7 +6,7 @@
             lineSpacing: 1.5,
             fontName: 'Geeza Pro',
             theme: 'dark',
-            interfaceColor: 'dark',
+            interfaceColor: 'black',
             readMode: false,
             fullscreen: false,
             fileSortType: 'modified', 
